@@ -189,11 +189,56 @@ def fan_chart(stats_df: pd.DataFrame, title: str = "Portfolio Value – Monte Ca
 
 # -----------------------------
 # Streamlit UI
+# Helper input formatters
+# -----------------------------
+
+def _dollar_input(label: str, default_value: float, key: str, help: str | None = None) -> float:
+    """Sidebar text input that shows/accepts a dollar amount like $20,000."""
+    default_str = f"${default_value:,.0f}"
+    s = st.sidebar.text_input(label, value=default_str, key=key, help=help)
+
+    try:
+        clean = (
+            s.replace("$", "")
+             .replace(",", "")
+             .replace(" ", "")
+             .replace("(", "-")
+             .replace(")", "")
+        )
+        if clean == "":
+            return default_value
+        return float(clean)
+    except ValueError:
+        st.sidebar.warning(f"Could not parse '{s}' as a dollar amount. Using {default_str}.")
+        return default_value
+
+
+def _percent_input(label: str, default_fraction: float, key: str, help: str | None = None) -> float:
+    """
+    Sidebar text input for percents.
+    Shows '3%' for 0.03 and returns the fraction (0.03).
+    """
+    default_str = f"{default_fraction * 100:.1f}%"
+    s = st.sidebar.text_input(label, value=default_str, key=key, help=help)
+
+    try:
+        clean = s.replace("%", "").strip()
+        if clean == "":
+            return default_fraction
+        return float(clean) / 100.0
+    except ValueError:
+        st.sidebar.warning(f"Could not parse '{s}' as a percent. Using {default_str}.")
+        return default_fraction
+
+
+# -----------------------------
+# Formatted sidebar inputs
 # -----------------------------
 
 def sidebar_inputs() -> ModelInputs:
     st.sidebar.header("Model Inputs")
 
+    # --- Client & Horizon ---
     st.sidebar.subheader("Client & Horizon")
     starting_portfolio = st.sidebar.number_input(
         "Starting Portfolio Value ($)",
@@ -209,107 +254,199 @@ def sidebar_inputs() -> ModelInputs:
         value=30,
         step=1
     )
+
     current_age = st.sidebar.number_input(
         "Current Age",
         min_value=0,
         max_value=120,
         value=48,
         step=1
+        step=1,
+        key="current_age",
     )
+
     horizon_age = st.sidebar.number_input(
         "Plan Horizon Age",
         min_value=current_age,
         max_value=120,
         value=78,
         step=1
+        step=1,
+        key="horizon_age",
     )
 
+    years_to_model = horizon_age - current_age
+
+    starting_portfolio = _dollar_input(
+        "Starting Portfolio Value",
+        default_value=4_500_000.0,
+        key="starting_portfolio",
+    )
+
+    # --- Spending & Inflation ---
     st.sidebar.subheader("Spending & Inflation")
     monthly_spending = st.sidebar.number_input(
         "Monthly Spending (negative = withdrawal)",
         value=-20_000.0,
         step=1_000.0,
         format="%.0f"
+
+    monthly_spend_abs = _dollar_input(
+        "Monthly Spending",
+        default_value=20_000.0,
+        key="monthly_spending",
+        help="Enter the monthly spending amount. It will be treated as a withdrawal.",
     )
     inflation_annual = st.sidebar.number_input(
+    # Internal convention: withdrawals are negative
+    monthly_spending = -abs(monthly_spend_abs)
+
+    inflation_annual = _percent_input(
         "Annual Inflation Rate",
         min_value=0.0,
         max_value=0.10,
         value=0.03,
         step=0.005,
         format="%.3f"
+        default_fraction=0.03,
+        key="inflation_annual",
     )
 
+    # --- Allocation ---
     st.sidebar.subheader("Allocation")
     equity_pct = st.sidebar.slider("Equity %", 0.0, 1.0, 0.70, 0.05)
     fi_pct = st.sidebar.slider("Fixed Income %", 0.0, 1.0, 0.25, 0.05)
     cash_pct = st.sidebar.slider("Cash %", 0.0, 1.0, 0.05, 0.01)
 
+    equity_pct_slider = st.sidebar.slider(
+        "Equity %",
+        min_value=0,
+        max_value=100,
+        value=70,
+        step=1,
+        key="equity_pct",
+    )
+    fi_pct_slider = st.sidebar.slider(
+        "Fixed Income %",
+        min_value=0,
+        max_value=100,
+        value=25,
+        step=1,
+        key="fi_pct",
+    )
+    cash_pct_slider = st.sidebar.slider(
+        "Cash %",
+        min_value=0,
+        max_value=100,
+        value=5,
+        step=1,
+        key="cash_pct",
+    )
+
+    equity_pct = equity_pct_slider / 100.0
+    fi_pct = fi_pct_slider / 100.0
+    cash_pct = cash_pct_slider / 100.0
+
+    alloc_sum = equity_pct + fi_pct + cash_pct
+    if abs(alloc_sum - 1.0) > 1e-6:
+        st.sidebar.warning(
+            f"Allocation totals {alloc_sum*100:.1f}% (should be 100%). "
+            "Consider adjusting Equity / Fixed Income / Cash."
+        )
+
+    # --- Return Assumptions ---
     st.sidebar.subheader("Return Assumptions (Annual, Nominal)")
     equity_return_annual = st.sidebar.number_input(
+
+    equity_return_annual = _percent_input(
         "Equity Expected Annual Return",
         min_value=-0.20,
         max_value=0.25,
         value=0.10,
         step=0.01,
         format="%.3f"
+        default_fraction=0.10,
+        key="equity_return",
     )
     fi_return_annual = st.sidebar.number_input(
+    fi_return_annual = _percent_input(
         "Fixed Income Expected Annual Return",
         min_value=-0.10,
         max_value=0.15,
         value=0.03,
         step=0.005,
         format="%.3f"
+        default_fraction=0.03,
+        key="fi_return",
     )
     cash_return_annual = st.sidebar.number_input(
+    cash_return_annual = _percent_input(
         "Cash Expected Annual Return",
         min_value=-0.05,
         max_value=0.10,
         value=0.02,
         step=0.005,
         format="%.3f"
+        default_fraction=0.02,
+        key="cash_return",
     )
 
+    # --- Volatility Assumptions ---
     st.sidebar.subheader("Volatility (Annual)")
     equity_vol_annual = st.sidebar.number_input(
+
+    equity_vol_annual = _percent_input(
         "Equity Annual Volatility",
         min_value=0.0,
         max_value=0.60,
         value=0.15,
         step=0.01,
         format="%.3f"
+        default_fraction=0.15,
+        key="equity_vol",
     )
     fi_vol_annual = st.sidebar.number_input(
+    fi_vol_annual = _percent_input(
         "Fixed Income Annual Volatility",
         min_value=0.0,
         max_value=0.40,
         value=0.05,
         step=0.005,
         format="%.3f"
+        default_fraction=0.05,
+        key="fi_vol",
     )
     cash_vol_annual = st.sidebar.number_input(
+    cash_vol_annual = _percent_input(
         "Cash Annual Volatility",
         min_value=0.0,
         max_value=0.20,
         value=0.01,
         step=0.005,
         format="%.3f"
+        default_fraction=0.01,
+        key="cash_vol",
     )
 
+    # --- Monte Carlo Settings ---
     st.sidebar.subheader("Monte Carlo Settings")
+
     n_scenarios = st.sidebar.slider(
         "Number of Scenarios",
         min_value=50,
         max_value=2000,
         value=200,
         step=50
+        step=50,
+        key="n_scenarios",
     )
 
     spending_rule = st.sidebar.radio(
         "Spending Rule",
         options=[1, 2],
         format_func=lambda x: "1 – Fixed $ (inflation-adjusted)" if x == 1 else "2 – % of Portfolio"
+        format_func=lambda x: "1 – Fixed $ (inflation-adjusted)" if x == 1 else "2 – % of Portfolio",
+        key="spending_rule",
     )
     spending_pct_annual = st.sidebar.number_input(
         "Percent of Portfolio (Annual, if Rule=2)",
@@ -318,21 +455,37 @@ def sidebar_inputs() -> ModelInputs:
         value=0.04,
         step=0.005,
         format="%.3f"
+
+    spending_pct_annual = _percent_input(
+        "Percent of Portfolio (Annual, if Rule = 2)",
+        default_fraction=0.04,
+        key="spending_pct_annual",
     )
 
+    # --- One-Time Cash Flow ---
     st.sidebar.subheader("One-Time Cash Flow")
     one_time_cf = st.sidebar.number_input(
         "One-Time Cash Flow (positive=inflow, negative=outflow)",
         value=0.0,
         step=10_000.0,
         format="%.0f"
+
+    one_time_cf = _dollar_input(
+        "One-Time Cash Flow",
+        default_value=0.0,
+        key="one_time_cf",
+        help="Positive = inflow, negative = outflow.",
     )
+
     one_time_cf_month = st.sidebar.number_input(
         "One-Time Cash Flow Month (1 = first month, 0 = never)",
         min_value=0,
         max_value=years_to_model * 12,
+        max_value=max(years_to_model * 12, 0),
         value=0,
         step=1
+        step=1,
+        key="one_time_cf_month",
     )
 
     return ModelInputs(
@@ -490,4 +643,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
+~
