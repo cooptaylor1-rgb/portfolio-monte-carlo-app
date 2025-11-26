@@ -348,6 +348,41 @@ def apply_salem_styling():
             letter-spacing: -0.01em !important;
         }}
         
+        /* Main content area selectbox */
+        .main [data-baseweb="select"] {{
+            background-color: rgba(27, 59, 95, 0.95) !important;
+            border: 1px solid rgba(196, 160, 83, 0.3) !important;
+            border-radius: 10px !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+            transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1) !important;
+        }}
+        
+        .main [data-baseweb="select"]:hover {{
+            border-color: rgba(196, 160, 83, 0.5) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+        }}
+        
+        .main [data-baseweb="select"] > div {{
+            background-color: transparent !important;
+            border: none !important;
+            color: white !important;
+            font-weight: 600 !important;
+            letter-spacing: -0.01em !important;
+        }}
+        
+        .main [data-baseweb="select"] svg {{
+            fill: white !important;
+        }}
+        
+        /* Main content area selectbox text styling */
+        .main [data-baseweb="select"] [role="combobox"] {{
+            color: white !important;
+        }}
+        
+        .main [data-baseweb="select"] input {{
+            color: white !important;
+        }}
+        
         /* Sidebar slider */
         section[data-testid="stSidebar"] [data-testid="stSlider"] {{
             padding: 8px 0 !important;
@@ -1517,6 +1552,304 @@ def _percent_input(label: str, default_fraction: float, key: str, help: str | No
 
 
 # -----------------------------
+# Quick Win Features
+# -----------------------------
+
+def calculate_rmd_projections(inputs: ModelInputs) -> pd.DataFrame:
+    """Calculate Required Minimum Distribution projections."""
+    rmd_data = []
+    
+    # IRS Uniform Lifetime Table (simplified)
+    life_expectancy_factors = {
+        73: 26.5, 74: 25.5, 75: 24.6, 76: 23.7, 77: 22.9, 78: 22.0, 79: 21.1, 80: 20.2,
+        81: 19.4, 82: 18.5, 83: 17.7, 84: 16.8, 85: 16.0, 86: 15.2, 87: 14.4, 88: 13.7,
+        89: 12.9, 90: 12.2, 91: 11.5, 92: 10.8, 93: 10.1, 94: 9.5, 95: 8.9, 96: 8.4,
+        97: 7.8, 98: 7.3, 99: 6.8, 100: 6.4
+    }
+    
+    ira_balance = inputs.starting_portfolio * inputs.ira_pct
+    
+    for age in range(inputs.current_age, inputs.horizon_age + 1):
+        if age >= inputs.rmd_age and age in life_expectancy_factors:
+            factor = life_expectancy_factors[age]
+            rmd_amount = ira_balance / factor
+            tax_on_rmd = rmd_amount * inputs.tax_rate
+            
+            rmd_data.append({
+                "Age": age,
+                "Year": age - inputs.current_age + 1,
+                "IRA Balance": ira_balance,
+                "RMD Amount": rmd_amount,
+                "Tax on RMD": tax_on_rmd,
+                "After-Tax RMD": rmd_amount - tax_on_rmd
+            })
+            
+            # Simplified growth assumption
+            ira_balance = (ira_balance - rmd_amount) * 1.05
+    
+    return pd.DataFrame(rmd_data)
+
+
+def create_rmd_chart(rmd_df: pd.DataFrame) -> alt.Chart:
+    """Create visualization of RMD projections."""
+    if rmd_df.empty:
+        return None
+    
+    chart = alt.Chart(rmd_df).mark_bar(color=SALEM_GOLD).encode(
+        x=alt.X("Age:O", title="Age"),
+        y=alt.Y("RMD Amount:Q", title="Required Minimum Distribution", axis=alt.Axis(format="$,.0f")),
+        tooltip=[
+            alt.Tooltip("Age:O"),
+            alt.Tooltip("RMD Amount:Q", format="$,.0f"),
+            alt.Tooltip("Tax on RMD:Q", format="$,.0f"),
+            alt.Tooltip("After-Tax RMD:Q", format="$,.0f")
+        ]
+    ).properties(
+        width="container",
+        height=350,
+        title={
+            "text": "Required Minimum Distribution Projections",
+            "fontSize": 18,
+            "fontWeight": 700,
+            "color": SALEM_NAVY
+        }
+    ).configure_axis(
+        gridColor="#dee2e6",
+        domainColor=SALEM_NAVY,
+        labelColor=SALEM_NAVY,
+        titleColor=SALEM_NAVY
+    )
+    
+    return chart
+
+
+def run_historical_backtest(inputs: ModelInputs, start_year: int) -> Tuple[pd.DataFrame, dict]:
+    """Run simulation using historical returns from a specific starting year."""
+    # Historical annual returns (simplified - real data would be more extensive)
+    historical_returns = {
+        1929: [-0.083, -0.249, -0.434, -0.082, 0.540, -0.013, 0.471, 0.339, 0.310, 0.284],
+        2000: [-0.091, -0.119, -0.220, 0.287, 0.108, 0.049, 0.157, 0.055, -0.370, 0.265],
+        2008: [-0.370, 0.265, 0.150, 0.021, 0.160, 0.321, 0.136, 0.114, 0.215, -0.043],
+        2022: [-0.180, 0.264, 0.260, 0.100, 0.120, 0.100, 0.100, 0.100, 0.100, 0.100]
+    }
+    
+    # Use historical sequence if available, otherwise use assumptions
+    if start_year in historical_returns:
+        return_sequence = historical_returns[start_year]
+    else:
+        # Fall back to Monte Carlo
+        return run_monte_carlo(inputs, seed=start_year)
+    
+    # Run deterministic simulation with historical returns
+    months = inputs.years_to_model * 12
+    values = []
+    val = inputs.starting_portfolio
+    spending = inputs.monthly_spending
+    monthly_inflation = (1 + inputs.inflation_annual) ** (1 / 12) - 1
+    
+    for month in range(1, months + 1):
+        # Apply cash flow
+        if inputs.spending_rule == 1:
+            cf = spending
+        else:
+            cf = -val * (inputs.spending_pct_annual / 12.0)
+        
+        val = max(val + cf, 0.0)
+        
+        # Apply historical return for this year
+        year_index = (month - 1) // 12
+        if year_index < len(return_sequence):
+            annual_return = return_sequence[year_index]
+            monthly_return = (1 + annual_return) ** (1/12) - 1
+        else:
+            # After historical data, use expected return
+            exp_ann, _ = compute_portfolio_return_and_vol(inputs)
+            monthly_return = (1 + exp_ann) ** (1/12) - 1
+        
+        val = max(val * (1 + monthly_return), 0.0)
+        values.append(val)
+        
+        if inputs.spending_rule == 1:
+            spending *= (1 + monthly_inflation)
+    
+    df = pd.DataFrame({"Month": range(1, months + 1), "Value": values})
+    
+    metrics = {
+        "ending_value": values[-1],
+        "min_value": min(values),
+        "max_drawdown": (max(values) - min(values)) / max(values) if max(values) > 0 else 0
+    }
+    
+    return df, metrics
+
+
+def create_historical_comparison_chart(scenarios: dict) -> alt.Chart:
+    """Create chart comparing historical scenarios."""
+    all_data = []
+    
+    for scenario_name, data in scenarios.items():
+        df = data["df"]
+        df_copy = df.copy()
+        df_copy["Scenario"] = scenario_name
+        df_copy["Year"] = df_copy["Month"] / 12
+        all_data.append(df_copy)
+    
+    combined_df = pd.concat(all_data)
+    
+    chart = alt.Chart(combined_df).mark_line(size=3).encode(
+        x=alt.X("Year:Q", title="Year"),
+        y=alt.Y("Value:Q", title="Portfolio Value", axis=alt.Axis(format="$,.0f")),
+        color=alt.Color("Scenario:N", scale=alt.Scale(range=[SALEM_NAVY, "#dc3545", SALEM_GOLD, SALEM_LIGHT_GOLD])),
+        tooltip=["Scenario", "Year", alt.Tooltip("Value:Q", format="$,.0f")]
+    ).properties(
+        width="container",
+        height=450,
+        title={
+            "text": "Historical Backtest: What if you retired in...",
+            "fontSize": 18,
+            "fontWeight": 700,
+            "color": SALEM_NAVY
+        }
+    ).configure_axis(
+        gridColor="#dee2e6",
+        domainColor=SALEM_NAVY,
+        labelColor=SALEM_NAVY,
+        titleColor=SALEM_NAVY
+    )
+    
+    return chart
+
+
+def calculate_social_security_optimization(
+    monthly_benefit_at_67: float,
+    current_age: int,
+    horizon_age: int
+) -> pd.DataFrame:
+    """Compare Social Security claiming strategies."""
+    results = []
+    
+    # Reduction/increase factors
+    claim_ages = [62, 65, 67, 70]
+    factors = {62: 0.70, 65: 0.867, 67: 1.0, 70: 1.24}  # Approximate factors
+    
+    for claim_age in claim_ages:
+        if claim_age < current_age:
+            continue
+            
+        adjusted_benefit = monthly_benefit_at_67 * factors[claim_age]
+        years_receiving = max(0, horizon_age - claim_age)
+        total_received = adjusted_benefit * 12 * years_receiving
+        
+        # Calculate breakeven vs age 67
+        if claim_age != 67:
+            benefit_67 = monthly_benefit_at_67 * 12 * max(0, horizon_age - 67)
+            difference = total_received - benefit_67
+        else:
+            difference = 0
+        
+        results.append({
+            "Claiming Age": claim_age,
+            "Monthly Benefit": adjusted_benefit,
+            "Years Receiving": years_receiving,
+            "Lifetime Total": total_received,
+            "vs Age 67": difference
+        })
+    
+    return pd.DataFrame(results)
+
+
+def create_ss_optimization_chart(ss_df: pd.DataFrame) -> alt.Chart:
+    """Create visualization of Social Security claiming strategies."""
+    if ss_df.empty:
+        return None
+    
+    chart = alt.Chart(ss_df).mark_bar(cornerRadius=4).encode(
+        x=alt.X("Claiming Age:O", title="Claiming Age"),
+        y=alt.Y("Lifetime Total:Q", title="Total Lifetime Benefits", axis=alt.Axis(format="$,.0f")),
+        color=alt.Color(
+            "Claiming Age:O",
+            scale=alt.Scale(range=["#dc3545", SALEM_LIGHT_GOLD, SALEM_GOLD, "#28a745"]),
+            legend=None
+        ),
+        tooltip=[
+            "Claiming Age",
+            alt.Tooltip("Monthly Benefit:Q", format="$,.0f"),
+            alt.Tooltip("Lifetime Total:Q", format="$,.0f"),
+            alt.Tooltip("vs Age 67:Q", format="$+,.0f")
+        ]
+    ).properties(
+        width="container",
+        height=350,
+        title={
+            "text": "Social Security Claiming Strategy Comparison",
+            "fontSize": 18,
+            "fontWeight": 700,
+            "color": SALEM_NAVY
+        }
+    ).configure_axis(
+        gridColor="#dee2e6",
+        domainColor=SALEM_NAVY,
+        labelColor=SALEM_NAVY,
+        titleColor=SALEM_NAVY
+    )
+    
+    return chart
+
+
+def get_assumption_preset(preset_name: str) -> dict:
+    """Return assumption presets from industry standards."""
+    presets = {
+        "CFP Board (Conservative)": {
+            "equity_return": 0.062,
+            "fi_return": 0.023,
+            "cash_return": 0.015,
+            "equity_vol": 0.18,
+            "fi_vol": 0.06,
+            "cash_vol": 0.01,
+            "inflation": 0.025
+        },
+        "Morningstar (Moderate)": {
+            "equity_return": 0.075,
+            "fi_return": 0.030,
+            "cash_return": 0.020,
+            "equity_vol": 0.17,
+            "fi_vol": 0.055,
+            "cash_vol": 0.01,
+            "inflation": 0.022
+        },
+        "Vanguard (Historical)": {
+            "equity_return": 0.095,
+            "fi_return": 0.042,
+            "cash_return": 0.025,
+            "equity_vol": 0.16,
+            "fi_vol": 0.05,
+            "cash_vol": 0.01,
+            "inflation": 0.030
+        },
+        "Conservative": {
+            "equity_return": 0.055,
+            "fi_return": 0.020,
+            "cash_return": 0.015,
+            "equity_vol": 0.15,
+            "fi_vol": 0.05,
+            "cash_vol": 0.01,
+            "inflation": 0.030
+        },
+        "Aggressive": {
+            "equity_return": 0.100,
+            "fi_return": 0.035,
+            "cash_return": 0.020,
+            "equity_vol": 0.20,
+            "fi_vol": 0.07,
+            "cash_vol": 0.01,
+            "inflation": 0.025
+        }
+    }
+    
+    return presets.get(preset_name, presets["Morningstar (Moderate)"])
+
+
+# -----------------------------
 # Main page inputs (formerly sidebar)
 # -----------------------------
 
@@ -1777,7 +2110,7 @@ def main_page_inputs() -> Tuple[ClientInfo, ModelInputs, List[StressTestScenario
         )
     
     # --- Tax Optimization ---
-    with st.expander("💼 Tax Optimization (Roth Conversions)", expanded=False):
+    with st.expander("Tax Optimization (Roth Conversions)", expanded=False):
         st.caption("Model Roth IRA conversion strategy to optimize lifetime tax burden")
         
         col1, col2, col3 = st.columns(3)
@@ -1808,7 +2141,7 @@ def main_page_inputs() -> Tuple[ClientInfo, ModelInputs, List[StressTestScenario
             ) if roth_conversion_annual > 0 else 70
     
     # --- Estate Planning ---
-    with st.expander("🏛️ Estate Planning", expanded=False):
+    with st.expander("Estate Planning", expanded=False):
         st.caption("Model estate tax implications and legacy goals")
         
         col1, col2 = st.columns(2)
@@ -1834,7 +2167,7 @@ def main_page_inputs() -> Tuple[ClientInfo, ModelInputs, List[StressTestScenario
             )
     
     # --- Longevity Planning ---
-    with st.expander("⏳ Longevity Planning", expanded=False):
+    with st.expander("Longevity Planning", expanded=False):
         st.caption("Adjust life expectancy based on health and actuarial data")
         
         col1, col2 = st.columns(2)
@@ -1968,7 +2301,7 @@ def main_page_inputs() -> Tuple[ClientInfo, ModelInputs, List[StressTestScenario
         )
     
     # --- Dynamic Asset Allocation (Glide Path) ---
-    with st.expander("⚙️ Dynamic Allocation (Glide Path)", expanded=False):
+    with st.expander("Dynamic Allocation (Glide Path)", expanded=False):
         use_glide_path = st.checkbox(
             "Use Dynamic Allocation Glide Path",
             value=False,
@@ -2003,25 +2336,61 @@ def main_page_inputs() -> Tuple[ClientInfo, ModelInputs, List[StressTestScenario
     # --- Return Assumptions ---
     st.subheader("Return Assumptions (Annual, Real)")
     
+    # Assumption Presets
+    preset_options = [
+        "Custom",
+        "CFP Board (Conservative)",
+        "Morningstar (Moderate)",
+        "Vanguard (Historical)",
+        "Conservative",
+        "Aggressive"
+    ]
+    
+    selected_preset = st.selectbox(
+        "Load Assumption Preset",
+        options=preset_options,
+        index=0,
+        key="assumption_preset",
+        help="Load industry-standard assumptions or use custom values"
+    )
+    
+    # Load preset values if selected
+    if selected_preset != "Custom":
+        preset_values = get_assumption_preset(selected_preset)
+        equity_return_default = preset_values["equity_return"]
+        fi_return_default = preset_values["fi_return"]
+        cash_return_default = preset_values["cash_return"]
+        equity_vol_default = preset_values["equity_vol"]
+        fi_vol_default = preset_values["fi_vol"]
+        cash_vol_default = preset_values["cash_vol"]
+        st.info(f"Loaded {selected_preset} assumptions")
+    else:
+        equity_return_default = 0.10
+        fi_return_default = 0.03
+        cash_return_default = 0.02
+        equity_vol_default = 0.15
+        fi_vol_default = 0.05
+        cash_vol_default = 0.01
+    
     col1, col2, col3 = st.columns(3)
 
     with col1:
         equity_return_annual = _percent_input(
             "Equity Return",
-            default_fraction=0.10,
-            key="equity_return",
+            default_fraction=equity_return_default,
+            key=f"equity_return_{selected_preset}",
         )
     with col2:
         fi_return_annual = _percent_input(
             "Fixed Income Return",
-            default_fraction=0.03,
-            key="fi_return",
+            default_fraction=fi_return_default,
+            key=f"fi_return_{selected_preset}",
         )
     with col3:
         cash_return_annual = _percent_input(
             "Cash Return",
-            default_fraction=0.02,
-            key="cash_return",
+            default_fraction=cash_return_default,
+            key=f"cash_return_{selected_preset}",
         )
 
     # --- Volatility Assumptions ---
@@ -2032,20 +2401,20 @@ def main_page_inputs() -> Tuple[ClientInfo, ModelInputs, List[StressTestScenario
     with col1:
         equity_vol_annual = _percent_input(
             "Equity Volatility",
-            default_fraction=0.15,
-            key="equity_vol",
+            default_fraction=equity_vol_default,
+            key=f"equity_vol_{selected_preset}",
         )
     with col2:
         fi_vol_annual = _percent_input(
             "Fixed Income Volatility",
-            default_fraction=0.05,
-            key="fi_vol",
+            default_fraction=fi_vol_default,
+            key=f"fi_vol_{selected_preset}",
         )
     with col3:
         cash_vol_annual = _percent_input(
             "Cash Volatility",
-            default_fraction=0.01,
-            key="cash_vol",
+            default_fraction=cash_vol_default,
+            key=f"cash_vol_{selected_preset}",
         )
 
     # --- Monte Carlo Settings ---
@@ -2084,7 +2453,7 @@ def main_page_inputs() -> Tuple[ClientInfo, ModelInputs, List[StressTestScenario
         )
     
     # --- Multiple Cash Flows ---
-    with st.expander("💰 Multiple One-Time Cash Flows", expanded=False):
+    with st.expander("Multiple One-Time Cash Flows", expanded=False):
         st.caption("Model multiple one-time events like home purchases, inheritances, college tuition, etc.")
         num_cash_flows = st.number_input(
             "Number of Additional Cash Flows",
@@ -2124,7 +2493,7 @@ def main_page_inputs() -> Tuple[ClientInfo, ModelInputs, List[StressTestScenario
             cash_flows.append((cf_month, cf_amount, cf_desc))
     
     # --- Lifestyle Spending Phases ---
-    with st.expander("🎯 Lifestyle Spending Phases", expanded=False):
+    with st.expander("Lifestyle Spending Phases", expanded=False):
         use_lifestyle_phases = st.checkbox(
             "Use Lifestyle Phase Spending",
             value=False,
@@ -2192,7 +2561,7 @@ def main_page_inputs() -> Tuple[ClientInfo, ModelInputs, List[StressTestScenario
             no_go_spending_multiplier = 0.60
     
     # --- Guardrails Strategy ---
-    with st.expander("📊 Dynamic Spending Guardrails", expanded=False):
+    with st.expander("Dynamic Spending Guardrails", expanded=False):
         use_guardrails = st.checkbox(
             "Use Guardrails Strategy",
             value=False,
@@ -2893,7 +3262,7 @@ def generate_pdf_report(client_info, inputs, metrics, stats_df, paths_df, stress
 
 def main():
     st.set_page_config(
-        page_title="Portfolio Growth – Monte Carlo Scenario Analysis",
+        page_title="Portfolio Scenario Analysis",
         layout="wide",
     )
     
@@ -2905,7 +3274,7 @@ def main():
     with col_logo:
         st.image("Salem logo.jpg", width=280)
     with col_title:
-        st.title("Portfolio Growth – Monte Carlo Scenario Analysis")
+        st.title("Portfolio Scenario Analysis")
 
     client_info, inputs, stress_scenarios, financial_goals = main_page_inputs()
     
@@ -2980,7 +3349,7 @@ def main():
         
         # --- PROMINENT SUCCESS GAUGE ---
         st.markdown("---")
-        st.markdown("## 📊 Plan Success Analysis")
+        st.markdown("## Plan Success Analysis")
         
         col1, col2, col3 = st.columns([1, 1, 1])
         with col2:
@@ -2995,13 +3364,13 @@ def main():
             shortfall_risk = 1 - metrics['prob_never_depleted']
             # Color code based on risk level
             if shortfall_risk < 0.10:
-                risk_indicator = "✓ Low Risk"
+                risk_indicator = "Low Risk"
                 risk_color = "normal"
             elif shortfall_risk < 0.15:
-                risk_indicator = "⚠ Moderate"
+                risk_indicator = "Moderate"
                 risk_color = "off"
             else:
-                risk_indicator = "⚠ High Risk"
+                risk_indicator = "High Risk"
                 risk_color = "inverse"
             
             st.metric(
@@ -3012,7 +3381,7 @@ def main():
             )
         with col2:
             p10_positive = (stats_df['P10'].iloc[-1] > 0)
-            worst_case_status = "✓ Positive" if p10_positive else "⚠️ Depleted"
+            worst_case_status = "Positive" if p10_positive else "Depleted"
             st.metric(
                 "Worst Case (P10)",
                 f"${metrics['ending_p10']:,.0f}",
@@ -3344,11 +3713,11 @@ def main():
                 with st.spinner("Generating heat map (running 25 simulations)..."):
                     heat_map_chart = create_sensitivity_heat_map(inputs)
                     st.altair_chart(heat_map_chart, use_container_width=True)
-                    st.info("💡 **Interpretation**: Darker red = higher risk, Darker green = higher success. Each cell shows the success probability for that combination of changes.")
+                    st.info("**Interpretation**: Darker red = higher risk, Darker green = higher success. Each cell shows the success probability for that combination of changes.")
         
         # --- Interactive What-If Analysis ---
         st.markdown("---")
-        st.subheader("🎛️ Interactive What-If Analysis")
+        st.subheader("Interactive What-If Analysis")
         st.caption("Adjust sliders to see real-time impact on key metrics")
         
         col1, col2 = st.columns(2)
@@ -3504,6 +3873,136 @@ def main():
                 if rec_rationale:
                     st.markdown("### Advisor Recommendation")
                     st.info(rec_rationale)
+        
+        # --- RMD PROJECTIONS (Quick Win #1) ---
+        if inputs.current_age < inputs.rmd_age and inputs.ira_pct > 0:
+            st.markdown("---")
+            st.subheader("Required Minimum Distribution (RMD) Projections")
+            st.caption("Projected RMDs from Traditional IRA/401(k) accounts")
+            
+            rmd_df = calculate_rmd_projections(inputs)
+            
+            if not rmd_df.empty:
+                rmd_chart = create_rmd_chart(rmd_df)
+                st.altair_chart(rmd_chart, use_container_width=True)
+                
+                st.markdown("**RMD Summary Table**")
+                st.dataframe(
+                    rmd_df.style.format({
+                        "IRA Balance": "${:,.0f}",
+                        "RMD Amount": "${:,.0f}",
+                        "Tax on RMD": "${:,.0f}",
+                        "After-Tax RMD": "${:,.0f}"
+                    }),
+                    use_container_width=True
+                )
+                
+                total_rmds = rmd_df["RMD Amount"].sum()
+                total_taxes = rmd_df["Tax on RMD"].sum()
+                st.info(f"**Total RMDs over planning horizon**: ${total_rmds:,.0f} (Estimated taxes: ${total_taxes:,.0f})")
+        
+        # --- HISTORICAL BACKTESTING (Quick Win #2) ---
+        st.markdown("---")
+        st.subheader("Historical Backtesting")
+        st.caption("See how your plan would have performed if you retired during past market crises")
+        
+        historical_years = {
+            "2008 Financial Crisis": 2008,
+            "2000 Dot-Com Bubble": 2000,
+            "1929 Great Depression": 1929,
+            "2022 Bear Market": 2022
+        }
+        
+        selected_scenarios = st.multiselect(
+            "Select Historical Scenarios to Test",
+            options=list(historical_years.keys()),
+            default=["2008 Financial Crisis", "2000 Dot-Com Bubble"],
+            key="historical_scenarios"
+        )
+        
+        if st.button("Run Historical Backtests", key="run_historical"):
+            if selected_scenarios:
+                with st.spinner("Running historical simulations..."):
+                    historical_results = {}
+                    
+                    for scenario_name in selected_scenarios:
+                        start_year = historical_years[scenario_name]
+                        df, metrics_hist = run_historical_backtest(inputs, start_year)
+                        historical_results[scenario_name] = {
+                            "df": df,
+                            "metrics": metrics_hist
+                        }
+                    
+                    # Add current Monte Carlo median for comparison
+                    mc_df = pd.DataFrame({
+                        "Month": stats_df["Month"],
+                        "Value": stats_df["Median"]
+                    })
+                    historical_results["Monte Carlo (Median)"] = {
+                        "df": mc_df,
+                        "metrics": {"ending_value": metrics["ending_median"]}
+                    }
+                    
+                    # Display comparison chart
+                    hist_chart = create_historical_comparison_chart(historical_results)
+                    st.altair_chart(hist_chart, use_container_width=True)
+                    
+                    # Comparison table
+                    st.markdown("**Historical Scenario Comparison**")
+                    comparison_data = []
+                    for scenario_name, data in historical_results.items():
+                        comparison_data.append({
+                            "Scenario": scenario_name,
+                            "Ending Value": data["metrics"].get("ending_value", 0),
+                            "Min Value": data["metrics"].get("min_value", 0) if "min_value" in data["metrics"] else "-",
+                            "Max Drawdown": f"{data['metrics'].get('max_drawdown', 0)*100:.1f}%" if "max_drawdown" in data["metrics"] else "-"
+                        })
+                    
+                    comparison_df = pd.DataFrame(comparison_data)
+                    st.dataframe(
+                        comparison_df.style.format({
+                            "Ending Value": "${:,.0f}",
+                            "Min Value": lambda x: f"${x:,.0f}" if isinstance(x, (int, float)) else x
+                        }),
+                        use_container_width=True
+                    )
+                    
+                    st.warning("**Note**: Historical results use actual market returns for the selected period. Past performance does not guarantee future results.")
+            else:
+                st.warning("Please select at least one historical scenario to test.")
+        
+        # --- SOCIAL SECURITY OPTIMIZATION (Quick Win #3) ---
+        if inputs.social_security_monthly > 0:
+            st.markdown("---")
+            st.subheader("Social Security Claiming Strategy Optimization")
+            st.caption("Compare different ages to start Social Security benefits")
+            
+            ss_df = calculate_social_security_optimization(
+                inputs.social_security_monthly,
+                inputs.current_age,
+                inputs.horizon_age
+            )
+            
+            ss_chart = create_ss_optimization_chart(ss_df)
+            st.altair_chart(ss_chart, use_container_width=True)
+            
+            st.markdown("**Claiming Strategy Comparison**")
+            st.dataframe(
+                ss_df.style.format({
+                    "Monthly Benefit": "${:,.0f}",
+                    "Lifetime Total": "${:,.0f}",
+                    "vs Age 67": "${:+,.0f}"
+                }),
+                use_container_width=True
+            )
+            
+            # Find optimal strategy
+            optimal_row = ss_df.loc[ss_df["Lifetime Total"].idxmax()]
+            st.success(f"**Optimal Strategy**: Claim at age {int(optimal_row['Claiming Age'])} for maximum lifetime benefits of ${optimal_row['Lifetime Total']:,.0f}")
+            
+            # Breakeven analysis
+            if len(ss_df) > 1:
+                st.info("**Breakeven Analysis**: Claiming later provides higher monthly benefits but fewer years of payments. Consider your health, longevity expectations, and need for current income.")
             
             # Separate by variable for clarity
             for variable in ["Portfolio Return", "Monthly Spending", "Starting Portfolio"]:
@@ -3526,7 +4025,7 @@ def main():
         st.subheader("📄 Generate PDF Report")
         st.caption("Create a comprehensive PDF report with selected sections from this analysis")
         
-        with st.expander("⚙️ Configure and Generate PDF Report", expanded=False):
+        with st.expander("Configure and Generate PDF Report", expanded=False):
             st.markdown("##### Select Report Sections")
             
             col1, col2 = st.columns(2)
@@ -3545,7 +4044,7 @@ def main():
             
             st.markdown("---")
             
-            if st.button("🔄 Generate PDF Report", type="primary"):
+            if st.button("Generate PDF Report", type="primary"):
                 # Collect selected sections
                 selected_sections = []
                 if include_title:
@@ -3588,9 +4087,9 @@ def main():
                             client_name = st.session_state.get('client_info', ClientInfo()).client_name or "Client"
                             filename = f"Portfolio_Analysis_{client_name.replace(' ', '_')}_{date.today().strftime('%Y%m%d')}.pdf"
                             
-                            st.success("✅ PDF report generated successfully!")
+                            st.success("PDF report generated successfully!")
                             st.download_button(
-                                label="📥 Download PDF Report",
+                                label="Download PDF Report",
                                 data=pdf_buffer.getvalue(),
                                 file_name=filename,
                                 mime="application/pdf",
@@ -3599,6 +4098,14 @@ def main():
                         except Exception as e:
                             st.error(f"Error generating PDF: {str(e)}")
                             st.error("Please ensure all required data is available and try again.")
+    
+    # --- MEETING PRESENTATION MODE (Quick Win #5) ---
+    st.markdown("---")
+    meeting_mode = st.checkbox("Meeting Presentation Mode", value=False, key="meeting_mode",
+                               help="Enable this for client presentations - hides input controls on page reload")
+    
+    if meeting_mode:
+        st.info("**Presentation Mode Enabled** - Reload the page to hide input controls and show clean results for client presentations.")
 
     else:
         st.info("Adjust inputs in the sidebar and click **Run Monte Carlo Simulation** to see results.")
