@@ -2372,25 +2372,28 @@ def main_page_inputs() -> Tuple[ClientInfo, ModelInputs, List[StressTestScenario
         fi_vol_default = 0.05
         cash_vol_default = 0.01
     
+    # Use a safe key suffix (replace spaces and parentheses)
+    key_suffix = selected_preset.replace(" ", "_").replace("(", "").replace(")", "")
+    
     col1, col2, col3 = st.columns(3)
 
     with col1:
         equity_return_annual = _percent_input(
             "Equity Return",
             default_fraction=equity_return_default,
-            key=f"equity_return_{selected_preset}",
+            key=f"equity_return_{key_suffix}",
         )
     with col2:
         fi_return_annual = _percent_input(
             "Fixed Income Return",
             default_fraction=fi_return_default,
-            key=f"fi_return_{selected_preset}",
+            key=f"fi_return_{key_suffix}",
         )
     with col3:
         cash_return_annual = _percent_input(
             "Cash Return",
             default_fraction=cash_return_default,
-            key=f"cash_return_{selected_preset}",
+            key=f"cash_return_{key_suffix}",
         )
 
     # --- Volatility Assumptions ---
@@ -2402,19 +2405,19 @@ def main_page_inputs() -> Tuple[ClientInfo, ModelInputs, List[StressTestScenario
         equity_vol_annual = _percent_input(
             "Equity Volatility",
             default_fraction=equity_vol_default,
-            key=f"equity_vol_{selected_preset}",
+            key=f"equity_vol_{key_suffix}",
         )
     with col2:
         fi_vol_annual = _percent_input(
             "Fixed Income Volatility",
             default_fraction=fi_vol_default,
-            key=f"fi_vol_{selected_preset}",
+            key=f"fi_vol_{key_suffix}",
         )
     with col3:
         cash_vol_annual = _percent_input(
             "Cash Volatility",
             default_fraction=cash_vol_default,
-            key=f"cash_vol_{selected_preset}",
+            key=f"cash_vol_{key_suffix}",
         )
 
     # --- Monte Carlo Settings ---
