@@ -5375,8 +5375,7 @@ def render_portfolio_tab():
                     inputs=ai_inputs,
                     metrics=metrics,
                     stats_df=stats_df,
-                    paths_df=paths_df,
-                    scenario_id="base_case"
+                    paths_df=paths_df
                 )
                 
                 # Store in session state
