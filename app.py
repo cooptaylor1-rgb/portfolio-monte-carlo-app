@@ -1220,89 +1220,89 @@ def run_monte_carlo(inputs: ModelInputs, seed: int | None = None):
     while maintaining identical financial calculation results.
     """
     from performance_optimizer import run_monte_carlo_vectorized, perf_monitor
+    from observability import metrics as obs_metrics
     
-    # Import performance monitoring
-    track_operation = perf_monitor.track_operation
+    # Track simulation metrics
+    obs_metrics.increment("simulation_count")
     
-    with track_operation("monte_carlo_simulation"):
-        # Portfolio-level parameters (annual -> monthly)
-        exp_ann, vol_ann = compute_portfolio_return_and_vol(inputs)
-        mu_month = (1 + exp_ann) ** (1 / 12) - 1        # geometric monthly mean
-        sigma_month = vol_ann / math.sqrt(12)           # monthly vol
-        monthly_inflation = (1 + inputs.inflation_annual) ** (1 / 12) - 1
-        n_months = inputs.years_to_model * 12
-        
-        # Prepare income streams dictionary for vectorized function
-        income_streams = {}
-        
-        if inputs.social_security_monthly > 0:
-            income_streams['social_security'] = {
-                'monthly_amount': inputs.social_security_monthly,
-                'start_age': inputs.ss_start_age
-            }
-        
-        if inputs.pension_monthly > 0:
-            income_streams['pension'] = {
-                'monthly_amount': inputs.pension_monthly,
-                'start_age': inputs.pension_start_age
-            }
-        
-        if inputs.regular_income_monthly > 0:
-            income_streams['regular_income'] = {
-                'monthly_amount': inputs.regular_income_monthly,
-                'start_age': inputs.current_age  # Available from start
-            }
-        
-        if inputs.other_income_monthly > 0:
-            income_streams['other_income'] = {
-                'monthly_amount': inputs.other_income_monthly,
-                'start_age': inputs.other_income_start_age
-            }
-        
-        if inputs.is_couple and inputs.spouse_ss_monthly > 0:
-            income_streams['spouse_ss'] = {
-                'monthly_amount': inputs.spouse_ss_monthly,
-                'start_age': inputs.spouse_ss_start_age,
-                'is_spouse': True,
-                'spouse_age_offset': inputs.spouse_age - inputs.current_age
-            }
-        
-        if inputs.healthcare_monthly > 0:
-            income_streams['healthcare'] = {
-                'monthly_amount': -inputs.healthcare_monthly,  # Negative for expense
-                'start_age': inputs.healthcare_start_age,
-                'inflation': inputs.healthcare_inflation
-            }
-        
-        if inputs.one_time_cf_month and inputs.one_time_cf != 0:
-            income_streams['one_time'] = {
-                'monthly_amount': inputs.one_time_cf,
-                'specific_month': inputs.one_time_cf_month
-            }
-        
-        # Call vectorized implementation
-        values, stats_df, metrics = run_monte_carlo_vectorized(
-            starting_portfolio=inputs.starting_portfolio,
-            monthly_spending=inputs.monthly_spending,
-            mu_month=mu_month,
-            sigma_month=sigma_month,
-            monthly_inflation=monthly_inflation,
-            n_scenarios=inputs.n_scenarios,
-            n_months=n_months,
-            income_streams=income_streams,
-            spending_rule=inputs.spending_rule,
-            spending_pct_annual=inputs.spending_pct_annual,
-            current_age=inputs.current_age,
-            seed=seed
-        )
-        
-        # Convert to DataFrame with proper labeling (for compatibility with existing code)
-        months_index = np.arange(1, n_months + 1)
-        columns = [f"Scenario_{i+1}" for i in range(inputs.n_scenarios)]
-        paths_df = pd.DataFrame(values, index=months_index, columns=columns)
-        paths_df.index.name = "Month"
-        
-        return paths_df, stats_df, metrics
+    # Portfolio-level parameters (annual -> monthly)
+    exp_ann, vol_ann = compute_portfolio_return_and_vol(inputs)
+    mu_month = (1 + exp_ann) ** (1 / 12) - 1        # geometric monthly mean
+    sigma_month = vol_ann / math.sqrt(12)           # monthly vol
+    monthly_inflation = (1 + inputs.inflation_annual) ** (1 / 12) - 1
+    n_months = inputs.years_to_model * 12
+    
+    # Prepare income streams dictionary for vectorized function
+    income_streams = {}
+    
+    if inputs.social_security_monthly > 0:
+        income_streams['social_security'] = {
+            'monthly_amount': inputs.social_security_monthly,
+            'start_age': inputs.ss_start_age
+        }
+    
+    if inputs.pension_monthly > 0:
+        income_streams['pension'] = {
+            'monthly_amount': inputs.pension_monthly,
+            'start_age': inputs.pension_start_age
+        }
+    
+    if inputs.regular_income_monthly > 0:
+        income_streams['regular_income'] = {
+            'monthly_amount': inputs.regular_income_monthly,
+            'start_age': inputs.current_age  # Available from start
+        }
+    
+    if inputs.other_income_monthly > 0:
+        income_streams['other_income'] = {
+            'monthly_amount': inputs.other_income_monthly,
+            'start_age': inputs.other_income_start_age
+        }
+    
+    if inputs.is_couple and inputs.spouse_ss_monthly > 0:
+        income_streams['spouse_ss'] = {
+            'monthly_amount': inputs.spouse_ss_monthly,
+            'start_age': inputs.spouse_ss_start_age,
+            'is_spouse': True,
+            'spouse_age_offset': inputs.spouse_age - inputs.current_age
+        }
+    
+    if inputs.healthcare_monthly > 0:
+        income_streams['healthcare'] = {
+            'monthly_amount': -inputs.healthcare_monthly,  # Negative for expense
+            'start_age': inputs.healthcare_start_age,
+            'inflation': inputs.healthcare_inflation
+        }
+    
+    if inputs.one_time_cf_month and inputs.one_time_cf != 0:
+        income_streams['one_time'] = {
+            'monthly_amount': inputs.one_time_cf,
+            'specific_month': inputs.one_time_cf_month
+        }
+    
+    # Call vectorized implementation
+    values, stats_df, metrics = run_monte_carlo_vectorized(
+        starting_portfolio=inputs.starting_portfolio,
+        monthly_spending=inputs.monthly_spending,
+        mu_month=mu_month,
+        sigma_month=sigma_month,
+        monthly_inflation=monthly_inflation,
+        n_scenarios=inputs.n_scenarios,
+        n_months=n_months,
+        income_streams=income_streams,
+        spending_rule=inputs.spending_rule,
+        spending_pct_annual=inputs.spending_pct_annual,
+        current_age=inputs.current_age,
+        seed=seed
+    )
+    
+    # Convert to DataFrame with proper labeling (for compatibility with existing code)
+    months_index = np.arange(1, n_months + 1)
+    columns = [f"Scenario_{i+1}" for i in range(inputs.n_scenarios)]
+    paths_df = pd.DataFrame(values, index=months_index, columns=columns)
+    paths_df.index.name = "Month"
+    
+    return paths_df, stats_df, metrics
 
 
 def create_success_gauge(probability: float, title: str = "Plan Success Probability"):
