@@ -5360,8 +5360,8 @@ def render_portfolio_tab():
                 ai_inputs = {
                     'starting_portfolio': inputs.starting_portfolio,
                     'current_age': inputs.current_age,
-                    'retirement_age': inputs.retirement_age,
-                    'life_expectancy': inputs.life_expectancy,
+                    'retirement_age': inputs.current_age,  # Using current_age as proxy
+                    'life_expectancy': inputs.horizon_age,
                     'monthly_spending': inputs.monthly_spending,
                     'equity_pct': inputs.equity_pct,
                     'equity_return': inputs.equity_return_annual,
