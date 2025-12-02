@@ -41,6 +41,11 @@ from scenario_intelligence import (
 from ai_engine import AIAnalysisEngine, AIResearchAssistant
 from ai_stress_audit import StressTestBuilder, AuditTrailSystem
 
+# Production infrastructure modules
+from config import config
+from observability import health_checker, metrics, structured_logger, track_request, track_simulation, new_correlation_id, correlation_context
+from security import InputValidator, default_rate_limiter, RateLimitExceeded, SecurityHeaders
+
 # Salem Investment Counselors Color Scheme
 SALEM_GOLD = "#C4A053"  # Gold/tan from logo
 SALEM_NAVY = "#1B3B5F"  # Dark blue/navy
@@ -7437,6 +7442,24 @@ def render_reports_tab():
 # ===========================================
 
 def main():
+    """Main application entry point with health checks and observability."""
+    # Initialize observability - generate correlation ID for request tracking
+    correlation_id = new_correlation_id()
+    structured_logger.info("Application request started", {"correlation_id": correlation_id})
+    
+    # Check application readiness
+    health_status = health_checker.check_readiness()
+    if not health_status["ready"]:
+        st.error("⚠️ Application is not ready. Please check system health.")
+        structured_logger.error("Application not ready", health_status)
+        return
+    
+    # Track request metrics
+    metrics.increment("request_count")
+    
+    # Initialize input validator and rate limiter
+    validator = InputValidator()
+    
     st.set_page_config(
         page_title="Portfolio Scenario Analysis",
         layout="wide",

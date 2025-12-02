@@ -1,0 +1,275 @@
+# ==============================================================
+# CD Workflow - Build & Deploy
+# Builds Docker images and deploys to staging/production
+# ==============================================================
+
+name: CD - Build & Deploy
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*.*.*' ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  # ==============================================================
+  # Build and Push Docker Image
+  # ==============================================================
+  build:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+      
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ steps.meta.outputs.version }}
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+        continue-on-error: true
+      
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+        if: always()
+  
+  # ==============================================================
+  # Deploy to Staging
+  # ==============================================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'staging'
+    environment:
+      name: staging
+      url: https://staging.portfolio-analyzer.example.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      
+      - name: Deploy to ECS Staging
+        run: |
+          # Update ECS task definition with new image
+          TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition portfolio-analyzer-staging --region us-east-1)
+          NEW_TASK_DEF=$(echo $TASK_DEFINITION | jq --arg IMAGE "${{ needs.build.outputs.image-tag }}" '.taskDefinition | .containerDefinitions[0].image = $IMAGE | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) | del(.registeredAt) | del(.registeredBy)')
+          
+          # Register new task definition
+          NEW_TASK_INFO=$(aws ecs register-task-definition --region us-east-1 --cli-input-json "$NEW_TASK_DEF")
+          NEW_REVISION=$(echo $NEW_TASK_INFO | jq -r '.taskDefinition.revision')
+          
+          # Update service to use new task definition
+          aws ecs update-service --cluster portfolio-analyzer-staging --service portfolio-analyzer-staging --task-definition portfolio-analyzer-staging:${NEW_REVISION} --region us-east-1
+          
+          # Wait for deployment to complete
+          aws ecs wait services-stable --cluster portfolio-analyzer-staging --services portfolio-analyzer-staging --region us-east-1
+        env:
+          AWS_DEFAULT_REGION: us-east-1
+      
+      - name: Run smoke tests
+        run: |
+          sleep 30  # Wait for service to be ready
+          curl -f https://staging.portfolio-analyzer.example.com/health || exit 1
+          curl -f https://staging.portfolio-analyzer.example.com/ready || exit 1
+      
+      - name: Notify deployment
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Staging deployment completed'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        if: always()
+  
+  # ==============================================================
+  # Deploy to Production (Manual Approval Required)
+  # ==============================================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build, deploy-staging]
+    if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.environment == 'production'
+    environment:
+      name: production
+      url: https://portfolio-analyzer.example.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+          aws-region: us-east-1
+      
+      - name: Deploy to ECS Production (Blue/Green)
+        run: |
+          # Create new task definition
+          TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition portfolio-analyzer-prod --region us-east-1)
+          NEW_TASK_DEF=$(echo $TASK_DEFINITION | jq --arg IMAGE "${{ needs.build.outputs.image-tag }}" '.taskDefinition | .containerDefinitions[0].image = $IMAGE | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) | del(.registeredAt) | del(.registeredBy)')
+          
+          # Register new task definition
+          NEW_TASK_INFO=$(aws ecs register-task-definition --region us-east-1 --cli-input-json "$NEW_TASK_DEF")
+          NEW_REVISION=$(echo $NEW_TASK_INFO | jq -r '.taskDefinition.revision')
+          
+          # Blue/Green deployment
+          # Create new service with green environment
+          aws ecs create-service --cluster portfolio-analyzer-prod --service-name portfolio-analyzer-green --task-definition portfolio-analyzer-prod:${NEW_REVISION} --desired-count 3 --launch-type FARGATE --network-configuration "awsvpcConfiguration={subnets=[subnet-xxx],securityGroups=[sg-xxx],assignPublicIp=ENABLED}" --load-balancers targetGroupArn=arn:aws:elasticloadbalancing:us-east-1:xxx:targetgroup/portfolio-green/xxx,containerName=app,containerPort=8501 --region us-east-1 || true
+          
+          # Wait for green to be healthy
+          aws ecs wait services-stable --cluster portfolio-analyzer-prod --services portfolio-analyzer-green --region us-east-1
+          
+          # Switch load balancer to green
+          # (This is simplified - actual implementation depends on your LB setup)
+          
+          echo "✅ Green deployment completed"
+          echo "⚠️  Remember to manually verify and remove blue deployment"
+        env:
+          AWS_DEFAULT_REGION: us-east-1
+      
+      - name: Run smoke tests (production)
+        run: |
+          sleep 60  # Wait for full propagation
+          curl -f https://portfolio-analyzer.example.com/health || exit 1
+          curl -f https://portfolio-analyzer.example.com/ready || exit 1
+      
+      - name: Run performance validation
+        run: |
+          # Run basic performance test to validate deployment
+          response_time=$(curl -o /dev/null -s -w '%{time_total}' https://portfolio-analyzer.example.com/)
+          if (( $(echo "$response_time > 2.0" | bc -l) )); then
+            echo "❌ Response time too high: ${response_time}s"
+            exit 1
+          fi
+          echo "✅ Response time OK: ${response_time}s"
+      
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          generateReleaseNotes: true
+          makeLatest: true
+      
+      - name: Notify deployment
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            🚀 Production deployment completed
+            Version: ${{ github.ref_name }}
+            Image: ${{ needs.build.outputs.image-tag }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        if: always()
+  
+  # ==============================================================
+  # Rollback (Manual Trigger Only)
+  # ==============================================================
+  rollback:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'rollback'
+    environment:
+      name: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      
+      - name: Rollback to previous version
+        run: |
+          # Get previous task definition
+          CURRENT_TASK=$(aws ecs describe-services --cluster portfolio-analyzer-${{ github.event.inputs.environment }} --services portfolio-analyzer-${{ github.event.inputs.environment }} --query 'services[0].taskDefinition' --output text)
+          CURRENT_REVISION=$(echo $CURRENT_TASK | grep -oP '\d+$')
+          PREVIOUS_REVISION=$((CURRENT_REVISION - 1))
+          
+          # Update service to previous revision
+          aws ecs update-service --cluster portfolio-analyzer-${{ github.event.inputs.environment }} --service portfolio-analyzer-${{ github.event.inputs.environment }} --task-definition portfolio-analyzer-${{ github.event.inputs.environment }}:${PREVIOUS_REVISION}
+          
+          # Wait for rollback to complete
+          aws ecs wait services-stable --cluster portfolio-analyzer-${{ github.event.inputs.environment }} --services portfolio-analyzer-${{ github.event.inputs.environment }}
+          
+          echo "✅ Rollback completed to revision ${PREVIOUS_REVISION}"
+      
+      - name: Notify rollback
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: '⚠️  Rollback completed for ${{ github.event.inputs.environment }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        if: always()

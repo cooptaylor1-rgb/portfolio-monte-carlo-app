@@ -1,0 +1,18 @@
+# ServiceMonitor for Prometheus monitoring
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: portfolio-app-monitor
+  namespace: portfolio-app
+  labels:
+    app: portfolio-app
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: portfolio-app
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s

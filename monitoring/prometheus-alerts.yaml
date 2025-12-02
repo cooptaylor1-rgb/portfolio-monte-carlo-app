@@ -1,0 +1,138 @@
+# Prometheus Alerts for Portfolio Monte Carlo Application
+
+groups:
+- name: portfolio_app_alerts
+  interval: 30s
+  rules:
+  
+  # Application Availability
+  - alert: ApplicationDown
+    expr: up{job="portfolio-app"} == 0
+    for: 2m
+    labels:
+      severity: critical
+      component: application
+    annotations:
+      summary: "Portfolio application is down"
+      description: "Application {{ $labels.instance }} has been down for more than 2 minutes."
+  
+  # High Error Rate
+  - alert: HighErrorRate
+    expr: rate(http_requests_total{job="portfolio-app",status=~"5.."}[5m]) > 0.05
+    for: 5m
+    labels:
+      severity: warning
+      component: application
+    annotations:
+      summary: "High error rate detected"
+      description: "Error rate is {{ $value | humanizePercentage }} for {{ $labels.instance }}."
+  
+  # High Response Time
+  - alert: HighResponseTime
+    expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="portfolio-app"}[5m])) > 2
+    for: 5m
+    labels:
+      severity: warning
+      component: application
+    annotations:
+      summary: "High response time"
+      description: "95th percentile response time is {{ $value }}s for {{ $labels.instance }}."
+  
+  # High CPU Usage
+  - alert: HighCPUUsage
+    expr: rate(container_cpu_usage_seconds_total{namespace="portfolio-app",pod=~"portfolio-app-.*"}[5m]) > 0.8
+    for: 10m
+    labels:
+      severity: warning
+      component: resources
+    annotations:
+      summary: "High CPU usage"
+      description: "CPU usage is {{ $value | humanizePercentage }} for {{ $labels.pod }}."
+  
+  # High Memory Usage
+  - alert: HighMemoryUsage
+    expr: container_memory_usage_bytes{namespace="portfolio-app",pod=~"portfolio-app-.*"} / container_spec_memory_limit_bytes{namespace="portfolio-app",pod=~"portfolio-app-.*"} > 0.9
+    for: 5m
+    labels:
+      severity: warning
+      component: resources
+    annotations:
+      summary: "High memory usage"
+      description: "Memory usage is {{ $value | humanizePercentage }} for {{ $labels.pod }}."
+  
+  # Pod Restart
+  - alert: PodRestarting
+    expr: rate(kube_pod_container_status_restarts_total{namespace="portfolio-app",pod=~"portfolio-app-.*"}[15m]) > 0
+    for: 5m
+    labels:
+      severity: warning
+      component: stability
+    annotations:
+      summary: "Pod is restarting"
+      description: "Pod {{ $labels.pod }} has restarted {{ $value }} times in the last 15 minutes."
+  
+  # Low Cache Hit Rate
+  - alert: LowCacheHitRate
+    expr: rate(cache_hits_total{job="portfolio-app"}[5m]) / rate(cache_requests_total{job="portfolio-app"}[5m]) < 0.7
+    for: 15m
+    labels:
+      severity: info
+      component: performance
+    annotations:
+      summary: "Low cache hit rate"
+      description: "Cache hit rate is {{ $value | humanizePercentage }}."
+  
+  # Database Connection Issues
+  - alert: HighDatabaseConnections
+    expr: pg_stat_activity_count{namespace="portfolio-app"} > 80
+    for: 5m
+    labels:
+      severity: warning
+      component: database
+    annotations:
+      summary: "High number of database connections"
+      description: "Database has {{ $value }} active connections."
+  
+  # Redis Memory High
+  - alert: RedisMemoryHigh
+    expr: redis_memory_used_bytes{namespace="portfolio-app"} / redis_memory_max_bytes{namespace="portfolio-app"} > 0.9
+    for: 5m
+    labels:
+      severity: warning
+      component: cache
+    annotations:
+      summary: "Redis memory usage high"
+      description: "Redis memory usage is {{ $value | humanizePercentage }}."
+  
+  # Slow Monte Carlo Simulations
+  - alert: SlowMonteCarlo
+    expr: histogram_quantile(0.95, rate(monte_carlo_duration_seconds_bucket{job="portfolio-app"}[5m])) > 5
+    for: 10m
+    labels:
+      severity: info
+      component: performance
+    annotations:
+      summary: "Monte Carlo simulations are slow"
+      description: "95th percentile simulation time is {{ $value }}s."
+  
+  # Certificate Expiry Warning
+  - alert: CertificateExpiringSoon
+    expr: (probe_ssl_earliest_cert_expiry{job="portfolio-app"} - time()) / 86400 < 30
+    for: 1h
+    labels:
+      severity: warning
+      component: security
+    annotations:
+      summary: "SSL certificate expiring soon"
+      description: "Certificate expires in {{ $value }} days."
+  
+  # Persistent Volume Usage
+  - alert: PersistentVolumeSpaceRunningLow
+    expr: kubelet_volume_stats_available_bytes{namespace="portfolio-app"} / kubelet_volume_stats_capacity_bytes{namespace="portfolio-app"} < 0.1
+    for: 5m
+    labels:
+      severity: warning
+      component: storage
+    annotations:
+      summary: "Persistent volume space low"
+      description: "Volume {{ $labels.persistentvolumeclaim }} has less than 10% space remaining."

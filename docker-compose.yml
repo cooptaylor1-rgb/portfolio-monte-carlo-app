@@ -1,0 +1,241 @@
+# ============================================================
+# Docker Compose - Local Development & Testing
+# Portfolio Monte Carlo Analysis Platform
+# ============================================================
+
+version: '3.9'
+
+services:
+  # ============================================================
+  # Main Application Service
+  # ============================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: portfolio-analyzer:local
+    container_name: portfolio-analyzer-app
+    ports:
+      - "8501:8501"  # Streamlit UI
+    environment:
+      # Application config
+      - APP_ENV=development
+      - LOG_LEVEL=DEBUG
+      - DEBUG=true
+      
+      # Performance config
+      - CACHE_TTL=600
+      - MAX_SCENARIOS=10000
+      
+      # Redis config (optional - uncomment to enable)
+      # - REDIS_HOST=redis
+      # - REDIS_PORT=6379
+      # - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      
+      # PostgreSQL config (optional - uncomment to enable)
+      # - DB_HOST=postgres
+      # - DB_PORT=5432
+      # - DB_NAME=portfolio_db
+      # - DB_USER=portfolio_user
+      # - DB_PASSWORD=${DB_PASSWORD:-changeme}
+      
+      # Observability config
+      - ENABLE_METRICS=true
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      
+      # Security config
+      - RATE_LIMIT_ENABLED=false
+      - ALLOWED_ORIGINS=*
+    volumes:
+      # Mount code for hot-reloading during development
+      - ./app.py:/app/app.py:ro
+      - ./charts_institutional.py:/app/charts_institutional.py:ro
+      - ./scenario_intelligence.py:/app/scenario_intelligence.py:ro
+      - ./ai_engine.py:/app/ai_engine.py:ro
+      - ./ai_stress_audit.py:/app/ai_stress_audit.py:ro
+      - ./performance_optimizer.py:/app/performance_optimizer.py:ro
+      
+      # Persist audit logs
+      - ./audit_logs:/app/audit_logs
+      
+      # Mount static assets
+      - "./Salem logo.png:/app/Salem logo.png:ro"
+    networks:
+      - portfolio-net
+    healthcheck:
+      test: ["CMD", "python", "/app/healthcheck.py"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    # Resource limits for development
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ============================================================
+  # Redis Cache (Optional - uncomment to enable)
+  # ============================================================
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: portfolio-analyzer-redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis-data:/data
+  #   networks:
+  #     - portfolio-net
+  #   command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-changeme}
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 3
+  #   restart: unless-stopped
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '0.5'
+  #         memory: 512M
+
+  # ============================================================
+  # PostgreSQL Database (Optional - uncomment to enable)
+  # ============================================================
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: portfolio-analyzer-db
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     - POSTGRES_DB=portfolio_db
+  #     - POSTGRES_USER=portfolio_user
+  #     - POSTGRES_PASSWORD=${DB_PASSWORD:-changeme}
+  #     - PGDATA=/var/lib/postgresql/data/pgdata
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #     - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+  #   networks:
+  #     - portfolio-net
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U portfolio_user -d portfolio_db"]
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 3
+  #   restart: unless-stopped
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '1.0'
+  #         memory: 1G
+
+  # ============================================================
+  # Prometheus (Metrics Collection - Optional)
+  # ============================================================
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: portfolio-analyzer-prometheus
+  #   ports:
+  #     - "9090:9090"
+  #   volumes:
+  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  #     - prometheus-data:/prometheus
+  #   networks:
+  #     - portfolio-net
+  #   command:
+  #     - '--config.file=/etc/prometheus/prometheus.yml'
+  #     - '--storage.tsdb.path=/prometheus'
+  #     - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+  #     - '--web.console.templates=/usr/share/prometheus/consoles'
+  #   restart: unless-stopped
+
+  # ============================================================
+  # Grafana (Metrics Visualization - Optional)
+  # ============================================================
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: portfolio-analyzer-grafana
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+  #     - GF_USERS_ALLOW_SIGN_UP=false
+  #   volumes:
+  #     - grafana-data:/var/lib/grafana
+  #   networks:
+  #     - portfolio-net
+  #   depends_on:
+  #     - prometheus
+  #   restart: unless-stopped
+
+# ============================================================
+# Networks
+# ============================================================
+networks:
+  portfolio-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+
+# ============================================================
+# Volumes
+# ============================================================
+volumes:
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+
+# ============================================================
+# Usage Instructions:
+#
+# 1. Start all services:
+#    docker-compose up -d
+#
+# 2. View logs:
+#    docker-compose logs -f app
+#
+# 3. Stop all services:
+#    docker-compose down
+#
+# 4. Rebuild and restart:
+#    docker-compose up -d --build
+#
+# 5. Enable Redis cache:
+#    Uncomment redis service and app environment variables
+#    docker-compose up -d redis
+#
+# 6. Enable PostgreSQL:
+#    Uncomment postgres service and app environment variables
+#    docker-compose up -d postgres
+#
+# 7. View resource usage:
+#    docker-compose stats
+#
+# 8. Access application:
+#    http://localhost:8501
+#
+# 9. Access Prometheus (if enabled):
+#    http://localhost:9090
+#
+# 10. Access Grafana (if enabled):
+#     http://localhost:3000 (admin/admin)
+#
+# Environment Variables:
+# - Create a .env file with:
+#   REDIS_PASSWORD=your_redis_password
+#   DB_PASSWORD=your_db_password
+#   GRAFANA_PASSWORD=your_grafana_password
+#   SENTRY_DSN=your_sentry_dsn
+# ============================================================

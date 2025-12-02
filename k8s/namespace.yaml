@@ -1,0 +1,8 @@
+# Kubernetes namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: portfolio-app
+  labels:
+    name: portfolio-app
+    environment: production

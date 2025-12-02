@@ -1,0 +1,11 @@
+# Pod Disruption Budget for high availability
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: portfolio-app-pdb
+  namespace: portfolio-app
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: portfolio-app
