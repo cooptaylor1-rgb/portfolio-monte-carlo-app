@@ -95,14 +95,18 @@ WORKDIR /app
 
 # Copy application code
 COPY --chown=appuser:appuser app.py .
+COPY --chown=appuser:appuser config.py .
+COPY --chown=appuser:appuser observability.py .
+COPY --chown=appuser:appuser security.py .
+COPY --chown=appuser:appuser healthcheck.py .
 COPY --chown=appuser:appuser charts_institutional.py .
 COPY --chown=appuser:appuser scenario_intelligence.py .
 COPY --chown=appuser:appuser ai_engine.py .
 COPY --chown=appuser:appuser ai_stress_audit.py .
 COPY --chown=appuser:appuser performance_optimizer.py .
 
-# Copy static assets
-COPY --chown=appuser:appuser "Salem logo.png" ./
+# Copy static assets (using wildcard to handle spaces in filenames)
+COPY --chown=appuser:appuser *.png ./
 
 # Create health check script
 COPY --chown=appuser:appuser <<'EOF' /app/healthcheck.py

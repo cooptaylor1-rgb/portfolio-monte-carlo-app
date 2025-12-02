@@ -54,19 +54,33 @@ SALEM_DARK_NAVY = "#0F2540"  # Darker navy
 
 
 def apply_salem_styling():
-    """Apply Apple-inspired premium styling with Salem Investment Counselors branding + Phase 5 enhancements."""
+    """
+    Apply comprehensive design system styling for Salem Investment Counselors.
+    Premium Apple-inspired aesthetic with professional financial UI patterns.
+    See design-system.md for complete documentation.
+    """
     st.markdown(f"""
     <style>
-        /* Import SF Pro Display font (Apple's signature font) */
+        /* ============================================================
+           DESIGN SYSTEM v2.0 - Salem Investment Counselors
+           Portfolio Scenario Analysis Platform
+           ============================================================ */
+        
+        /* Typography Import - SF Pro Display / Inter fallback */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
-        /* ===== PHASE 5: SIMPLIFICATION & POLISH - Typography Optimization ===== */
-        /* Global text color and typography - Apple style */
+        /* ============================================================
+           1. GLOBAL FOUNDATION
+           ============================================================ */
+        
+        /* Reset and Base Styles */
         body, html, .stApp, .main, [data-testid="stAppViewContainer"] {{
             color: {SALEM_NAVY} !important;
             font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'SF Pro Display', sans-serif !important;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            font-size: 16px;
+            line-height: 1.5;
         }}
         
         /* Main app background - subtle gradient like Apple products */
@@ -853,6 +867,44 @@ def apply_salem_styling():
             margin: 1.5rem 0 !important;
         }}
         
+        /* ============================================================
+           PRESET CONFIGURATION BUTTONS - Enhanced Styling
+           ============================================================ */
+        
+        /* Create distinctive styling for preset buttons */
+        div[data-testid="column"]:has(button:contains("Conservative")),
+        div[data-testid="column"]:has(button:contains("Moderate")),
+        div[data-testid="column"]:has(button:contains("Aggressive")) {{
+            padding: 0 4px;
+        }}
+        
+        /* Preset button container enhancement */
+        .stButton > button[kind="secondary"] {{
+            background: rgba(255, 255, 255, 0.95) !important;
+            color: {SALEM_NAVY} !important;
+            font-weight: 600 !important;
+            border: 2px solid rgba(196, 160, 83, 0.3) !important;
+            padding: 14px 20px !important;
+            border-radius: 12px !important;
+            font-size: 1rem !important;
+            transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1) !important;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
+            letter-spacing: -0.01em;
+            text-align: center !important;
+        }}
+        
+        .stButton > button[kind="secondary"]:hover {{
+            background: rgba(196, 160, 83, 0.08) !important;
+            border-color: rgba(196, 160, 83, 0.5) !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10) !important;
+            transform: translateY(-2px) !important;
+        }}
+        
+        .stButton > button[kind="secondary"]:active {{
+            background: rgba(196, 160, 83, 0.15) !important;
+            transform: translateY(0px) !important;
+        }}
+        
         /* Main content inputs - Apple style (same as sidebar but for main area) */
         .main input[type="text"],
         .main input[type="number"],
@@ -973,6 +1025,16 @@ def apply_salem_styling():
         }}
     </style>
     """, unsafe_allow_html=True)
+
+
+def get_logo_base64():
+    """Convert logo image to base64 for inline HTML embedding."""
+    try:
+        with open("Salem logo.png", "rb") as img_file:
+            import base64
+            return base64.b64encode(img_file.read()).decode()
+    except:
+        return ""
 
 
 # -----------------------------
@@ -4828,21 +4890,34 @@ def render_client_tab():
     
     # Preset Configurations Section
     st.markdown("---")
-    st.markdown("#### 🎯 Quick Start: Preset Configurations")
-    st.caption("Apply a preset configuration to quickly set up portfolio assumptions")
+    # Preset Configuration Section - Enhanced UI
+    st.markdown("""
+        <div style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; padding: 24px; 
+                    border: 1px solid rgba(196, 160, 83, 0.2); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); 
+                    margin-bottom: 24px;">
+            <h4 style="margin: 0 0 8px 0; font-size: 1.0625rem; font-weight: 600; color: #1B3B5F; 
+                       letter-spacing: -0.02em;">🎯 Quick Start: Preset Configurations</h4>
+            <p style="margin: 0 0 16px 0; font-size: 0.875rem; color: rgba(27, 59, 95, 0.7); font-weight: 400;">
+                Apply a preset configuration to quickly set up portfolio assumptions
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
     
     col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
     
     with col1:
-        if st.button("🛡️ Conservative", use_container_width=True, help="30% Equity / 60% FI / 10% Cash"):
+        if st.button("🛡️ Conservative", use_container_width=True, key="preset_conservative", 
+                    help="30% Equity / 60% Fixed Income / 10% Cash • Lower risk, steady growth"):
             apply_preset("Conservative")
     
     with col2:
-        if st.button("⚖️ Moderate", use_container_width=True, help="60% Equity / 35% FI / 5% Cash"):
+        if st.button("⚖️ Moderate", use_container_width=True, key="preset_moderate",
+                    help="60% Equity / 35% Fixed Income / 5% Cash • Balanced risk/return"):
             apply_preset("Moderate")
     
     with col3:
-        if st.button("🚀 Aggressive", use_container_width=True, help="85% Equity / 10% FI / 5% Cash"):
+        if st.button("🚀 Aggressive", use_container_width=True, key="preset_aggressive",
+                    help="85% Equity / 10% Fixed Income / 5% Cash • Higher risk, growth-focused"):
             apply_preset("Aggressive")
     
     with col4:
@@ -7445,13 +7520,18 @@ def main():
     """Main application entry point with health checks and observability."""
     # Initialize observability - generate correlation ID for request tracking
     correlation_id = new_correlation_id()
-    structured_logger.info("Application request started", {"correlation_id": correlation_id})
+    
+    # Mark application as ready on first run
+    if not health_checker.ready:
+        health_checker.mark_ready()
+    
+    structured_logger.info("Application request started", correlation_id=correlation_id)
     
     # Check application readiness
     health_status = health_checker.check_readiness()
-    if not health_status["ready"]:
+    if health_status.get("status") != "ready":
         st.error("⚠️ Application is not ready. Please check system health.")
-        structured_logger.error("Application not ready", health_status)
+        structured_logger.error("Application not ready", **health_status)
         return
     
     # Track request metrics
@@ -7478,12 +7558,22 @@ def main():
     if 'audit_system' not in st.session_state:
         st.session_state.audit_system = AuditTrailSystem()
 
-    # Display Salem logo and title
-    col_logo, col_title = st.columns([1, 5])
-    with col_logo:
-        st.image("Salem logo.jpg", width=280)
-    with col_title:
-        st.title("Portfolio Scenario Analysis")
+    # Display Salem logo and title with improved layout
+    st.markdown("""
+        <div style="display: flex; align-items: center; margin-bottom: 2rem; padding: 1rem 0;">
+            <div style="margin-right: 1.5rem;">
+                <img src="data:image/png;base64,{}" style="width: 240px; height: auto; image-rendering: -webkit-optimize-contrast;">
+            </div>
+            <div>
+                <h1 style="margin: 0; font-size: 2.25rem; font-weight: 700; color: #1B3B5F; letter-spacing: -0.04em;">
+                    Portfolio Scenario Analysis
+                </h1>
+                <p style="margin: 0.25rem 0 0 0; font-size: 0.95rem; color: rgba(27, 59, 95, 0.7); font-weight: 500;">
+                    Institutional-Grade Retirement Planning & Monte Carlo Simulation
+                </p>
+            </div>
+        </div>
+    """.format(get_logo_base64()), unsafe_allow_html=True)
     
     st.markdown("---")
     
