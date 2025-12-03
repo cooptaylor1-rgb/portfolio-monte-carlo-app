@@ -43,7 +43,8 @@ const InputsPage: React.FC = () => {
     setValidation,
     setHasRunSimulation,
     isLoading,
-    validation,
+    validationErrors,
+    validationWarnings,
   } = useSimulationStore();
 
   const [isSaving, setIsSaving] = useState(false);
@@ -155,14 +156,14 @@ const InputsPage: React.FC = () => {
       </Card>
 
       {/* Validation Messages */}
-      {validation.errors.length > 0 && (
+      {validationErrors.length > 0 && (
         <Card padding="md" variant="default" className="border-status-error-base bg-status-error-base bg-opacity-10">
           <div className="flex items-start gap-3">
             <AlertCircle size={20} className="text-status-error-base flex-shrink-0 mt-0.5" />
             <div>
               <h4 className="text-h4 font-semibold text-status-error-light mb-2">Validation Errors</h4>
               <ul className="space-y-1">
-                {validation.errors.map((error, idx) => (
+                {validationErrors.map((error, idx) => (
                   <li key={idx} className="text-small text-status-error-light">• {error}</li>
                 ))}
               </ul>
@@ -171,14 +172,14 @@ const InputsPage: React.FC = () => {
         </Card>
       )}
 
-      {validation.warnings.length > 0 && (
+      {validationWarnings.length > 0 && (
         <Card padding="md" variant="default" className="border-status-warning-base bg-status-warning-base bg-opacity-10">
           <div className="flex items-start gap-3">
             <AlertCircle size={20} className="text-status-warning-base flex-shrink-0 mt-0.5" />
             <div>
               <h4 className="text-h4 font-semibold text-status-warning-light mb-2">Warnings</h4>
               <ul className="space-y-1">
-                {validation.warnings.map((warning, idx) => (
+                {validationWarnings.map((warning, idx) => (
                   <li key={idx} className="text-small text-status-warning-light">• {warning}</li>
                 ))}
               </ul>
@@ -555,22 +556,22 @@ const InputsPage: React.FC = () => {
       </FormSection>
 
       {/* Sticky Action Bar */}
-      <div className="fixed bottom-0 left-60 right-0 bg-background-elevated border-t border-background-border shadow-xl z-40">
+      <div className="fixed bottom-0 left-60 right-0 bg-background-elevated border-t border-background-border shadow-xl z-50">
         <div className="max-w-container mx-auto px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            {validation.errors.length > 0 && (
-              <div className="flex items-center gap-2 text-status-error-light">
+            {validationErrors.length > 0 && (
+              <div className="flex items-center gap-2 text-status-error-base">
                 <AlertCircle size={16} />
-                <span className="text-small font-medium">{validation.errors.length} errors found</span>
+                <span className="text-small font-medium">{validationErrors.length} errors found</span>
               </div>
             )}
-            {validation.warnings.length > 0 && validation.errors.length === 0 && (
-              <div className="flex items-center gap-2 text-status-warning-light">
+            {validationWarnings.length > 0 && validationErrors.length === 0 && (
+              <div className="flex items-center gap-2 text-status-warning-base">
                 <AlertCircle size={16} />
-                <span className="text-small font-medium">{validation.warnings.length} warnings</span>
+                <span className="text-small font-medium">{validationWarnings.length} warnings</span>
               </div>
             )}
-            {validation.errors.length === 0 && validation.warnings.length === 0 && (
+            {validationErrors.length === 0 && validationWarnings.length === 0 && (
               <div className="flex items-center gap-2 text-text-tertiary">
                 <CheckCircle size={16} />
                 <span className="text-small">Ready to run</span>
@@ -593,7 +594,7 @@ const InputsPage: React.FC = () => {
               size="md"
               onClick={handleRunSimulation}
               loading={isLoading}
-              disabled={isLoading || validation.errors.length > 0}
+              disabled={isLoading || validationErrors.length > 0}
               icon={<Zap size={18} />}
             >
               Run Monte Carlo Simulation
