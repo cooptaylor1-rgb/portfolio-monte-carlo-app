@@ -183,6 +183,28 @@ class HealthCheckResponse(BaseModel):
     timestamp: str
 
 
+class SensitivityRequest(BaseModel):
+    """Request for sensitivity analysis"""
+    inputs: ModelInputsModel = Field(description="Base simulation inputs")
+    parameter: str = Field(description="Parameter name to vary")
+    variations: List[float] = Field(description="List of parameter values to test")
+
+
+class SensitivityResult(BaseModel):
+    """Single sensitivity analysis result"""
+    parameter_value: float = Field(description="Value of the varied parameter")
+    success_probability: float = Field(description="Success probability at this parameter value")
+    ending_median: float = Field(description="Median ending portfolio value")
+    depletion_probability: float = Field(description="Depletion probability")
+
+
+class SensitivityResponse(BaseModel):
+    """Response from sensitivity analysis"""
+    success: bool = True
+    parameter: str = Field(description="Parameter that was varied")
+    results: List[SensitivityResult] = Field(description="Results for each parameter variation")
+
+
 # ============================================================================
 # Salem-Branded Report Models
 # ============================================================================

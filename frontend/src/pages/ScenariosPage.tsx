@@ -135,23 +135,21 @@ const ScenariosPage: React.FC = () => {
     setIsSensitivityRunning(true);
     try {
       const variations = [-0.03, -0.02, -0.01, 0, 0.01, 0.02, 0.03];
-      const results = await Promise.all(
-        variations.map(async (variation) => {
-          const response = await apiClient.axiosClient.post('/simulation/sensitivity', {
-            client_info: clientInfo,
-            model_inputs: modelInputs,
-            parameter: selectedParameter,
-            variation: variation,
-          });
+      
+      // Call the sensitivity endpoint with correct parameters
+      const response = await apiClient.axiosClient.post('/simulation/sensitivity', {
+        inputs: modelInputs,
+        parameter: selectedParameter,
+        variations: variations,
+      });
 
-          return {
-            parameter: selectedParameter,
-            variation: variation,
-            successProbability: response.data.metrics.success_probability,
-            impact: response.data.metrics.success_probability,
-          };
-        })
-      );
+      // Transform the results to match the chart's expected format
+      const results = response.data.results.map((result: any) => ({
+        parameter: selectedParameter,
+        variation: result.parameter_value, // Backend returns parameter_value
+        successProbability: result.success_probability,
+        impact: result.success_probability,
+      }));
 
       setSensitivityData(results);
     } catch (error) {

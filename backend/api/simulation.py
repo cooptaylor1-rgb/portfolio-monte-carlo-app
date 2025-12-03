@@ -7,7 +7,10 @@ from models.schemas import (
     SimulationRequest,
     SimulationResponse,
     SimulationMetrics,
-    ModelInputsModel
+    ModelInputsModel,
+    SensitivityRequest,
+    SensitivityResponse,
+    SensitivityResult
 )
 from core.simulation import (
     PortfolioInputs,
@@ -149,12 +152,8 @@ async def run_simulation(request: SimulationRequest):
         raise HTTPException(status_code=500, detail=f"Simulation failed: {str(e)}")
 
 
-@router.post("/sensitivity")
-async def run_sensitivity_analysis(
-    inputs: ModelInputsModel,
-    parameter: str,
-    variations: list[float]
-):
+@router.post("/sensitivity", response_model=SensitivityResponse)
+async def run_sensitivity_analysis(request: SensitivityRequest):
     """
     Run sensitivity analysis on a specific parameter.
     
@@ -169,23 +168,34 @@ async def run_sensitivity_analysis(
     - results: List of outcomes for each parameter value
     """
     try:
-        sim_inputs = convert_model_to_dataclass(inputs)
+        sim_inputs = convert_model_to_dataclass(request.inputs)
         
         # Verify parameter exists
-        if not hasattr(sim_inputs, parameter):
+        if not hasattr(sim_inputs, request.parameter):
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid parameter: {parameter}"
+                detail=f"Invalid parameter: {request.parameter}"
             )
         
         # Run sensitivity analysis
-        results_df = sensitivity_analysis(sim_inputs, parameter, variations)
+        results_df = sensitivity_analysis(sim_inputs, request.parameter, request.variations)
         
-        return {
-            "success": True,
-            "parameter": parameter,
-            "results": results_df.to_dict('records')
-        }
+        # Convert to response model
+        results = [
+            SensitivityResult(
+                parameter_value=row['parameter_value'],
+                success_probability=row['success_probability'],
+                ending_median=row['ending_median'],
+                depletion_probability=row['depletion_probability']
+            )
+            for _, row in results_df.iterrows()
+        ]
+        
+        return SensitivityResponse(
+            success=True,
+            parameter=request.parameter,
+            results=results
+        )
         
     except Exception as e:
         logger.error(f"Sensitivity analysis error: {e}", exc_info=True)
