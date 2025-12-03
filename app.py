@@ -1,3 +1,38 @@
+"""
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                                                                               ║
+║   ⚠️  DEPRECATED - THIS STREAMLIT APPLICATION IS NO LONGER MAINTAINED       ║
+║                                                                               ║
+║   This application has been migrated to a modern React + FastAPI             ║
+║   architecture for improved performance, maintainability, and scalability.   ║
+║                                                                               ║
+║   🚀 NEW ARCHITECTURE (December 2025):                                       ║
+║   • Backend API: http://localhost:8000/api/docs                              ║
+║   • React Frontend: http://localhost:3000                                    ║
+║                                                                               ║
+║   📚 TO RUN THE NEW VERSION:                                                 ║
+║   1. Backend:  cd backend && python main.py                                  ║
+║   2. Frontend: cd frontend && npm run dev                                    ║
+║                                                                               ║
+║   📖 DOCUMENTATION:                                                           ║
+║   • Architecture: MIGRATION_README.md                                        ║
+║   • Quick Start: QUICKSTART.md                                               ║
+║   • API Docs: http://localhost:8000/api/docs                                 ║
+║                                                                               ║
+║   ✨ NEW FEATURES:                                                            ║
+║   • RESTful API with OpenAPI documentation                                   ║
+║   • Type-safe frontend (TypeScript)                                          ║
+║   • Professional dark mode design system                                     ║
+║   • Modular component architecture                                           ║
+║   • 10-50x faster simulations (vectorized)                                   ║
+║   • Comprehensive test coverage                                              ║
+║                                                                               ║
+║   ⚡ This Streamlit version is kept for reference and validation only.       ║
+║   All future development will use the React + FastAPI stack.                 ║
+║                                                                               ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+"""
+
 import math
 from dataclasses import dataclass
 from typing import List, Tuple
@@ -46,85 +81,735 @@ from config import config
 from observability import health_checker, metrics, structured_logger, track_request, track_simulation, new_correlation_id, correlation_context
 from security import InputValidator, default_rate_limiter, RateLimitExceeded, SecurityHeaders
 
-# Salem Investment Counselors Color Scheme
-SALEM_GOLD = "#C4A053"  # Gold/tan from logo
-SALEM_NAVY = "#1B3B5F"  # Dark blue/navy
-SALEM_LIGHT_GOLD = "#D4B87D"  # Lighter gold accent
-SALEM_DARK_NAVY = "#0F2540"  # Darker navy
+# Salem Investment Counselors Design System - Dark Mode Institutional
+SALEM_PRIMARY_600 = "#0F3B63"
+SALEM_PRIMARY_500 = "#1F4F7C"
+SALEM_PRIMARY_300 = "#7AA6C4"
+SALEM_BRAND_GOLD = "#B49759"
+
+# Dark Mode Surfaces
+SURFACE_900 = "#0C0E12"
+SURFACE_800 = "#12141A"
+SURFACE_700 = "#1A1D24"
+SURFACE_600 = "#262A33"
+
+# Text Colors
+TEXT_PRIMARY = "#E6E8EC"
+TEXT_SECONDARY = "#9AA0A6"
+TEXT_MUTED = "#6F767D"
+
+# Status Colors
+SUCCESS = "#4CAF50"
+WARNING = "#FFC107"
+DANGER = "#D9534F"
+
+# Chart Colors
+CHART_EQUITY = "#4CA6E8"
+CHART_FIXED_INCOME = "#7AC18D"
+CHART_CASH = "#D7B46A"
+CHART_RISK = "#E05F5F"
+CHART_PROJECTION = "#7AA6C4"
 
 
 def apply_salem_styling():
     """
-    Apply comprehensive design system styling for Salem Investment Counselors.
-    Premium Apple-inspired aesthetic with professional financial UI patterns.
-    See design-system.md for complete documentation.
+    Apply Salem Investment Counselors Dark Mode Institutional Design System.
+    Professional financial platform with optimized dark mode visualization.
     """
     st.markdown(f"""
     <style>
         /* ============================================================
-           DESIGN SYSTEM v2.0 - Salem Investment Counselors
-           Portfolio Scenario Analysis Platform
+           SALEM INVESTMENT COUNSELORS DESIGN SYSTEM v3.0
+           Dark Mode Institutional Financial Platform
            ============================================================ */
         
-        /* Typography Import - SF Pro Display / Inter fallback */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        /* Typography Import - Inter for institutional readability */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Nunito+Sans:wght@300;400;600;700;800&display=swap');
         
         /* ============================================================
-           1. GLOBAL FOUNDATION
+           1. GLOBAL FOUNDATION & DARK MODE BASE
            ============================================================ */
         
-        /* Reset and Base Styles */
+        /* Root Variables */
+        :root {{
+            /* Primary Brand Colors */
+            --primary-600: {SALEM_PRIMARY_600};
+            --primary-500: {SALEM_PRIMARY_500};
+            --primary-300: {SALEM_PRIMARY_300};
+            --brand-gold: {SALEM_BRAND_GOLD};
+            
+            /* Dark Mode Surfaces */
+            --surface-900: {SURFACE_900};
+            --surface-800: {SURFACE_800};
+            --surface-700: {SURFACE_700};
+            --surface-600: {SURFACE_600};
+            
+            /* Text Colors */
+            --text-primary: {TEXT_PRIMARY};
+            --text-secondary: {TEXT_SECONDARY};
+            --text-muted: {TEXT_MUTED};
+            
+            /* Status Colors */
+            --success: {SUCCESS};
+            --warning: {WARNING};
+            --danger: {DANGER};
+            
+            /* Chart Colors */
+            --chart-equity: {CHART_EQUITY};
+            --chart-fixed-income: {CHART_FIXED_INCOME};
+            --chart-cash: {CHART_CASH};
+            --chart-risk: {CHART_RISK};
+            --chart-projection: {CHART_PROJECTION};
+            
+            /* Spacing System */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --space-2xl: 48px;
+            
+            /* Interactions */
+            --hover: rgba(255, 255, 255, 0.05);
+            --active: rgba(255, 255, 255, 0.08);
+            --focus-ring: 0 0 0 3px rgba(180, 151, 89, 0.4);
+        }}
+        
+        /* Base Reset and Typography */
         body, html, .stApp, .main, [data-testid="stAppViewContainer"] {{
-            color: {SALEM_NAVY} !important;
-            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'SF Pro Display', sans-serif !important;
+            background-color: var(--surface-900) !important;
+            color: var(--text-primary) !important;
+            font-family: 'Inter', 'Nunito Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             font-size: 16px;
             line-height: 1.5;
         }}
         
-        /* Main app background - subtle gradient like Apple products */
         .main {{
-            background: linear-gradient(to bottom, #fafafa 0%, #ffffff 100%);
-            padding: 0.75rem 1.5rem;  /* PHASE 5: Tighter padding */
+            background-color: var(--surface-900) !important;
+            padding: var(--space-xl) var(--space-lg);
         }}
+        
         .stApp {{
-            background: linear-gradient(to bottom, #fafafa 0%, #ffffff 100%);
+            background-color: var(--surface-900) !important;
         }}
         
-        /* Logo image - crisp and clear */
-        img {{
-            image-rendering: -webkit-optimize-contrast;
-            image-rendering: high-quality;
-            -ms-interpolation-mode: bicubic;
-            max-width: 100%;
-            height: auto;
+        /* ============================================================
+           2. TYPOGRAPHY SCALE
+           ============================================================ */
+        
+        h1 {{
+            color: var(--primary-600) !important;
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 700 !important;
+            font-size: 36px !important;
+            line-height: 1.2 !important;
+            letter-spacing: -0.02em !important;
+            margin: var(--space-md) 0 !important;
         }}
         
-        /* Specific styling for Salem logo */
-        [data-testid="stImage"] img {{
-            image-rendering: auto;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            transform: translateZ(0);
+        h2 {{
+            color: var(--primary-600) !important;
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 600 !important;
+            font-size: 24px !important;
+            line-height: 1.3 !important;
+            letter-spacing: -0.01em !important;
+            margin: var(--space-lg) 0 var(--space-md) 0 !important;
         }}
         
-        .stMarkdown, p, span, div {{
-            color: {SALEM_NAVY} !important;
-            font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
-            font-size: 1rem !important;
-            line-height: 1.5 !important;  /* PHASE 5: Better readability */
-            letter-spacing: -0.01em;  /* PHASE 5: Tighter tracking */
-            margin-bottom: 0.5rem !important;  /* PHASE 5: Reduced spacing */
+        h3 {{
+            color: var(--primary-500) !important;
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 600 !important;
+            font-size: 20px !important;
+            line-height: 1.4 !important;
+            letter-spacing: -0.01em !important;
+            margin: var(--space-md) 0 var(--space-sm) 0 !important;
         }}
         
-        /* ===== PHASE 5: Enhanced Metrics with Animations ===== */
-        /* Metrics - Apple card style with subtle shadows */
+        h4 {{
+            color: var(--text-primary) !important;
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 600 !important;
+            font-size: 18px !important;
+            line-height: 1.4 !important;
+            margin: var(--space-md) 0 var(--space-sm) 0 !important;
+        }}
+        
+        p, .stMarkdown, span, div {{
+            color: var(--text-primary) !important;
+            font-family: 'Inter', sans-serif !important;
+            font-size: 16px !important;
+            font-weight: 400 !important;
+            line-height: 1.6 !important;
+            letter-spacing: -0.01em !important;
+        }}
+        
+        /* Labels */
+        label, [data-testid="stWidgetLabel"] {{
+            color: var(--text-secondary) !important;
+            font-family: 'Inter', sans-serif !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            letter-spacing: 0.01em !important;
+            margin-bottom: var(--space-sm) !important;
+        }}
+        
+        /* Captions */
+        .caption, [data-testid="stCaptionContainer"], small {{
+            color: var(--text-muted) !important;
+            font-size: 12px !important;
+            font-weight: 400 !important;
+            line-height: 1.5 !important;
+        }}
+        
+        /* ============================================================
+           3. BUTTONS - INSTITUTIONAL STANDARDS
+           ============================================================ */
+        
+        .stButton > button {{
+            background: linear-gradient(180deg, var(--primary-500) 0%, var(--primary-600) 100%) !important;
+            color: var(--text-primary) !important;
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 500 !important;
+            font-size: 16px !important;
+            height: 44px !important;
+            border-radius: 8px !important;
+            border: none !important;
+            padding: 0 var(--space-lg) !important;
+            transition: all 0.2s ease !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+            letter-spacing: -0.01em !important;
+        }}
+        
+        .stButton > button:hover {{
+            background: linear-gradient(180deg, #2A5F8C 0%, #1A4A6F 100%) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+            transform: translateY(-1px) !important;
+        }}
+        
+        .stButton > button:active {{
+            transform: translateY(0px) !important;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+        }}
+        
+        /* Secondary/Outline Buttons */
+        .stDownloadButton > button {{
+            background: transparent !important;
+            color: var(--brand-gold) !important;
+            border: 2px solid var(--brand-gold) !important;
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 500 !important;
+            font-size: 16px !important;
+            height: 44px !important;
+            border-radius: 8px !important;
+            padding: 0 var(--space-lg) !important;
+            transition: all 0.2s ease !important;
+        }}
+        
+        .stDownloadButton > button:hover {{
+            background: rgba(180, 151, 89, 0.1) !important;
+            border-color: var(--brand-gold) !important;
+            box-shadow: 0 4px 12px rgba(180, 151, 89, 0.2) !important;
+            transform: translateY(-1px) !important;
+        }}
+        
+        /* ============================================================
+           4. CARDS & SURFACES
+           ============================================================ */
+        
+        /* Metric Cards */
         .stMetric {{
-            background: rgba(255, 255, 255, 0.95);
-            padding: 14px 16px;  /* PHASE 5: Tighter padding */
-            border-radius: 12px;
-            border: 1px solid rgba(196, 160, 83, 0.2);
+            background: var(--surface-700) !important;
+            padding: var(--space-lg) !important;
+            border-radius: 10px !important;
+            border: 1px solid var(--surface-600) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+            transition: all 0.2s ease !important;
+        }}
+        
+        .stMetric:hover {{
+            background: var(--surface-600) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+        }}
+        
+        .stMetric label {{
+            color: var(--text-secondary) !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+            margin-bottom: var(--space-xs) !important;
+        }}
+        
+        .stMetric [data-testid="stMetricValue"] {{
+            color: var(--text-primary) !important;
+            font-size: 32px !important;
+            font-weight: 700 !important;
+            letter-spacing: -0.02em !important;
+            margin: var(--space-xs) 0 !important;
+        }}
+        
+        .stMetric [data-testid="stMetricDelta"] {{
+            color: var(--brand-gold) !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+        }}
+        
+        /* Generic Cards and Containers */
+        [data-testid="stVerticalBlock"] > div {{
+            background: var(--surface-800) !important;
+            padding: var(--space-lg) !important;
+            border-radius: 10px !important;
+            margin-bottom: var(--space-md) !important;
+        }}
+        
+        /* ============================================================
+           5. INPUT FIELDS - DARK MODE OPTIMIZED
+           ============================================================ */
+        
+        /* Text Inputs */
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        textarea {{
+            background: var(--surface-700) !important;
+            color: var(--text-primary) !important;
+            border: 1px solid var(--surface-600) !important;
+            border-radius: 8px !important;
+            height: 42px !important;
+            padding: 0 var(--space-md) !important;
+            font-family: 'Inter', sans-serif !important;
+            font-size: 16px !important;
+            font-weight: 400 !important;
+            transition: all 0.2s ease !important;
+        }}
+        
+        input:focus, textarea:focus {{
+            background: var(--surface-600) !important;
+            border-color: var(--brand-gold) !important;
+            outline: none !important;
+            box-shadow: var(--focus-ring) !important;
+        }}
+        
+        input::placeholder {{
+            color: var(--text-muted) !important;
+        }}
+        
+        /* Select Dropdowns */
+        [data-baseweb="select"] {{
+            background: var(--surface-700) !important;
+            border: 1px solid var(--surface-600) !important;
+            border-radius: 8px !important;
+            min-height: 42px !important;
+        }}
+        
+        [data-baseweb="select"]:hover {{
+            background: var(--surface-600) !important;
+            border-color: var(--primary-300) !important;
+        }}
+        
+        [data-baseweb="select"] > div {{
+            background: transparent !important;
+            border: none !important;
+            color: var(--text-primary) !important;
+            font-weight: 500 !important;
+        }}
+        
+        /* Sliders */
+        [data-testid="stSlider"] [role="slider"] {{
+            background: var(--brand-gold) !important;
+            border: none !important;
+            width: 20px !important;
+            height: 20px !important;
+            box-shadow: 0 2px 8px rgba(180, 151, 89, 0.4) !important;
+        }}
+        
+        [data-testid="stSlider"] [role="slider"]:hover {{
+            transform: scale(1.1) !important;
+            box-shadow: 0 4px 12px rgba(180, 151, 89, 0.5) !important;
+        }}
+        
+        [data-testid="stSlider"] [data-baseweb="slider"] > div > div {{
+            background: linear-gradient(90deg, var(--brand-gold) 0%, rgba(180, 151, 89, 0.3) 100%) !important;
+            height: 4px !important;
+        }}
+        
+        [data-testid="stSlider"] [data-baseweb="slider"] > div {{
+            background: var(--surface-600) !important;
+            height: 4px !important;
+        }}
+        
+        /* ============================================================
+           6. TABS - INSTITUTIONAL NAVIGATION
+           ============================================================ */
+        
+        .stTabs [data-baseweb="tab-list"] {{
+            gap: var(--space-sm) !important;
+            background: var(--surface-800) !important;
+            padding: var(--space-sm) !important;
+            border-radius: 10px !important;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+        }}
+        
+        .stTabs [data-baseweb="tab"] {{
+            background: transparent !important;
+            color: var(--text-secondary) !important;
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 500 !important;
+            font-size: 15px !important;
+            border: none !important;
+            border-radius: 8px !important;
+            padding: 12px var(--space-lg) !important;
+            transition: all 0.2s ease !important;
+            letter-spacing: -0.01em !important;
+        }}
+        
+        .stTabs [data-baseweb="tab"]:hover {{
+            background: var(--hover) !important;
+            color: var(--text-primary) !important;
+        }}
+        
+        .stTabs [aria-selected="true"] {{
+            background: linear-gradient(180deg, var(--primary-500) 0%, var(--primary-600) 100%) !important;
+            color: var(--text-primary) !important;
+            font-weight: 600 !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+        }}
+        
+        /* ============================================================
+           7. EXPANDERS / ACCORDIONS
+           ============================================================ */
+        
+        [data-testid="stExpander"] {{
+            background: var(--surface-700) !important;
+            border: 1px solid var(--surface-600) !important;
+            border-radius: 10px !important;
+            margin-bottom: var(--space-md) !important;
+            overflow: hidden !important;
+        }}
+        
+        .streamlit-expanderHeader {{
+            background: var(--surface-700) !important;
+            color: var(--primary-500) !important;
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 600 !important;
+            font-size: 16px !important;
+            padding: var(--space-md) var(--space-lg) !important;
+            border-radius: 10px !important;
+            transition: all 0.2s ease !important;
+        }}
+        
+        .streamlit-expanderHeader:hover {{
+            background: var(--surface-600) !important;
+            color: var(--primary-300) !important;
+        }}
+        
+        [data-testid="stExpander"] > div {{
+            background: var(--surface-800) !important;
+            padding: var(--space-lg) !important;
+        }}
+        
+        /* ============================================================
+           8. DATA TABLES - FINANCIAL DATA OPTIMIZATION
+           ============================================================ */
+        
+        .dataframe, [data-testid="stDataFrame"] {{
+            background: var(--surface-700) !important;
+            border: 1px solid var(--surface-600) !important;
+            border-radius: 10px !important;
+            overflow: hidden !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+        }}
+        
+        .dataframe th, [data-testid="stDataFrame"] thead th {{
+            background: linear-gradient(180deg, var(--primary-600) 0%, var(--primary-500) 100%) !important;
+            color: var(--text-primary) !important;
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+            padding: var(--space-md) var(--space-lg) !important;
+            border: none !important;
+        }}
+        
+        .dataframe td, [data-testid="stDataFrame"] tbody td {{
+            background: transparent !important;
+            color: var(--text-primary) !important;
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 400 !important;
+            font-size: 15px !important;
+            padding: 12px var(--space-lg) !important;
+            border-bottom: 1px solid var(--surface-600) !important;
+        }}
+        
+        .dataframe tr:hover td, [data-testid="stDataFrame"] tbody tr:hover td {{
+            background: var(--hover) !important;
+        }}
+        
+        /* ============================================================
+           9. CHARTS & VISUALIZATIONS
+           ============================================================ */
+        
+        [data-testid="stVegaLiteChart"] {{
+            background: var(--surface-700) !important;
+            border: 1px solid var(--surface-600) !important;
+            border-radius: 10px !important;
+            padding: var(--space-lg) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+            margin-bottom: var(--space-lg) !important;
+        }}
+        
+        [data-testid="stVegaLiteChart"]:hover {{
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+        }}
+        
+        /* ============================================================
+           10. ALERTS & NOTIFICATIONS
+           ============================================================ */
+        
+        .stAlert {{
+            background: var(--surface-700) !important;
+            border-left: 4px solid var(--brand-gold) !important;
+            border-radius: 8px !important;
+            color: var(--text-primary) !important;
+            padding: var(--space-md) var(--space-lg) !important;
+            margin: var(--space-md) 0 !important;
+        }}
+        
+        .stSuccess {{
+            border-left-color: var(--success) !important;
+        }}
+        
+        .stWarning {{
+            border-left-color: var(--warning) !important;
+        }}
+        
+        .stError {{
+            border-left-color: var(--danger) !important;
+        }}
+        
+        /* ============================================================
+           11. SIDEBAR - DARK MODE OPTIMIZED
+           ============================================================ */
+        
+        section[data-testid="stSidebar"] {{
+            background: var(--surface-800) !important;
+            border-right: 1px solid var(--surface-600) !important;
+            padding: var(--space-lg) !important;
+        }}
+        
+        section[data-testid="stSidebar"] h1,
+        section[data-testid="stSidebar"] h2,
+        section[data-testid="stSidebar"] h3 {{
+            color: var(--primary-500) !important;
+        }}
+        
+        section[data-testid="stSidebar"] label {{
+            color: var(--text-secondary) !important;
+        }}
+        
+        section[data-testid="stSidebar"] input,
+        section[data-testid="stSidebar"] textarea,
+        section[data-testid="stSidebar"] [data-baseweb="select"] {{
+            background: var(--surface-700) !important;
+            border-color: var(--surface-600) !important;
+            color: var(--text-primary) !important;
+        }}
+        
+        /* ============================================================
+           12. PRESET CONFIGURATION BUTTONS - 3-COLUMN GRID
+           ============================================================ */
+        
+        /* Container for preset buttons */
+        div[data-testid="column"]:has(button:contains("Conservative")),
+        div[data-testid="column"]:has(button:contains("Moderate")),
+        div[data-testid="column"]:has(button:contains("Aggressive")) {{
+            padding: 0 var(--space-xs) !important;
+        }}
+        
+        /* Preset buttons styling */
+        .stButton > button[kind="secondary"],
+        button:contains("Conservative"),
+        button:contains("Moderate"),
+        button:contains("Aggressive") {{
+            background: transparent !important;
+            color: var(--text-primary) !important;
+            border: 2px solid var(--brand-gold) !important;
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 600 !important;
+            font-size: 16px !important;
+            height: 56px !important;
+            border-radius: 10px !important;
+            padding: 0 var(--space-lg) !important;
+            transition: all 0.2s ease !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: var(--space-sm) !important;
+        }}
+        
+        .stButton > button[kind="secondary"]:hover {{
+            background: rgba(180, 151, 89, 0.15) !important;
+            border-color: var(--brand-gold) !important;
+            box-shadow: 0 4px 16px rgba(180, 151, 89, 0.3) !important;
+            transform: translateY(-2px) !important;
+        }}
+        
+        .stButton > button[kind="secondary"]:active {{
+            background: rgba(180, 151, 89, 0.25) !important;
+            transform: translateY(0px) !important;
+        }}
+        
+        /* ============================================================
+           13. SCENARIO TEMPLATE CARDS
+           ============================================================ */
+        
+        /* Scenario card container */
+        .scenario-card {{
+            background: var(--surface-700) !important;
+            border: 2px solid var(--surface-600) !important;
+            border-radius: 10px !important;
+            padding: var(--space-lg) !important;
+            margin-bottom: var(--space-md) !important;
+            transition: all 0.2s ease !important;
+            cursor: pointer !important;
+        }}
+        
+        .scenario-card:hover {{
+            background: var(--surface-600) !important;
+            border-color: var(--primary-300) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+            transform: translateY(-2px) !important;
+        }}
+        
+        .scenario-card.selected {{
+            border-color: var(--brand-gold) !important;
+            background: var(--surface-600) !important;
+            box-shadow: 0 0 0 2px rgba(180, 151, 89, 0.3) !important;
+        }}
+        
+        /* ============================================================
+           14. DIVIDERS & SEPARATORS
+           ============================================================ */
+        
+        hr {{
+            border: none !important;
+            border-top: 1px solid var(--surface-600) !important;
+            margin: var(--space-xl) 0 !important;
+            opacity: 0.5 !important;
+        }}
+        
+        /* ============================================================
+           15. LOGO & IMAGES - HIGH QUALITY RENDERING
+           ============================================================ */
+        
+        img {{
+            image-rendering: -webkit-optimize-contrast !important;
+            image-rendering: crisp-edges !important;
+            -ms-interpolation-mode: nearest-neighbor !important;
+        }}
+        
+        [data-testid="stImage"] img {{
+            border-radius: 8px !important;
+            background: white !important;
+            padding: var(--space-sm) !important;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12) !important;
+        }}
+        
+        /* ============================================================
+           16. CHECKBOX & RADIO BUTTONS
+           ============================================================ */
+        
+        [data-testid="stCheckbox"] input[type="checkbox"] {{
+            border: 2px solid var(--surface-600) !important;
+            border-radius: 4px !important;
+            background: var(--surface-700) !important;
+        }}
+        
+        [data-testid="stCheckbox"] input[type="checkbox"]:checked {{
+            background: var(--brand-gold) !important;
+            border-color: var(--brand-gold) !important;
+        }}
+        
+        /* ============================================================
+           17. LOADING & PROGRESS
+           ============================================================ */
+        
+        .stProgress > div > div {{
+            background: var(--brand-gold) !important;
+        }}
+        
+        .stSpinner > div {{
+            border-color: var(--brand-gold) transparent transparent transparent !important;
+        }}
+        
+        /* ============================================================
+           18. SCROLLBARS - DARK MODE
+           ============================================================ */
+        
+        ::-webkit-scrollbar {{
+            width: 10px !important;
+            height: 10px !important;
+        }}
+        
+        ::-webkit-scrollbar-track {{
+            background: var(--surface-800) !important;
+        }}
+        
+        ::-webkit-scrollbar-thumb {{
+            background: var(--surface-600) !important;
+            border-radius: 5px !important;
+        }}
+        
+        ::-webkit-scrollbar-thumb:hover {{
+            background: var(--surface-600) !important;
+        }}
+        
+        /* ============================================================
+           19. RESPONSIVE SPACING
+           ============================================================ */
+        
+        /* Section spacing */
+        .element-container {{
+            margin-bottom: var(--space-md) !important;
+        }}
+        
+        [data-testid="stVerticalBlock"] {{
+            gap: var(--space-md) !important;
+        }}
+        
+        /* Component grouping */
+        [data-testid="column"] {{
+            padding: 0 var(--space-sm) !important;
+        }}
+        
+        /* ============================================================
+           20. UTILITY CLASSES & OVERRIDES
+           ============================================================ */
+        
+        /* Hide Streamlit branding */
+        #MainMenu {{visibility: hidden;}}
+        footer {{visibility: hidden;}}
+        header {{visibility: hidden;}}
+        
+        /* Force dark mode text colors */
+        * {{
+            scrollbar-width: thin !important;
+            scrollbar-color: var(--surface-600) var(--surface-800) !important;
+        }}
+        
+        /* Ensure all text uses proper contrast */
+        .stMarkdown, .stMarkdown * {{
+            color: var(--text-primary) !important;
+        }}
+        
+    </style>
+    """, unsafe_allow_html=True)
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0,0,0,0.02);
             backdrop-filter: blur(20px);
             transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);  /* PHASE 5: Faster transition */
@@ -5375,8 +6060,7 @@ def render_portfolio_tab():
                     inputs=ai_inputs,
                     metrics=metrics,
                     stats_df=stats_df,
-                    paths_df=paths_df,
-                    scenario_id="base_case"
+                    paths_df=paths_df
                 )
                 
                 # Store in session state
@@ -7558,17 +8242,54 @@ def main():
     if 'audit_system' not in st.session_state:
         st.session_state.audit_system = AuditTrailSystem()
 
-    # Display Salem logo and title with improved layout
+    # Display Salem header with institutional dark mode design
     st.markdown("""
-        <div style="display: flex; align-items: center; margin-bottom: 2rem; padding: 1rem 0;">
-            <div style="margin-right: 1.5rem;">
-                <img src="data:image/png;base64,{}" style="width: 240px; height: auto; image-rendering: -webkit-optimize-contrast;">
+        <div style="
+            display: flex; 
+            align-items: center; 
+            height: 90px;
+            background: #0C0E12;
+            border-bottom: 1px solid #262A33;
+            padding: 0 32px;
+            margin: -1rem -1rem 2rem -1rem;
+            gap: 24px;
+        ">
+            <div style="
+                background: white;
+                border-radius: 8px;
+                padding: 8px 16px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100px;
+                height: 60px;
+            ">
+                <img src="data:image/png;base64,{}" style="
+                    max-width: 100%;
+                    max-height: 100%;
+                    object-fit: contain;
+                    image-rendering: -webkit-optimize-contrast;
+                ">
             </div>
             <div>
-                <h1 style="margin: 0; font-size: 2.25rem; font-weight: 700; color: #1B3B5F; letter-spacing: -0.04em;">
+                <h1 style="
+                    margin: 0;
+                    font-size: 32px;
+                    font-weight: 700;
+                    color: #0F3B63;
+                    letter-spacing: -0.02em;
+                    line-height: 1.2;
+                ">
                     Portfolio Scenario Analysis
                 </h1>
-                <p style="margin: 0.25rem 0 0 0; font-size: 0.95rem; color: rgba(27, 59, 95, 0.7); font-weight: 500;">
+                <p style="
+                    margin: 4px 0 0 0;
+                    font-size: 14px;
+                    color: #9AA0A6;
+                    font-weight: 500;
+                    letter-spacing: -0.01em;
+                ">
                     Institutional-Grade Retirement Planning & Monte Carlo Simulation
                 </p>
             </div>
