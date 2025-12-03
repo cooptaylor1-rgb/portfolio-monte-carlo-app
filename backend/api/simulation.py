@@ -3,13 +3,13 @@ Monte Carlo simulation endpoints.
 Core API for running portfolio projections and analysis.
 """
 from fastapi import APIRouter, HTTPException
-from backend.models.schemas import (
+from models.schemas import (
     SimulationRequest,
     SimulationResponse,
     SimulationMetrics,
     ModelInputsModel
 )
-from backend.core.simulation import (
+from core.simulation import (
     PortfolioInputs,
     run_monte_carlo,
     calculate_metrics,

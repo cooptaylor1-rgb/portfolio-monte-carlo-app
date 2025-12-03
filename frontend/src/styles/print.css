@@ -1,0 +1,229 @@
+/**
+ * Print-Optimized Styles for Professional Reports
+ * Ensures clean PDF/print output with proper page breaks and formatting
+ */
+
+/* Print-specific styles */
+@media print {
+  /* Reset background colors for print */
+  body {
+    background: white !important;
+    color: #000 !important;
+  }
+
+  /* Hide navigation and UI elements */
+  nav,
+  header,
+  .no-print,
+  button:not(.print-button) {
+    display: none !important;
+  }
+
+  /* Page setup */
+  @page {
+    size: letter;
+    margin: 0.75in 0.75in 1in 0.75in;
+  }
+
+  /* Ensure proper page breaks */
+  .print\\:break-before-page {
+    page-break-before: always;
+  }
+
+  .print\\:break-inside-avoid {
+    page-break-inside: avoid;
+  }
+
+  .print\\:break-after-page {
+    page-break-after: always;
+  }
+
+  /* Report sections */
+  .report-section {
+    page-break-inside: avoid;
+  }
+
+  /* Table handling */
+  table {
+    page-break-inside: avoid;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  /* Chart sizing for print */
+  .recharts-wrapper {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Adjust typography for print */
+  .print\\:text-4xl {
+    font-size: 2.25rem !important;
+  }
+
+  .print\\:text-2xl {
+    font-size: 1.5rem !important;
+  }
+
+  .print\\:text-xl {
+    font-size: 1.25rem !important;
+  }
+
+  .print\\:text-lg {
+    font-size: 1.125rem !important;
+  }
+
+  .print\\:text-base {
+    font-size: 1rem !important;
+  }
+
+  /* Spacing adjustments */
+  .print\\:p-6 {
+    padding: 1.5rem !important;
+  }
+
+  .print\\:p-4 {
+    padding: 1rem !important;
+  }
+
+  .print\\:p-3 {
+    padding: 0.75rem !important;
+  }
+
+  .print\\:mb-8 {
+    margin-bottom: 2rem !important;
+  }
+
+  .print\\:mb-6 {
+    margin-bottom: 1.5rem !important;
+  }
+
+  .print\\:mb-4 {
+    margin-bottom: 1rem !important;
+  }
+
+  .print\\:pb-6 {
+    padding-bottom: 1.5rem !important;
+  }
+
+  .print\\:gap-4 {
+    gap: 1rem !important;
+  }
+
+  .print\\:gap-3 {
+    gap: 0.75rem !important;
+  }
+
+  .print\\:h-12 {
+    height: 3rem !important;
+  }
+
+  .print\\:h-64 {
+    height: 16rem !important;
+  }
+
+  .print\\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  /* Ensure colors are visible in print */
+  .text-text-primary,
+  .text-text-secondary {
+    color: #1a1a1a !important;
+  }
+
+  .text-text-tertiary {
+    color: #4a4a4a !important;
+  }
+
+  /* Border colors for print */
+  .border-background-border,
+  .border-accent-navy {
+    border-color: #d1d5db !important;
+  }
+
+  .border-status-success-base {
+    border-color: #4CAF50 !important;
+  }
+
+  .border-status-warning-base {
+    border-color: #FFC107 !important;
+  }
+
+  .border-status-error-base {
+    border-color: #D9534F !important;
+  }
+
+  /* Background colors for emphasis */
+  .bg-background-elevated,
+  .bg-background-base {
+    background-color: #f9fafb !important;
+  }
+
+  .bg-status-success-base {
+    background-color: rgba(76, 175, 80, 0.1) !important;
+  }
+
+  .bg-status-warning-base {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+  }
+
+  .bg-status-error-base {
+    background-color: rgba(217, 83, 79, 0.1) !important;
+  }
+
+  /* Chart colors */
+  .bg-chart-blue {
+    background-color: #4CA6E8 !important;
+  }
+
+  .bg-chart-green {
+    background-color: #7AC18D !important;
+  }
+
+  .bg-accent-gold {
+    background-color: #B49759 !important;
+  }
+
+  /* Links */
+  a {
+    color: #0F3B63 !important;
+    text-decoration: none !important;
+  }
+
+  /* Shadows - remove or minimize for print */
+  .shadow-lg,
+  .shadow-md,
+  .shadow {
+    box-shadow: none !important;
+  }
+
+  /* Ensure icons print well */
+  svg {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Logo sizing */
+  .report-header img {
+    max-height: 3rem !important;
+  }
+}
+
+/* Screen-only helper for report generation */
+@media screen {
+  .report-container {
+    max-width: 8.5in;
+    margin: 0 auto;
+    background: white;
+    min-height: 100vh;
+  }
+
+  .report-page {
+    background: white;
+    padding: 1in;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+}

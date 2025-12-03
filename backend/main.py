@@ -10,8 +10,8 @@ import time
 from datetime import datetime
 import logging
 
-from backend.api import simulation, presets, health
-from backend.models.schemas import HealthCheckResponse
+from api import simulation, presets, health
+from models.schemas import HealthCheckResponse
 
 # Configure logging
 logging.basicConfig(
