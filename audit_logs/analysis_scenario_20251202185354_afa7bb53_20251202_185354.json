@@ -1,0 +1,91 @@
+{
+  "scenario_id": "scenario_20251202185354_afa7bb53",
+  "timestamp": "2025-12-02T18:53:54.743431",
+  "short_summary": "**Executive Summary**\n\nThis retirement plan shows a **100% probability of success** over the modeled horizon, \nindicating strong sustainability under the stated assumptions.\n\n**Key Findings:**\n- Median ending portfolio: $63,475,523\n- 10th percentile outcome: $33,292,258\n- Overall risk level: LOW TO MODERATE\n\n**Primary Considerations:**\n- The plan shows a 100% probability of success, indicating strong sustainability.\n- The initial withdrawal rate of 5.33% exceeds the traditional 4% guideline.\n\n**Risk Factors to Monitor:**\n- No critical risks identified\n\n*Note: This analysis assumes the stated return, volatility, and spending assumptions. \nActual results will vary based on market conditions and individual circumstances.*",
+  "long_form_narrative": "# Portfolio Analysis: Detailed Findings\n\n## Overview\n\nThis comprehensive Monte Carlo analysis evaluated 10,000 potential market scenarios \nover a 0-year planning horizon. The analysis incorporates realistic assumptions \nabout investment returns, portfolio volatility, inflation, and spending patterns.\n\n## Success Probability Analysis\n\nThe plan demonstrates a **100.0% probability of success**, meaning that \nin 100.0% of simulated scenarios, the portfolio sustained the planned \nwithdrawals throughout the entire time horizon.\n\nSuccess rates above 80% are generally considered robust for retirement planning.\n\n## Key Drivers of Plan Success\n\n\n### 1. High Probability of Plan Success\n\nThe 100% success probability indicates a robust plan with a high likelihood of sustaining \nplanned withdrawals. This elevated success rate reflects:\n\n- **Sustainable withdrawal rate**: At 5.33%, spending is well-aligned with portfolio capacity\n- **Appropriate asset allocation**: 70% equity allocation balances growth and stability\n- **Adequate portfolio resources**: Starting capital appears sufficient for the modeled horizon\n\nThis success rate provides meaningful margin for unexpected expenses or market volatility.\n\n### 2. Elevated Withdrawal Rate\n\n\nResearch suggests withdrawal rates above 4-4.5% significantly increase portfolio depletion risk, \nparticularly for planning horizons of 0 years or longer. The current 5.33% rate implies \nthe portfolio must generate returns exceeding inflation by approximately 4.3% annually after \naccounting for volatility drag.\n\nHistorical data shows that 5.3% withdrawal rates have approximately a \n45% failure rate over 0-year periods, \neven with balanced portfolios. Consider reducing spending or extending the accumulation phase.\n\n\n### 3. Asset Allocation: 70% Equity\n\n\nThe 70% equity allocation reflects a balance between growth objectives and risk tolerance \nover the 0-year planning horizon. This allocation results in high volatility and potential for significant short-term drawdowns.\n\nFor withdrawal-based strategies, research suggests equity allocations between 50-70% often optimize \nthe trade-off between growth (needed to sustain withdrawals) and stability (to reduce sequence risk). \nThe current allocation, combined with the 5.33% withdrawal rate, implies the portfolio \nmust navigate market volatility while generating sufficient returns to sustain spending.\n\n\n### 4. Elevated Sequence of Returns Risk\n\n\nSequence of returns risk\u2014the danger that poor returns early in retirement coincide with portfolio \nwithdrawals\u2014represents a critical threat to plan sustainability. The current 5.33% \nwithdrawal rate amplifies this risk, as early portfolio declines are difficult to recover when \ncombined with ongoing withdrawals.\n\nResearch shows that portfolios experiencing negative returns in the first 5-10 years of retirement \nhave significantly higher failure rates than those experiencing the same returns later. Consider:\n\n- Maintaining 2-3 years of spending in cash/short-term bonds\n- Implementing a \"guardrails\" strategy to reduce spending in down markets\n- Delaying Social Security to provide more stable income later\n- Building flexibility into spending assumptions\n\n\n## Risk Factors and Considerations\n\n## Sensitivity Analysis\n\nUnderstanding how changes in key assumptions impact plan success:\n\n**Returns**: Impact of \u00b11% change in expected returns\n**Spending**: Impact of \u00b110% change in spending\n**Volatility**: Impact of \u00b15% change in volatility\n**Time Horizon**: Impact of \u00b15 years in planning horizon\n\n## Important Disclosures\n\n\n**Important Disclosures and Limitations**\n\n*AI-Generated Analysis*: This analysis was generated using automated analytical tools. While designed to \nprovide helpful insights, it should not be considered personalized investment advice.\n\n*Assumptions and Limitations*: All projections are based on stated assumptions about returns, volatility, \ninflation, and spending. Actual results will vary, potentially materially, based on market conditions, \nindividual circumstances, and behavioral factors.\n\n*No Guarantees*: Past performance does not guarantee future results. Monte Carlo analysis shows potential \nranges of outcomes but cannot predict actual future returns.\n\n*Not Investment Advice*: This analysis is educational in nature. Consult with qualified financial advisors \nbefore making investment decisions.\n\n*Probabilities Not Certainties*: Success probabilities represent statistical likelihoods under modeled \nassumptions, not guarantees of outcomes. Plans with high success probabilities can still fail; plans with \nlower probabilities can still succeed.",
+  "key_drivers": [
+    {
+      "insight_type": "success_driver",
+      "title": "High Probability of Plan Success",
+      "summary": "The plan shows a 100% probability of success, indicating strong sustainability.",
+      "detailed_explanation": "The 100% success probability indicates a robust plan with a high likelihood of sustaining \nplanned withdrawals. This elevated success rate reflects:\n\n- **Sustainable withdrawal rate**: At 5.33%, spending is well-aligned with portfolio capacity\n- **Appropriate asset allocation**: 70% equity allocation balances growth and stability\n- **Adequate portfolio resources**: Starting capital appears sufficient for the modeled horizon\n\nThis success rate provides meaningful margin for unexpected expenses or market volatility.",
+      "confidence_level": "high",
+      "data_support": {
+        "success_probability": 1.0
+      },
+      "timestamp": "2025-12-02T18:53:54.743452"
+    },
+    {
+      "insight_type": "risk_factor",
+      "title": "Elevated Withdrawal Rate",
+      "summary": "The initial withdrawal rate of 5.33% exceeds the traditional 4% guideline.",
+      "detailed_explanation": "\nResearch suggests withdrawal rates above 4-4.5% significantly increase portfolio depletion risk, \nparticularly for planning horizons of 0 years or longer. The current 5.33% rate implies \nthe portfolio must generate returns exceeding inflation by approximately 4.3% annually after \naccounting for volatility drag.\n\nHistorical data shows that 5.3% withdrawal rates have approximately a \n45% failure rate over 0-year periods, \neven with balanced portfolios. Consider reducing spending or extending the accumulation phase.\n",
+      "confidence_level": "high",
+      "data_support": {
+        "withdrawal_rate": 5.333333333333334,
+        "years": 0
+      },
+      "timestamp": "2025-12-02T18:53:54.743470"
+    },
+    {
+      "insight_type": "success_driver",
+      "title": "Asset Allocation: 70% Equity",
+      "summary": "Growth-oriented 70% equity allocation increases upside potential and volatility",
+      "detailed_explanation": "\nThe 70% equity allocation reflects a balance between growth objectives and risk tolerance \nover the 0-year planning horizon. This allocation results in high volatility and potential for significant short-term drawdowns.\n\nFor withdrawal-based strategies, research suggests equity allocations between 50-70% often optimize \nthe trade-off between growth (needed to sustain withdrawals) and stability (to reduce sequence risk). \nThe current allocation, combined with the 5.33% withdrawal rate, implies the portfolio \nmust navigate market volatility while generating sufficient returns to sustain spending.\n",
+      "confidence_level": "medium",
+      "data_support": {
+        "equity_pct": 70.0,
+        "years": 0
+      },
+      "timestamp": "2025-12-02T18:53:54.743482"
+    },
+    {
+      "insight_type": "risk_factor",
+      "title": "Elevated Sequence of Returns Risk",
+      "summary": "Early portfolio declines could significantly impact long-term sustainability.",
+      "detailed_explanation": "\nSequence of returns risk\u2014the danger that poor returns early in retirement coincide with portfolio \nwithdrawals\u2014represents a critical threat to plan sustainability. The current 5.33% \nwithdrawal rate amplifies this risk, as early portfolio declines are difficult to recover when \ncombined with ongoing withdrawals.\n\nResearch shows that portfolios experiencing negative returns in the first 5-10 years of retirement \nhave significantly higher failure rates than those experiencing the same returns later. Consider:\n\n- Maintaining 2-3 years of spending in cash/short-term bonds\n- Implementing a \"guardrails\" strategy to reduce spending in down markets\n- Delaying Social Security to provide more stable income later\n- Building flexibility into spending assumptions\n",
+      "confidence_level": "medium",
+      "data_support": {
+        "sequence_risk_score": 0.5132749116395384
+      },
+      "timestamp": "2025-12-02T18:53:54.746525"
+    }
+  ],
+  "risk_factors": [],
+  "sensitivity_analysis": {
+    "returns": {
+      "description": "Impact of \u00b11% change in expected returns",
+      "plus_1_pct": "Estimated success probability: 100% (change of +10%)",
+      "minus_1_pct": "Estimated success probability: 90% (change of -10%)",
+      "importance": "high"
+    },
+    "spending": {
+      "description": "Impact of \u00b110% change in spending",
+      "plus_10_pct": "Estimated success probability: 94% (change of -6%)",
+      "minus_10_pct": "Estimated success probability: 100% (change of +6%)",
+      "importance": "high"
+    },
+    "volatility": {
+      "description": "Impact of \u00b15% change in volatility",
+      "plus_5_pct": "Estimated success probability: 96% (change of -4%)",
+      "minus_5_pct": "Estimated success probability: 100% (change of +4%)",
+      "importance": "medium"
+    },
+    "time_horizon": {
+      "description": "Impact of \u00b15 years in planning horizon",
+      "plus_5_years": "Consider longevity scenarios",
+      "minus_5_years": "Shorter horizon may improve success",
+      "importance": "high"
+    }
+  },
+  "recommendations": [
+    "Current 5.3% withdrawal rate is above sustainable levels; target 4.0-4.5% for improved longevity",
+    "Review and update this analysis annually to reflect actual portfolio performance and spending patterns",
+    "Consider maintaining 2-3 years of spending in cash/short-term bonds to reduce sequence risk"
+  ],
+  "audit_metadata": {
+    "cache_key": "77051c91071b03df16480d9f96829528",
+    "inputs_hash": "afa7bb53c26a323126d623ba1373a315",
+    "analysis_version": "1.0"
+  }
+}
