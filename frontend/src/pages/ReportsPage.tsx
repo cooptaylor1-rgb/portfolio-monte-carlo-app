@@ -9,11 +9,9 @@ import { useNavigate } from 'react-router-dom';
 import { SectionHeader, Button, Card, EmptyState, Badge } from '../components/ui';
 import { FileText, Download, FileSpreadsheet, FileImage, AlertCircle } from 'lucide-react';
 import {
-  LineChart,
   Line,
   BarChart,
   Bar,
-  AreaChart,
   Area,
   XAxis,
   YAxis,
@@ -26,9 +24,7 @@ import {
 } from 'recharts';
 import {
   formatCurrency,
-  formatCurrencyFull,
   formatPercent,
-  formatPercentDecimal,
   getSuccessRating,
   hasValidData,
   getLastElement,
@@ -70,14 +66,14 @@ const ReportsPage: React.FC = () => {
     try {
       // Percentile chart data - annual data points only
       const percentileData: PercentileDataPoint[] = simulationResults.stats
-        .filter((stat, idx) => idx % 12 === 0 && stat.month !== undefined)
+        .filter((stat, idx) => idx % 12 === 0 && stat.Month !== undefined)
         .map((stat) => ({
-          year: Math.round(stat.month / 12),
-          p10: stat.p10 ?? 0,
-          p25: stat.p25 ?? 0,
-          median: stat.median ?? 0,
-          p75: stat.p75 ?? 0,
-          p90: stat.p90 ?? 0,
+          year: Math.round(stat.Month / 12),
+          p10: stat.P10 ?? 0,
+          p25: stat.P25 ?? 0,
+          median: stat.Median ?? 0,
+          p75: stat.P75 ?? 0,
+          p90: stat.P90 ?? 0,
         }))
         .filter((point) => !isNaN(point.year));
 

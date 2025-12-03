@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { useSimulationStore } from '../store/simulationStore';
 import apiClient from '../lib/api';
-import { Slider, SelectBox } from '../components/forms';
+import { Slider } from '../components/forms';
 import { SensitivityHeatMap } from '../components/charts';
 import { SectionHeader, Button, Card, Badge, EmptyState } from '../components/ui';
 import { Plus, X, GitCompare, TrendingUp, TrendingDown, Zap, Copy } from 'lucide-react';
@@ -62,7 +62,6 @@ const ScenariosPage: React.FC = () => {
   ]);
   const [isRunning, setIsRunning] = useState(false);
   const [sensitivityData, setSensitivityData] = useState<any[]>([]);
-  const [selectedParameter, setSelectedParameter] = useState('equity_return_annual');
   const [isSensitivityRunning, setIsSensitivityRunning] = useState(false);
 
   const addScenario = (template?: typeof ScenarioTemplates[0]) => {
@@ -133,25 +132,54 @@ const ScenariosPage: React.FC = () => {
 
   const runSensitivityAnalysis = async () => {
     setIsSensitivityRunning(true);
+    setSensitivityData([]);
+    
     try {
-      const variations = [-0.03, -0.02, -0.01, 0, 0.01, 0.02, 0.03];
+      // Define parameters to analyze
+      const parametersToAnalyze = [
+        'equity_return_annual',
+        'fi_return_annual', 
+        'inflation_annual',
+        'monthly_spending',
+      ];
       
-      // Call the sensitivity endpoint with correct parameters
-      const response = await apiClient.axiosClient.post('/simulation/sensitivity', {
-        inputs: modelInputs,
-        parameter: selectedParameter,
-        variations: variations,
-      });
+      // Use more practical variation ranges for each parameter
+      const variationsByParameter: Record<string, number[]> = {
+        'equity_return_annual': [-0.04, -0.03, -0.02, -0.01, 0, 0.01, 0.02, 0.03, 0.04],
+        'fi_return_annual': [-0.03, -0.02, -0.01, 0, 0.01, 0.02, 0.03],
+        'inflation_annual': [-0.02, -0.01, 0, 0.01, 0.02, 0.03],
+        'monthly_spending': [-0.30, -0.20, -0.10, 0, 0.10, 0.20, 0.30],
+      };
 
-      // Transform the results to match the chart's expected format
-      const results = response.data.results.map((result: any) => ({
-        parameter: selectedParameter,
-        variation: result.parameter_value, // Backend returns parameter_value
-        successProbability: result.success_probability,
-        impact: result.success_probability,
-      }));
+      // Run sensitivity analysis for all parameters in parallel
+      const allResults = await Promise.all(
+        parametersToAnalyze.map(async (param) => {
+          try {
+            const variations = variationsByParameter[param] || [-0.03, -0.02, -0.01, 0, 0.01, 0.02, 0.03];
+            
+            const response = await apiClient.axiosClient.post('/simulation/sensitivity', {
+              inputs: modelInputs,
+              parameter: param,
+              variations: variations,
+            });
 
-      setSensitivityData(results);
+            // Transform results for this parameter
+            return response.data.results.map((result: any) => ({
+              parameter: param,
+              variation: result.parameter_value,
+              successProbability: result.success_probability,
+              impact: result.success_probability,
+            }));
+          } catch (error) {
+            console.error(`Failed to analyze ${param}:`, error);
+            return [];
+          }
+        })
+      );
+
+      // Flatten all results
+      const combinedResults = allResults.flat();
+      setSensitivityData(combinedResults);
     } catch (error) {
       console.error('Failed to run sensitivity analysis:', error);
     } finally {
@@ -506,26 +534,26 @@ const ScenariosPage: React.FC = () => {
       <Card padding="lg">
         <div className="mb-6">
           <h3 className="text-h3 font-display text-text-primary mb-2">
-            Sensitivity Analysis
+            Multi-Parameter Sensitivity Analysis
           </h3>
           <p className="text-body text-text-tertiary">
-            Analyze how sensitive your portfolio is to changes in key parameters
+            Analyze how changes in key parameters affect plan success probability. Compare sensitivity across equity returns, fixed income returns, inflation, and spending levels.
           </p>
         </div>
 
-        <div className="flex items-end gap-4 mb-6">
-          <div className="flex-1">
-            <SelectBox
-              label="Parameter to Analyze"
-              value={selectedParameter}
-              onChange={(value) => setSelectedParameter(value.toString())}
-              options={[
-                { value: 'equity_return_annual', label: 'Equity Return' },
-                { value: 'fi_return_annual', label: 'Fixed Income Return' },
-                { value: 'inflation_annual', label: 'Inflation Rate' },
-                { value: 'monthly_spending', label: 'Monthly Spending' },
-              ]}
-            />
+        <div className="flex items-center justify-between mb-6 p-4 bg-background-elevated border border-background-border rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-accent-gold bg-opacity-10 flex items-center justify-center">
+              <Zap size={20} className="text-accent-gold" />
+            </div>
+            <div>
+              <p className="text-body font-medium text-text-primary">
+                Comprehensive Analysis
+              </p>
+              <p className="text-small text-text-tertiary">
+                Tests {sensitivityData.length > 0 ? `${new Set(sensitivityData.map(d => d.parameter)).size} parameters` : '4 key parameters'} with multiple variations each
+              </p>
+            </div>
           </div>
           <Button
             variant="secondary"
@@ -535,16 +563,42 @@ const ScenariosPage: React.FC = () => {
             disabled={isSensitivityRunning}
             icon={<Zap size={18} />}
           >
-            Analyze Sensitivity
+            {isSensitivityRunning ? 'Analyzing...' : 'Run Full Analysis'}
           </Button>
         </div>
 
-        {sensitivityData.length > 0 && (
-          <div className="h-96">
-            <SensitivityHeatMap
-              data={sensitivityData}
-              height={384}
-            />
+        {sensitivityData.length > 0 ? (
+          <SensitivityHeatMap
+            data={sensitivityData}
+            height={500}
+          />
+        ) : (
+          <div className="h-96 flex flex-col items-center justify-center text-center border-2 border-dashed border-background-border rounded-lg">
+            <div className="w-16 h-16 rounded-full bg-background-elevated flex items-center justify-center mb-4">
+              <TrendingUp size={32} className="text-text-tertiary" />
+            </div>
+            <h4 className="text-h4 font-semibold text-text-primary mb-2">
+              Ready to Analyze Sensitivity
+            </h4>
+            <p className="text-body text-text-tertiary max-w-md mb-6">
+              Click "Run Full Analysis" to test how different market conditions and spending levels affect your plan's success probability.
+            </p>
+            <div className="grid grid-cols-2 gap-4 text-left max-w-2xl">
+              <div className="p-3 bg-background-elevated rounded-lg border border-background-border">
+                <p className="text-small font-semibold text-text-primary mb-1">Will Analyze:</p>
+                <ul className="text-small text-text-tertiary space-y-1">
+                  <li>• Equity returns (±4%)</li>
+                  <li>• Fixed income returns (±3%)</li>
+                </ul>
+              </div>
+              <div className="p-3 bg-background-elevated rounded-lg border border-background-border">
+                <p className="text-small font-semibold text-text-primary mb-1">And Also:</p>
+                <ul className="text-small text-text-tertiary space-y-1">
+                  <li>• Inflation rates (±3%)</li>
+                  <li>• Spending levels (±30%)</li>
+                </ul>
+              </div>
+            </div>
           </div>
         )}
       </Card>

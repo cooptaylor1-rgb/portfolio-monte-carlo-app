@@ -110,10 +110,10 @@ export const StressTestChart: React.FC<StressTestChartProps> = ({ scenarios }) =
                       borderRadius: '4px',
                       fontSize: 'var(--salem-text-xs)',
                       fontWeight: 600,
-                      backgroundColor: scenario.impact_severity === 'high' ? '#fee2e2' :
-                                    scenario.impact_severity === 'medium' ? '#fef3c7' : '#dbeafe',
-                      color: scenario.impact_severity === 'high' ? '#991b1b' :
-                            scenario.impact_severity === 'medium' ? '#92400e' : '#1e40af',
+                      backgroundColor: scenario.impact_severity === 'High' || scenario.impact_severity === 'Severe' ? '#fee2e2' :
+                                    scenario.impact_severity === 'Moderate' ? '#fef3c7' : '#dbeafe',
+                      color: scenario.impact_severity === 'High' || scenario.impact_severity === 'Severe' ? '#991b1b' :
+                            scenario.impact_severity === 'Moderate' ? '#92400e' : '#1e40af',
                     }}>
                       {scenario.impact_severity}
                     </span>

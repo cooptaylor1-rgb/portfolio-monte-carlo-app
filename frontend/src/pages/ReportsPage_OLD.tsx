@@ -11,7 +11,7 @@ const ReportsPage: React.FC = () => {
     useSimulationStore();
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const generateReport = async (format: 'pdf' | 'excel') => {
+  const generateReport = async (_format: 'pdf' | 'excel') => {
     setIsGenerating(true);
     try {
       const reportData = {

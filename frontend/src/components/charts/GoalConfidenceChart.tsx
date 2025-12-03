@@ -72,7 +72,7 @@ export const GoalConfidenceChart: React.FC<GoalConfidenceChartProps> = ({
           }}
         />
         <Tooltip
-          formatter={(value: number, name: string, props: any) => [
+          formatter={(value: number) => [
             formatPercent(value),
             'Confidence',
           ]}

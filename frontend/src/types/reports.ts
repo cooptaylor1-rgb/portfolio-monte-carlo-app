@@ -90,6 +90,9 @@ export interface StressScenarioResult {
   description: string;
   base_metrics: StressMetric[];
   stressed_metrics: StressMetric[];
+  base_success_probability: number;
+  stressed_success_probability: number;
+  impact_severity?: 'Low' | 'Moderate' | 'High' | 'Severe';
 }
 
 export interface AssumptionsBlock {

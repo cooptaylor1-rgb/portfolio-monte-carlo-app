@@ -58,7 +58,7 @@ export const TerminalWealthHistogram: React.FC<TerminalWealthHistogramProps> = (
               stroke="#6c757d"
             />
             <Tooltip
-              formatter={(value: number, name: string, props: any) => {
+              formatter={(value: number, _name: string, props: any) => {
                 return [
                   `${value.toLocaleString()} scenarios (${formatPercent(props.payload.percentage)})`,
                   'Count'
@@ -71,7 +71,7 @@ export const TerminalWealthHistogram: React.FC<TerminalWealthHistogramProps> = (
               }}
             />
             <Bar dataKey="count" name="Scenarios">
-              {data.map((entry, index) => (
+              {data.map((_entry, index) => (
                 <Cell key={`cell-${index}`} fill={getColor(index, data.length)} />
               ))}
             </Bar>

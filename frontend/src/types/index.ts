@@ -84,7 +84,7 @@ export interface ModelInputs {
   
   // Longevity planning
   use_actuarial_tables: boolean;
-  health_adjustment: 'poor' | 'average' | 'excellent';
+  health_adjustment: number;
   
   // Dynamic allocation (glide path)
   use_glide_path: boolean;
@@ -104,6 +104,24 @@ export interface ModelInputs {
   upper_guardrail: number;
   lower_guardrail: number;
   guardrail_adjustment: number;
+  
+  // UI-only optional fields (not sent to backend)
+  equity_dist_rate?: number;
+  fi_dist_rate?: number;
+  corr_equity_fi?: number;
+  num_sims?: number;
+  spending_inflation_adjusted?: boolean;
+  one_time_contribution?: number;
+  contribution_year?: number;
+  one_time_withdrawal?: number;
+  withdrawal_year?: number;
+  social_security_start_year?: number;
+  social_security_cola?: boolean;
+  pension_start_year?: number;
+  pension_cola?: boolean;
+  rebalance_strategy?: string;
+  fee_pct?: number;
+  random_seed?: number;
 }
 
 export interface FinancialGoal {
