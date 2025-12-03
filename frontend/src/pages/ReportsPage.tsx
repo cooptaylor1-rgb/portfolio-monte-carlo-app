@@ -8,6 +8,7 @@ import { useSimulationStore } from '../store/simulationStore';
 import { useNavigate } from 'react-router-dom';
 import { SectionHeader, Button, Card, EmptyState, Badge } from '../components/ui';
 import { FileText, Download, FileSpreadsheet, FileImage, AlertCircle } from 'lucide-react';
+import apiClient from '../lib/api';
 import {
   Line,
   BarChart,
@@ -112,60 +113,183 @@ const ReportsPage: React.FC = () => {
   }, [simulationResults]);
 
   /**
-   * Export to Excel (CSV format) with comprehensive data
+   * Export to Excel (comprehensive CSV with multiple data sections)
    */
   const exportToExcel = async () => {
-    if (!chartData.hasData) {
+    if (!simulationResults || !chartData.hasData) {
       console.warn('No data available for export');
       return;
     }
 
     setExportingFormat('excel');
     try {
-      const headers = ['Year', 'P10', 'P25', 'Median', 'P75', 'P90'];
-      const rows = chartData.percentileData.map((point) => [
-        point.year,
-        point.p10.toFixed(0),
-        point.p25.toFixed(0),
-        point.median.toFixed(0),
-        point.p75.toFixed(0),
-        point.p90.toFixed(0),
-      ]);
-
-      const csv = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
-
+      // Build comprehensive CSV with multiple sections
+      const sections: string[] = [];
+      
+      // Section 1: Summary Metrics
+      sections.push('PORTFOLIO ANALYSIS SUMMARY');
+      sections.push(`Client: ${clientInfo.client_name || 'N/A'}`);
+      sections.push(`Report Date: ${new Date().toISOString().split('T')[0]}`);
+      sections.push('');
+      sections.push('Key Metrics');
+      sections.push('Metric,Value');
+      sections.push(`Success Probability,${formatPercent(simulationResults.metrics.success_probability)}`);
+      sections.push(`Median Ending Portfolio,${formatCurrency(simulationResults.metrics.ending_median)}`);
+      sections.push(`10th Percentile,${formatCurrency(simulationResults.metrics.ending_p10)}`);
+      sections.push(`90th Percentile,${formatCurrency(simulationResults.metrics.ending_p90)}`);
+      sections.push(`Depletion Risk,${formatPercent(simulationResults.metrics.depletion_probability)}`);
+      sections.push('');
+      sections.push('');
+      
+      // Section 2: Percentile Paths
+      sections.push('WEALTH PERCENTILE PROJECTIONS');
+      sections.push('Year,P5,P10,P25,Median,P75,P90,P95');
+      chartData.percentileData.forEach((point) => {
+        sections.push([
+          point.year,
+          point.p5?.toFixed(0) || '',
+          point.p10.toFixed(0),
+          point.p25.toFixed(0),
+          point.median.toFixed(0),
+          point.p75.toFixed(0),
+          point.p90.toFixed(0),
+          point.p95?.toFixed(0) || ''
+        ].join(','));
+      });
+      sections.push('');
+      sections.push('');
+      
+      // Section 3: Distribution Data (if available)
+      if (chartData.distributionData && chartData.distributionData.length > 0) {
+        sections.push('TERMINAL WEALTH DISTRIBUTION');
+        sections.push('Range,Count,Percentage');
+        chartData.distributionData.forEach((bucket) => {
+          sections.push(`"${bucket.range}",${bucket.count},${(bucket.percentage * 100).toFixed(1)}%`);
+        });
+        sections.push('');
+        sections.push('');
+      }
+      
+      // Section 4: Input Parameters
+      sections.push('INPUT PARAMETERS');
+      sections.push('Parameter,Value');
+      sections.push(`Starting Portfolio,$${modelInputs.portfolio_value.toLocaleString()}`);
+      sections.push(`Monthly Spending,$${Math.abs(modelInputs.monthly_spending).toLocaleString()}`);
+      sections.push(`Planning Horizon,${modelInputs.years_in_retirement} years`);
+      sections.push(`Equity Return,${(modelInputs.equity_return_annual * 100).toFixed(1)}%`);
+      sections.push(`Fixed Income Return,${(modelInputs.fi_return_annual * 100).toFixed(1)}%`);
+      sections.push(`Inflation Rate,${(modelInputs.inflation_annual * 100).toFixed(1)}%`);
+      sections.push(`Simulation Runs,${modelInputs.num_simulations}`);
+      
+      // Create CSV blob
+      const csv = sections.join('\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `portfolio-analysis-${clientInfo.client_name || 'report'}-${Date.now()}.csv`;
+      
+      // Generate filename
+      const clientName = clientInfo.client_name || 'Client';
+      const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
+      a.download = `Portfolio_Analysis_${clientName.replace(/\s+/g, '_')}_${date}.csv`;
+      
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      
+      console.log('Excel/CSV exported successfully');
     } catch (error) {
       console.error('Error exporting to Excel:', error);
+      alert('Export failed. Please try again or contact support if the issue persists.');
     } finally {
       setExportingFormat(null);
     }
   };
 
   /**
-   * Export to PDF via browser print
+   * Export to PDF (professional Salem-branded report with actual data)
    */
   const exportToPDF = async () => {
+    if (!simulationResults || !chartData.hasData) {
+      console.warn('No simulation results available for export');
+      return;
+    }
+
     setExportingFormat('pdf');
     try {
-      window.print();
-    } catch (error) {
+      // Prepare actual simulation data for PDF generation
+      const exportData = {
+        metrics: {
+          success_probability: simulationResults.metrics.success_probability,
+          ending_median: simulationResults.metrics.ending_median,
+          ending_p10: simulationResults.metrics.ending_p10,
+          ending_p90: simulationResults.metrics.ending_p90,
+          ending_p95: simulationResults.metrics.ending_p95,
+          ending_p5: simulationResults.metrics.ending_p5,
+          depletion_probability: simulationResults.metrics.depletion_probability,
+        },
+        percentile_paths: chartData.percentileData.map(point => ({
+          year: point.year,
+          p5: point.p5,
+          p10: point.p10,
+          p25: point.p25,
+          median: point.median,
+          p50: point.median,
+          p75: point.p75,
+          p90: point.p90,
+          p95: point.p95,
+        })),
+        inputs: modelInputs,
+        client_info: {
+          client_name: clientInfo.client_name || 'Client',
+        },
+      };
+
+      // Call backend endpoint to generate PDF with actual data
+      const response = await apiClient.axiosClient.post(
+        `/reports/export/pdf`,
+        exportData,
+        {
+          responseType: 'blob', // Important: treat response as binary
+        }
+      );
+
+      // Create blob from response
+      const blob = new Blob([response.data], {
+        type: 'application/pdf',
+      });
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      
+      // Generate filename
+      const clientName = clientInfo.client_name || 'Client';
+      const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
+      a.download = `Portfolio_Analysis_${clientName.replace(/\s+/g, '_')}_${date}.pdf`;
+      
+      // Trigger download
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      console.log('PDF exported successfully with actual simulation data');
+    } catch (error: any) {
       console.error('Error exporting to PDF:', error);
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to export PDF';
+      alert(`Export failed: ${errorMessage}\n\nPlease try again or contact support if the issue persists.`);
     } finally {
-      setTimeout(() => setExportingFormat(null), 500);
+      setExportingFormat(null);
     }
   };
 
   /**
-   * Export to PowerPoint (comprehensive JSON data)
+   * Export to PowerPoint (real .pptx file)
    */
   const exportToPowerPoint = async () => {
     if (!simulationResults) {
@@ -175,34 +299,71 @@ const ReportsPage: React.FC = () => {
 
     setExportingFormat('powerpoint');
     try {
-      const reportData = {
-        title: 'Portfolio Analysis Report',
-        client: clientInfo.client_name || 'Client',
-        date: new Date().toISOString().split('T')[0],
+      // Prepare actual simulation data for PowerPoint generation
+      const exportData = {
         metrics: {
-          success_probability: formatPercent(simulationResults.metrics.success_probability),
-          ending_median: formatCurrency(simulationResults.metrics.ending_median),
-          ending_p10: formatCurrency(simulationResults.metrics.ending_p10),
-          ending_p90: formatCurrency(simulationResults.metrics.ending_p90),
-          depletion_probability: formatPercent(simulationResults.metrics.depletion_probability),
+          success_probability: simulationResults.metrics.success_probability,
+          ending_median: simulationResults.metrics.ending_median,
+          ending_p10: simulationResults.metrics.ending_p10,
+          ending_p90: simulationResults.metrics.ending_p90,
+          ending_p95: simulationResults.metrics.ending_p95,
+          ending_p5: simulationResults.metrics.ending_p5,
+          depletion_probability: simulationResults.metrics.depletion_probability,
         },
-        chart_data: chartData.percentileData,
-        distribution_data: chartData.distributionData,
+        percentile_paths: chartData.percentileData.map(point => ({
+          year: point.year,
+          p5: point.p5,
+          p10: point.p10,
+          p25: point.p25,
+          median: point.median,
+          p50: point.median,
+          p75: point.p75,
+          p90: point.p90,
+          p95: point.p95,
+        })),
+        inputs: modelInputs,
+        client_info: {
+          client_name: clientInfo.client_name || 'Client',
+        },
       };
 
-      const blob = new Blob([JSON.stringify(reportData, null, 2)], {
-        type: 'application/json;charset=utf-8;',
+      // Call backend endpoint to generate PowerPoint with actual data
+      const response = await apiClient.axiosClient.post(
+        `/reports/export/powerpoint`,
+        exportData,
+        {
+          responseType: 'blob', // Important: treat response as binary
+        }
+      );
+
+      // Create blob from response
+      const blob = new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
       });
-      const url = URL.createObjectURL(blob);
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `portfolio-analysis-${clientInfo.client_name || 'report'}-${Date.now()}.json`;
+      
+      // Generate filename
+      const clientName = clientInfo.client_name || 'Client';
+      const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
+      a.download = `Portfolio_Analysis_${clientName.replace(/\s+/g, '_')}_${date}.pptx`;
+      
+      // Trigger download
       document.body.appendChild(a);
       a.click();
+      
+      // Cleanup
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (error) {
+      window.URL.revokeObjectURL(url);
+      
+      console.log('PowerPoint exported successfully with actual simulation data');
+    } catch (error: any) {
       console.error('Error exporting to PowerPoint:', error);
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to export PowerPoint';
+      alert(`Export failed: ${errorMessage}\n\nPlease try again or contact support if the issue persists.`);
     } finally {
       setExportingFormat(null);
     }

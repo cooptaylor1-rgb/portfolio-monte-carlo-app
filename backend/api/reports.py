@@ -3,6 +3,7 @@ Salem-Branded Reports API
 Professional advisor/client-ready portfolio analysis reports
 """
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 from models.schemas import (
     ReportData,
     ReportSummary,
@@ -22,6 +23,9 @@ from models.schemas import (
 from datetime import date
 import logging
 from typing import List
+from io import BytesIO
+import uuid
+import os
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -521,3 +525,1506 @@ async def get_report(plan_id: str):
     except Exception as e:
         logger.error(f"Failed to generate report for plan_id {plan_id}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
+
+
+@router.post("/reports/{plan_id}/export/powerpoint")
+async def export_powerpoint(plan_id: str):
+    """
+    Export portfolio analysis report as PowerPoint presentation (.pptx).
+    
+    Generates a professional, Salem-branded PowerPoint presentation with:
+    - Executive summary slide with key metrics
+    - Monte Carlo analysis results
+    - Stress test scenarios
+    - Planning assumptions
+    - Recommendations
+    
+    **Parameters:**
+    - plan_id: Unique plan identifier (simulation run ID)
+    
+    **Returns:**
+    - PowerPoint file (.pptx) for download
+    """
+    try:
+        from pptx import Presentation
+        from pptx.util import Inches, Pt
+        from pptx.enum.text import PP_ALIGN
+        from pptx.dml.color import RGBColor
+        
+        logger.info(f"Generating PowerPoint export for plan_id: {plan_id}")
+        
+        # Get report data (reuse existing report generation logic)
+        report = await get_report(plan_id)
+        
+        # Create presentation
+        prs = Presentation()
+        prs.slide_width = Inches(10)
+        prs.slide_height = Inches(7.5)
+        
+        # Define Salem brand colors
+        SALEM_NAVY = RGBColor(0, 51, 93)  # #00335D
+        SALEM_GOLD = RGBColor(180, 151, 89)  # #B49759
+        DARK_GRAY = RGBColor(51, 51, 51)
+        LIGHT_GRAY = RGBColor(245, 245, 245)
+        
+        # ==========================================
+        # SLIDE 1: Title Slide
+        # ==========================================
+        slide = prs.slides.add_slide(prs.slide_layouts[6])  # Blank layout
+        
+        # Background
+        background = slide.background
+        fill = background.fill
+        fill.solid()
+        fill.fore_color.rgb = SALEM_NAVY
+        
+        # Title
+        title_box = slide.shapes.add_textbox(Inches(0.5), Inches(2.5), Inches(9), Inches(1))
+        title_frame = title_box.text_frame
+        title_frame.text = "Portfolio Analysis Report"
+        title_para = title_frame.paragraphs[0]
+        title_para.font.size = Pt(48)
+        title_para.font.bold = True
+        title_para.font.color.rgb = RGBColor(255, 255, 255)
+        title_para.alignment = PP_ALIGN.CENTER
+        
+        # Client name
+        client_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.7), Inches(9), Inches(0.6))
+        client_frame = client_box.text_frame
+        client_frame.text = report.summary.client_name
+        client_para = client_frame.paragraphs[0]
+        client_para.font.size = Pt(32)
+        client_para.font.color.rgb = SALEM_GOLD
+        client_para.alignment = PP_ALIGN.CENTER
+        
+        # Date and firm
+        footer_box = slide.shapes.add_textbox(Inches(0.5), Inches(6.5), Inches(9), Inches(0.5))
+        footer_frame = footer_box.text_frame
+        footer_frame.text = f"{report.summary.firm_name} | {report.summary.as_of_date}"
+        footer_para = footer_frame.paragraphs[0]
+        footer_para.font.size = Pt(14)
+        footer_para.font.color.rgb = RGBColor(200, 200, 200)
+        footer_para.alignment = PP_ALIGN.CENTER
+        
+        # ==========================================
+        # SLIDE 2: Executive Summary
+        # ==========================================
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        
+        # Title
+        title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.4), Inches(9), Inches(0.6))
+        title_frame = title_box.text_frame
+        title_frame.text = "Executive Summary"
+        title_para = title_frame.paragraphs[0]
+        title_para.font.size = Pt(36)
+        title_para.font.bold = True
+        title_para.font.color.rgb = SALEM_NAVY
+        
+        # Key Metrics Grid (2x2)
+        metrics_positions = [
+            (0.5, 1.2, 4.25, 1.5),  # Top left
+            (5.25, 1.2, 4.25, 1.5),  # Top right
+            (0.5, 2.9, 4.25, 1.5),  # Bottom left
+            (5.25, 2.9, 4.25, 1.5),  # Bottom right
+        ]
+        
+        for i, metric in enumerate(report.summary.key_metrics[:4]):
+            if i >= len(metrics_positions):
+                break
+                
+            left, top, width, height = metrics_positions[i]
+            
+            # Metric box with border
+            shape = slide.shapes.add_shape(
+                1,  # Rectangle
+                Inches(left), Inches(top), Inches(width), Inches(height)
+            )
+            shape.fill.solid()
+            shape.fill.fore_color.rgb = LIGHT_GRAY
+            shape.line.color.rgb = SALEM_NAVY
+            shape.line.width = Pt(2)
+            
+            # Metric label
+            label_box = slide.shapes.add_textbox(
+                Inches(left + 0.2), Inches(top + 0.2), 
+                Inches(width - 0.4), Inches(0.4)
+            )
+            label_frame = label_box.text_frame
+            label_frame.text = metric.label
+            label_para = label_frame.paragraphs[0]
+            label_para.font.size = Pt(14)
+            label_para.font.color.rgb = DARK_GRAY
+            label_para.font.bold = True
+            
+            # Metric value
+            value_box = slide.shapes.add_textbox(
+                Inches(left + 0.2), Inches(top + 0.7), 
+                Inches(width - 0.4), Inches(0.6)
+            )
+            value_frame = value_box.text_frame
+            value_frame.text = metric.value
+            value_para = value_frame.paragraphs[0]
+            value_para.font.size = Pt(28)
+            value_para.font.bold = True
+            
+            # Color based on variant
+            if metric.variant == "success":
+                value_para.font.color.rgb = RGBColor(16, 185, 129)  # Green
+            elif metric.variant == "warning":
+                value_para.font.color.rgb = RGBColor(245, 158, 11)  # Amber
+            elif metric.variant == "error":
+                value_para.font.color.rgb = RGBColor(239, 68, 68)  # Red
+            else:
+                value_para.font.color.rgb = SALEM_NAVY
+        
+        # ==========================================
+        # SLIDE 3: Key Findings
+        # ==========================================
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        
+        # Title
+        title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.4), Inches(9), Inches(0.6))
+        title_frame = title_box.text_frame
+        title_frame.text = "Key Findings"
+        title_para = title_frame.paragraphs[0]
+        title_para.font.size = Pt(36)
+        title_para.font.bold = True
+        title_para.font.color.rgb = SALEM_NAVY
+        
+        # Findings list
+        findings_box = slide.shapes.add_textbox(Inches(0.8), Inches(1.3), Inches(8.4), Inches(5.5))
+        findings_frame = findings_box.text_frame
+        findings_frame.word_wrap = True
+        
+        for i, finding in enumerate(report.narrative.key_findings):
+            if i > 0:
+                findings_frame.add_paragraph()
+            p = findings_frame.paragraphs[i]
+            p.text = f"• {finding}"
+            p.font.size = Pt(16)
+            p.font.color.rgb = DARK_GRAY
+            p.space_after = Pt(16)
+            p.level = 0
+        
+        # ==========================================
+        # SLIDE 4: Key Risks
+        # ==========================================
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        
+        # Title
+        title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.4), Inches(9), Inches(0.6))
+        title_frame = title_box.text_frame
+        title_frame.text = "Key Risks & Considerations"
+        title_para = title_frame.paragraphs[0]
+        title_para.font.size = Pt(36)
+        title_para.font.bold = True
+        title_para.font.color.rgb = SALEM_NAVY
+        
+        # Risks list
+        risks_box = slide.shapes.add_textbox(Inches(0.8), Inches(1.3), Inches(8.4), Inches(5.5))
+        risks_frame = risks_box.text_frame
+        risks_frame.word_wrap = True
+        
+        for i, risk in enumerate(report.narrative.key_risks):
+            if i > 0:
+                risks_frame.add_paragraph()
+            p = risks_frame.paragraphs[i]
+            p.text = f"• {risk}"
+            p.font.size = Pt(16)
+            p.font.color.rgb = DARK_GRAY
+            p.space_after = Pt(16)
+            p.level = 0
+        
+        # ==========================================
+        # SLIDE 5: Recommendations
+        # ==========================================
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        
+        # Title
+        title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.4), Inches(9), Inches(0.6))
+        title_frame = title_box.text_frame
+        title_frame.text = "Recommendations"
+        title_para = title_frame.paragraphs[0]
+        title_para.font.size = Pt(36)
+        title_para.font.bold = True
+        title_para.font.color.rgb = SALEM_NAVY
+        
+        # Recommendations list
+        rec_box = slide.shapes.add_textbox(Inches(0.8), Inches(1.3), Inches(8.4), Inches(5.5))
+        rec_frame = rec_box.text_frame
+        rec_frame.word_wrap = True
+        
+        for i, rec in enumerate(report.narrative.recommendations):
+            if i > 0:
+                rec_frame.add_paragraph()
+            p = rec_frame.paragraphs[i]
+            p.text = f"• {rec}"
+            p.font.size = Pt(16)
+            p.font.color.rgb = DARK_GRAY
+            p.space_after = Pt(16)
+            p.level = 0
+        
+        # ==========================================
+        # SLIDE 6: Stress Tests Summary
+        # ==========================================
+        if report.stress_tests:
+            slide = prs.slides.add_slide(prs.slide_layouts[6])
+            
+            # Title
+            title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.4), Inches(9), Inches(0.6))
+            title_frame = title_box.text_frame
+            title_frame.text = "Stress Test Analysis"
+            title_para = title_frame.paragraphs[0]
+            title_para.font.size = Pt(36)
+            title_para.font.bold = True
+            title_para.font.color.rgb = SALEM_NAVY
+            
+            # Stress tests
+            y_pos = 1.3
+            for stress in report.stress_tests[:3]:  # Show top 3
+                # Scenario name
+                name_box = slide.shapes.add_textbox(
+                    Inches(0.8), Inches(y_pos), Inches(8.4), Inches(0.4)
+                )
+                name_frame = name_box.text_frame
+                name_frame.text = stress.name
+                name_para = name_frame.paragraphs[0]
+                name_para.font.size = Pt(18)
+                name_para.font.bold = True
+                name_para.font.color.rgb = SALEM_NAVY
+                
+                # Description
+                desc_box = slide.shapes.add_textbox(
+                    Inches(0.8), Inches(y_pos + 0.4), Inches(8.4), Inches(0.5)
+                )
+                desc_frame = desc_box.text_frame
+                desc_frame.text = stress.description
+                desc_frame.word_wrap = True
+                desc_para = desc_frame.paragraphs[0]
+                desc_para.font.size = Pt(13)
+                desc_para.font.color.rgb = DARK_GRAY
+                
+                # Impact
+                impact_box = slide.shapes.add_textbox(
+                    Inches(0.8), Inches(y_pos + 0.95), Inches(8.4), Inches(0.3)
+                )
+                impact_frame = impact_box.text_frame
+                success_change = stress.stressed_success_probability - stress.base_success_probability
+                impact_frame.text = f"Success Probability Impact: {success_change:+.1%}"
+                impact_para = impact_frame.paragraphs[0]
+                impact_para.font.size = Pt(14)
+                impact_para.font.bold = True
+                
+                if stress.impact_severity == "high":
+                    impact_para.font.color.rgb = RGBColor(239, 68, 68)  # Red
+                elif stress.impact_severity == "medium":
+                    impact_para.font.color.rgb = RGBColor(245, 158, 11)  # Amber
+                else:
+                    impact_para.font.color.rgb = RGBColor(16, 185, 129)  # Green
+                
+                y_pos += 1.8
+        
+        # ==========================================
+        # SLIDE 7: Planning Assumptions
+        # ==========================================
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        
+        # Title
+        title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.4), Inches(9), Inches(0.6))
+        title_frame = title_box.text_frame
+        title_frame.text = "Planning Assumptions"
+        title_para = title_frame.paragraphs[0]
+        title_para.font.size = Pt(36)
+        title_para.font.bold = True
+        title_para.font.color.rgb = SALEM_NAVY
+        
+        # Assumptions
+        assumptions_box = slide.shapes.add_textbox(Inches(0.8), Inches(1.3), Inches(8.4), Inches(5.5))
+        assumptions_frame = assumptions_box.text_frame
+        assumptions_frame.word_wrap = True
+        
+        assumptions_list = [
+            f"Planning Horizon: {report.assumptions.planning_horizon_years} years",
+            f"Inflation Rate: {report.assumptions.inflation_rate:.1%}",
+            f"Expected Return: {report.assumptions.real_return_mean:.1%} (real)",
+            f"Return Volatility: {report.assumptions.real_return_std:.1%}",
+            f"Spending Rule: {report.assumptions.spending_rule_description}",
+        ]
+        
+        # Add other assumptions
+        for key, value in list(report.assumptions.other_assumptions.items())[:5]:
+            formatted_key = key.replace('_', ' ').title()
+            assumptions_list.append(f"{formatted_key}: {value}")
+        
+        for i, assumption in enumerate(assumptions_list):
+            if i > 0:
+                assumptions_frame.add_paragraph()
+            p = assumptions_frame.paragraphs[i]
+            p.text = f"• {assumption}"
+            p.font.size = Pt(16)
+            p.font.color.rgb = DARK_GRAY
+            p.space_after = Pt(12)
+        
+        # ==========================================
+        # Save to bytes buffer
+        # ==========================================
+        pptx_buffer = BytesIO()
+        prs.save(pptx_buffer)
+        pptx_buffer.seek(0)
+        
+        # Generate filename
+        client_name = report.summary.client_name.replace(' ', '_')
+        filename = f"Portfolio_Analysis_{client_name}_{date.today().strftime('%Y%m%d')}.pptx"
+        
+        logger.info(f"PowerPoint generated successfully for plan_id: {plan_id}")
+        
+        # Return as streaming response
+        return StreamingResponse(
+            pptx_buffer,
+            media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"'
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to generate PowerPoint for plan_id {plan_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"PowerPoint generation failed: {str(e)}")
+
+
+@router.post("/reports/export/pdf")
+async def export_pdf_from_results(simulation_results: dict):
+    """
+    Export portfolio analysis report as professional PDF document using actual simulation results.
+    
+    Accepts simulation results from frontend and generates a comprehensive, Salem-branded PDF report.
+    
+    **Parameters:**
+    - simulation_results: Complete simulation data including metrics, paths, and inputs
+    
+    **Returns:**
+    - PDF file for download
+    """
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import letter, A4
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
+        from reportlab.platypus import (
+            SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
+            PageBreak, Image as RLImage, KeepTogether
+        )
+        from reportlab.pdfgen import canvas
+        from reportlab.lib.colors import HexColor
+        import matplotlib
+        matplotlib.use('Agg')  # Non-interactive backend
+        import matplotlib.pyplot as plt
+        import numpy as np
+        
+        logger.info(f"Generating PDF export from simulation results")
+        
+        # Extract data from simulation results
+        metrics = simulation_results.get('metrics', {})
+        percentile_paths = simulation_results.get('percentile_paths', [])
+        inputs = simulation_results.get('inputs', {})
+        client_info = simulation_results.get('client_info', {})
+        
+        # Create PDF buffer
+        pdf_buffer = BytesIO()
+        
+        # Define Salem brand colors
+        SALEM_NAVY = HexColor('#00335D')
+        SALEM_GOLD = HexColor('#B49759')
+        SALEM_GREEN = HexColor('#4B8F29')
+        SALEM_RED = HexColor('#9E2A2B')
+        DARK_GRAY = HexColor('#333333')
+        LIGHT_GRAY = HexColor('#F5F5F5')
+        
+        # Create document
+        client_name = client_info.get('client_name', 'Client')
+        doc = SimpleDocTemplate(
+            pdf_buffer,
+            pagesize=letter,
+            rightMargin=0.75*inch,
+            leftMargin=0.75*inch,
+            topMargin=0.75*inch,
+            bottomMargin=0.75*inch,
+            title=f"Portfolio Analysis - {client_name}",
+            author="Salem Investment Counselors"
+        )
+        
+        # Custom styles
+        styles = getSampleStyleSheet()
+        
+        # Helper function to add or get style
+        def add_style_if_not_exists(name, **kwargs):
+            if name not in styles:
+                styles.add(ParagraphStyle(name=name, **kwargs))
+            return styles[name]
+        
+        # Cover title style
+        add_style_if_not_exists(
+            'CoverTitle',
+            parent=styles['Heading1'],
+            fontSize=32,
+            textColor=SALEM_NAVY,
+            spaceAfter=12,
+            alignment=TA_CENTER,
+            fontName='Helvetica-Bold'
+        )
+        
+        # Cover subtitle style
+        add_style_if_not_exists(
+            'CoverSubtitle',
+            parent=styles['Normal'],
+            fontSize=18,
+            textColor=SALEM_GOLD,
+            spaceAfter=6,
+            alignment=TA_CENTER,
+            fontName='Helvetica'
+        )
+        
+        # Section heading style
+        add_style_if_not_exists(
+            'SectionHeading',
+            parent=styles['Heading1'],
+            fontSize=16,
+            textColor=SALEM_NAVY,
+            spaceAfter=12,
+            spaceBefore=20,
+            fontName='Helvetica-Bold',
+            borderWidth=0,
+            borderColor=SALEM_NAVY,
+            borderPadding=0,
+            leftIndent=0
+        )
+        
+        # Subsection heading
+        add_style_if_not_exists(
+            'SubHeading',
+            parent=styles['Heading2'],
+            fontSize=13,
+            textColor=SALEM_NAVY,
+            spaceAfter=8,
+            spaceBefore=12,
+            fontName='Helvetica-Bold'
+        )
+        
+        # Body text
+        add_style_if_not_exists(
+            'BodyText',
+            parent=styles['Normal'],
+            fontSize=10,
+            textColor=DARK_GRAY,
+            spaceAfter=8,
+            alignment=TA_JUSTIFY,
+            fontName='Helvetica'
+        )
+        
+        # Bullet style
+        add_style_if_not_exists(
+            'Bullet',
+            parent=styles['Normal'],
+            fontSize=10,
+            textColor=DARK_GRAY,
+            spaceAfter=6,
+            leftIndent=20,
+            fontName='Helvetica'
+        )
+        
+        # Build PDF content
+        story = []
+        
+        # ==========================================
+        # COVER PAGE
+        # ==========================================
+        story.append(Spacer(1, 2*inch))
+        story.append(Paragraph("Portfolio Analysis Report", styles['CoverTitle']))
+        story.append(Spacer(1, 0.3*inch))
+        story.append(Paragraph(client_name, styles['CoverSubtitle']))
+        story.append(Paragraph("Monte Carlo Retirement Analysis", styles['CoverSubtitle']))
+        story.append(Spacer(1, 0.5*inch))
+        
+        # Firm info
+        firm_style = ParagraphStyle(
+            'FirmInfo',
+            parent=styles['Normal'],
+            fontSize=12,
+            textColor=DARK_GRAY,
+            alignment=TA_CENTER
+        )
+        story.append(Paragraph("<b>Salem Investment Counselors</b>", firm_style))
+        story.append(Paragraph(f"As of: {date.today().strftime('%B %d, %Y')}", firm_style))
+        
+        story.append(PageBreak())
+        
+        # ==========================================
+        # EXECUTIVE SUMMARY
+        # ==========================================
+        story.append(Paragraph("Executive Summary", styles['SectionHeading']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # Extract key metrics
+        success_prob = metrics.get('success_probability', 0)
+        median_ending = metrics.get('ending_median', 0)
+        p10_ending = metrics.get('ending_p10', 0)
+        p90_ending = metrics.get('ending_p90', 0)
+        depletion_prob = metrics.get('depletion_probability', 0)
+        
+        # Key metrics table
+        metrics_data = [['Metric', 'Value', 'Assessment']]
+        
+        # Success Probability
+        success_assessment = '✓ Strong' if success_prob >= 0.85 else '⚠ Adequate' if success_prob >= 0.70 else '✗ At Risk'
+        metrics_data.append(['Success Probability', format_percent(success_prob, 1), success_assessment])
+        
+        # Median Ending
+        metrics_data.append(['Median Ending Portfolio', format_currency(median_ending, 0), 'Neutral'])
+        
+        # 10th Percentile
+        metrics_data.append(['10th Percentile (Downside)', format_currency(p10_ending, 0), 'Neutral'])
+        
+        # Depletion Risk
+        depl_assessment = '✓ Low' if depletion_prob < 0.10 else '⚠ Moderate' if depletion_prob < 0.20 else '✗ High'
+        metrics_data.append(['Depletion Risk', format_percent(depletion_prob, 1), depl_assessment])
+        
+        metrics_table = Table(metrics_data, colWidths=[2.5*inch, 1.5*inch, 1.5*inch])
+        metrics_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), SALEM_NAVY),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('TOPPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), LIGHT_GRAY),
+            ('GRID', (0, 0), (-1, -1), 0.5, DARK_GRAY),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('TOPPADDING', (0, 1), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, LIGHT_GRAY]),
+        ]))
+        story.append(metrics_table)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # ==========================================
+        # MONTE CARLO ANALYSIS - Create wealth fan chart with ACTUAL DATA
+        # ==========================================
+        story.append(Paragraph("Monte Carlo Simulation Results", styles['SectionHeading']))
+        story.append(Spacer(1, 0.1*inch))
+        
+        # Create wealth fan chart from actual percentile paths
+        if percentile_paths and len(percentile_paths) > 0:
+            fig, ax = plt.subplots(figsize=(7, 4.5))
+            
+            years = [p.get('year', i) for i, p in enumerate(percentile_paths)]
+            p5 = [p.get('p5', 0) / 1_000_000 for p in percentile_paths]
+            p10 = [p.get('p10', 0) / 1_000_000 for p in percentile_paths]
+            p25 = [p.get('p25', 0) / 1_000_000 for p in percentile_paths]
+            p50 = [p.get('median', p.get('p50', 0)) / 1_000_000 for p in percentile_paths]
+            p75 = [p.get('p75', 0) / 1_000_000 for p in percentile_paths]
+            p90 = [p.get('p90', 0) / 1_000_000 for p in percentile_paths]
+            p95 = [p.get('p95', 0) / 1_000_000 for p in percentile_paths]
+            
+            # Plot percentile bands
+            ax.fill_between(years, p5, p95, alpha=0.15, color='#00335D', label='5th-95th %ile')
+            ax.fill_between(years, p10, p90, alpha=0.2, color='#00335D', label='10th-90th %ile')
+            ax.fill_between(years, p25, p75, alpha=0.3, color='#00335D', label='25th-75th %ile')
+            ax.plot(years, p50, color='#00335D', linewidth=2.5, label='Median (50th %ile)')
+            
+            ax.set_xlabel('Year', fontsize=11, fontweight='bold')
+            ax.set_ylabel('Portfolio Value ($M)', fontsize=11, fontweight='bold')
+            ax.set_title('Projected Wealth Outcomes', fontsize=13, fontweight='bold', color='#00335D')
+            ax.legend(loc='best', fontsize=9, framealpha=0.9)
+            ax.grid(True, alpha=0.3, linestyle='--')
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            
+            # Save chart to buffer
+            chart_buffer = BytesIO()
+            plt.tight_layout()
+            plt.savefig(chart_buffer, format='png', dpi=150, bbox_inches='tight')
+            plt.close()
+            chart_buffer.seek(0)
+            
+            # Add chart to PDF
+            chart_image = RLImage(chart_buffer, width=6*inch, height=3.75*inch)
+            story.append(chart_image)
+            story.append(Spacer(1, 0.2*inch))
+        
+        # Monte Carlo summary text
+        num_runs = inputs.get('num_simulations', 1000)
+        years_horizon = inputs.get('years_in_retirement', 30)
+        
+        mc_summary = f"""
+        This Monte Carlo simulation ran {num_runs:,} scenarios over a 
+        {years_horizon}-year planning horizon. The median projection shows 
+        the most likely outcome, while the shaded bands represent the range of potential results. 
+        The plan demonstrates a {format_percent(success_prob, 0)} probability 
+        of successfully meeting all financial objectives throughout the planning period.
+        """
+        story.append(Paragraph(mc_summary.strip(), styles['BodyText']))
+        
+        story.append(PageBreak())
+        
+        # ==========================================
+        # PLANNING ASSUMPTIONS
+        # ==========================================
+        story.append(Paragraph("Planning Assumptions", styles['SectionHeading']))
+        story.append(Spacer(1, 0.1*inch))
+        
+        portfolio_value = inputs.get('portfolio_value', 0)
+        monthly_spending = abs(inputs.get('monthly_spending', 0))
+        annual_spending = monthly_spending * 12
+        equity_return = inputs.get('equity_return_annual', 0)
+        fi_return = inputs.get('fi_return_annual', 0)
+        inflation = inputs.get('inflation_annual', 0)
+        
+        assumptions_text = f"""
+        <b>Starting Portfolio:</b> {format_currency(portfolio_value, 0)}<br/>
+        <b>Annual Spending:</b> {format_currency(annual_spending, 0)} ({format_currency(monthly_spending, 0)}/month)<br/>
+        <b>Planning Horizon:</b> {years_horizon} years<br/>
+        <b>Equity Return:</b> {format_percent(equity_return, 1)}<br/>
+        <b>Fixed Income Return:</b> {format_percent(fi_return, 1)}<br/>
+        <b>Inflation Rate:</b> {format_percent(inflation, 1)}<br/>
+        <b>Simulation Runs:</b> {num_runs:,}<br/>
+        """
+        story.append(Paragraph(assumptions_text, styles['BodyText']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # ==========================================
+        # KEY INSIGHTS
+        # ==========================================
+        story.append(Paragraph("Key Insights", styles['SectionHeading']))
+        story.append(Spacer(1, 0.1*inch))
+        
+        # Generate insights based on actual data
+        insights = []
+        
+        # Success probability insight
+        if success_prob >= 0.85:
+            insights.append(
+                f"Plan demonstrates strong {format_percent(success_prob, 0)} probability of success, "
+                f"indicating robust likelihood of meeting all financial objectives."
+            )
+        elif success_prob >= 0.70:
+            insights.append(
+                f"Plan shows moderate {format_percent(success_prob, 0)} probability of success. "
+                f"Consider stress testing and maintaining spending flexibility."
+            )
+        else:
+            insights.append(
+                f"Plan exhibits {format_percent(success_prob, 0)} success probability, below recommended thresholds. "
+                f"Adjustments to spending, allocation, or timeline recommended."
+            )
+        
+        # Portfolio trajectory
+        growth = (median_ending - portfolio_value) / portfolio_value if portfolio_value > 0 else 0
+        if growth > 0.50:
+            insights.append(
+                f"Median scenario projects substantial portfolio growth to {format_currency(median_ending, 0)}, "
+                f"representing {format_percent(growth, 0)} increase from starting value."
+            )
+        elif growth > 0:
+            insights.append(
+                f"Median scenario projects modest portfolio growth to {format_currency(median_ending, 0)}."
+            )
+        else:
+            insights.append(
+                f"Median scenario projects controlled spend-down to {format_currency(median_ending, 0)}, "
+                f"aligned with decumulation objectives."
+            )
+        
+        # Depletion risk
+        if depletion_prob > 0.15:
+            insights.append(
+                f"Elevated depletion risk of {format_percent(depletion_prob, 0)} warrants contingency planning "
+                f"and potential adjustments to mitigate downside scenarios."
+            )
+        
+        for insight in insights:
+            story.append(Paragraph(f"• {insight}", styles['Bullet']))
+        
+        story.append(PageBreak())
+        
+        # ==========================================
+        # APPENDIX
+        # ==========================================
+        story.append(Paragraph("Important Disclosures", styles['SectionHeading']))
+        story.append(Spacer(1, 0.1*inch))
+        
+        disclosures = [
+            "This analysis is based on Monte Carlo simulation utilizing historical return and volatility assumptions.",
+            "Past performance does not guarantee future results. Actual outcomes may differ materially from projections.",
+            "Simulations model thousands of potential scenarios but cannot predict actual market conditions or returns.",
+            "Tax treatment depends on individual circumstances and may differ from assumptions used in this analysis.",
+            "This report is for informational purposes only and does not constitute investment advice.",
+            "Consult with your advisor before making any financial decisions based on this analysis."
+        ]
+        
+        for disclosure in disclosures:
+            story.append(Paragraph(f"• {disclosure}", styles['Bullet']))
+        
+        # ==========================================
+        # Build PDF
+        # ==========================================
+        def add_page_number(canvas, doc):
+            """Add page numbers to each page"""
+            page_num = canvas.getPageNumber()
+            text = f"Page {page_num}"
+            canvas.saveState()
+            canvas.setFont('Helvetica', 9)
+            canvas.setFillColor(DARK_GRAY)
+            canvas.drawRightString(7.5*inch, 0.5*inch, text)
+            canvas.drawString(0.75*inch, 0.5*inch, f"Salem Investment Counselors | {client_name}")
+            canvas.restoreState()
+        
+        doc.build(story, onFirstPage=add_page_number, onLaterPages=add_page_number)
+        pdf_buffer.seek(0)
+        
+        # Generate filename
+        safe_client_name = client_name.replace(' ', '_')
+        filename = f"Portfolio_Analysis_{safe_client_name}_{date.today().strftime('%Y%m%d')}.pdf"
+        
+        logger.info(f"PDF generated successfully with actual simulation data")
+        
+        # Return as streaming response
+        return StreamingResponse(
+            pdf_buffer,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"'
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to generate PDF from simulation results: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
+
+
+@router.post("/reports/export/powerpoint")
+async def export_powerpoint_from_results(simulation_results: dict):
+    """
+    Export PowerPoint presentation using actual simulation results.
+    Accepts simulation data directly from frontend.
+    """
+    try:
+        from pptx import Presentation
+        from pptx.util import Inches, Pt
+        from pptx.enum.text import PP_ALIGN
+        from pptx.dml.color import RGBColor
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+        
+        # Extract actual data from passed simulation results
+        metrics = simulation_results.get('metrics', {})
+        percentile_paths = simulation_results.get('percentile_paths', [])
+        inputs = simulation_results.get('inputs', {})
+        client_info = simulation_results.get('client_info', {})
+        
+        # Extract key metrics
+        success_prob = metrics.get('success_probability', 0)
+        median_ending = metrics.get('ending_median', 0)
+        p10_ending = metrics.get('ending_p10', 0)
+        p90_ending = metrics.get('ending_p90', 0)
+        depletion_prob = metrics.get('depletion_probability', 0)
+        
+        # Extract input parameters
+        starting_value = inputs.get('portfolio_value', 0)
+        monthly_spending = inputs.get('monthly_spending', 0)
+        annual_spending = monthly_spending * 12
+        years_retirement = inputs.get('years_in_retirement', 30)
+        expected_return = inputs.get('expected_return', 0.07)
+        volatility = inputs.get('volatility', 0.12)
+        inflation = inputs.get('inflation_rate', 0.025)
+        
+        # Client information
+        client_name = client_info.get('client_name', 'Client')
+        
+        # Create presentation
+        prs = Presentation()
+        prs.slide_width = Inches(10)
+        prs.slide_height = Inches(7.5)
+        
+        # Define Salem brand colors
+        SALEM_NAVY = RGBColor(0, 51, 93)
+        SALEM_GOLD = RGBColor(180, 151, 89)
+        DARK_GRAY = RGBColor(51, 51, 51)
+        LIGHT_GRAY = RGBColor(245, 245, 245)
+        
+        # ========== SLIDE 1: Title Slide ==========
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        
+        background = slide.background
+        fill = background.fill
+        fill.solid()
+        fill.fore_color.rgb = SALEM_NAVY
+        
+        title_box = slide.shapes.add_textbox(Inches(0.5), Inches(2.5), Inches(9), Inches(1))
+        title_frame = title_box.text_frame
+        title_frame.text = "Portfolio Analysis Report"
+        title_para = title_frame.paragraphs[0]
+        title_para.font.size = Pt(48)
+        title_para.font.bold = True
+        title_para.font.color.rgb = RGBColor(255, 255, 255)
+        title_para.alignment = PP_ALIGN.CENTER
+        
+        client_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.7), Inches(9), Inches(0.6))
+        client_frame = client_box.text_frame
+        client_frame.text = client_name
+        client_para = client_frame.paragraphs[0]
+        client_para.font.size = Pt(32)
+        client_para.font.color.rgb = SALEM_GOLD
+        client_para.alignment = PP_ALIGN.CENTER
+        
+        footer_box = slide.shapes.add_textbox(Inches(0.5), Inches(6.5), Inches(9), Inches(0.5))
+        footer_frame = footer_box.text_frame
+        footer_frame.text = f"Salem Investment Counselors | {date.today().strftime('%B %d, %Y')}"
+        footer_para = footer_frame.paragraphs[0]
+        footer_para.font.size = Pt(14)
+        footer_para.font.color.rgb = RGBColor(200, 200, 200)
+        footer_para.alignment = PP_ALIGN.CENTER
+        
+        # ========== SLIDE 2: Executive Summary ==========
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        
+        title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.4), Inches(9), Inches(0.6))
+        title_frame = title_box.text_frame
+        title_frame.text = "Executive Summary"
+        title_para = title_frame.paragraphs[0]
+        title_para.font.size = Pt(36)
+        title_para.font.bold = True
+        title_para.font.color.rgb = SALEM_NAVY
+        
+        metrics_positions = [
+            (0.5, 1.2, 4.25, 1.5),
+            (5.25, 1.2, 4.25, 1.5),
+            (0.5, 2.9, 4.25, 1.5),
+            (5.25, 2.9, 4.25, 1.5),
+        ]
+        
+        actual_metrics = [
+            ("Success Probability", f"{success_prob:.1%}"),
+            ("Median Ending Value", f"${median_ending / 1_000_000:.2f}M"),
+            ("10th Percentile", f"${p10_ending / 1_000_000:.2f}M"),
+            ("Depletion Risk", f"{depletion_prob:.1%}"),
+        ]
+        
+        for i, (label, value) in enumerate(actual_metrics):
+            left, top, width, height = metrics_positions[i]
+            
+            shape = slide.shapes.add_shape(
+                1, Inches(left), Inches(top), Inches(width), Inches(height)
+            )
+            shape.fill.solid()
+            shape.fill.fore_color.rgb = LIGHT_GRAY
+            shape.line.color.rgb = SALEM_NAVY
+            shape.line.width = Pt(2)
+            
+            label_box = slide.shapes.add_textbox(
+                Inches(left + 0.2), Inches(top + 0.2), 
+                Inches(width - 0.4), Inches(0.4)
+            )
+            label_frame = label_box.text_frame
+            label_frame.text = label
+            label_para = label_frame.paragraphs[0]
+            label_para.font.size = Pt(14)
+            label_para.font.color.rgb = DARK_GRAY
+            label_para.font.bold = True
+            
+            value_box = slide.shapes.add_textbox(
+                Inches(left + 0.2), Inches(top + 0.7), 
+                Inches(width - 0.4), Inches(0.6)
+            )
+            value_frame = value_box.text_frame
+            value_frame.text = value
+            value_para = value_frame.paragraphs[0]
+            value_para.font.size = Pt(28)
+            value_para.font.bold = True
+            value_para.font.color.rgb = SALEM_NAVY
+            value_para.alignment = PP_ALIGN.CENTER
+        
+        note_box = slide.shapes.add_textbox(Inches(0.5), Inches(4.6), Inches(9), Inches(2.2))
+        note_frame = note_box.text_frame
+        note_frame.word_wrap = True
+        
+        if success_prob >= 0.85:
+            assessment = "strong probability of success"
+        elif success_prob >= 0.70:
+            assessment = "adequate probability of success"
+        else:
+            assessment = "elevated risk that may require plan adjustments"
+            
+        note_text = f"Based on {years_retirement}-year Monte Carlo simulation with 10,000 trials, "
+        note_text += f"this portfolio demonstrates a {assessment}. "
+        note_text += f"Starting with ${starting_value / 1_000_000:.2f}M and spending ${annual_spending:,.0f} annually, "
+        note_text += f"the median projection reaches ${median_ending / 1_000_000:.2f}M."
+        
+        note_frame.text = note_text
+        for para in note_frame.paragraphs:
+            para.font.size = Pt(14)
+            para.font.color.rgb = DARK_GRAY
+            para.space_before = Pt(6)
+            para.space_after = Pt(6)
+        
+        # ========== SLIDE 3: Wealth Chart ==========
+        if percentile_paths:
+            slide = prs.slides.add_slide(prs.slide_layouts[6])
+            
+            title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.4), Inches(9), Inches(0.6))
+            title_frame = title_box.text_frame
+            title_frame.text = "Portfolio Wealth Projection"
+            title_para = title_frame.paragraphs[0]
+            title_para.font.size = Pt(32)
+            title_para.font.bold = True
+            title_para.font.color.rgb = SALEM_NAVY
+            
+            fig, ax = plt.subplots(figsize=(10, 5))
+            
+            years = [p.get('year', i) for i, p in enumerate(percentile_paths)]
+            p5 = [p.get('p5', 0) / 1_000_000 for p in percentile_paths]
+            p10 = [p.get('p10', 0) / 1_000_000 for p in percentile_paths]
+            p25 = [p.get('p25', 0) / 1_000_000 for p in percentile_paths]
+            p50 = [p.get('median', p.get('p50', 0)) / 1_000_000 for p in percentile_paths]
+            p75 = [p.get('p75', 0) / 1_000_000 for p in percentile_paths]
+            p90 = [p.get('p90', 0) / 1_000_000 for p in percentile_paths]
+            p95 = [p.get('p95', 0) / 1_000_000 for p in percentile_paths]
+            
+            ax.fill_between(years, p5, p95, alpha=0.1, color='#00335D', label='5th-95th Percentile')
+            ax.fill_between(years, p10, p90, alpha=0.2, color='#00335D', label='10th-90th Percentile')
+            ax.fill_between(years, p25, p75, alpha=0.3, color='#00335D', label='25th-75th Percentile')
+            ax.plot(years, p50, color='#B49759', linewidth=3, label='Median')
+            
+            ax.set_xlabel('Year', fontsize=12, fontweight='bold')
+            ax.set_ylabel('Portfolio Value ($M)', fontsize=12, fontweight='bold')
+            ax.set_title('Wealth Projection', fontsize=14, fontweight='bold', color='#00335D')
+            ax.legend(loc='upper left')
+            ax.grid(True, alpha=0.3)
+            
+            chart_path = f"/tmp/pptx_chart_{uuid.uuid4().hex}.png"
+            plt.tight_layout()
+            plt.savefig(chart_path, dpi=150, bbox_inches='tight')
+            plt.close()
+            
+            slide.shapes.add_picture(chart_path, Inches(0.5), Inches(1.2), width=Inches(9))
+            
+            if os.path.exists(chart_path):
+                os.remove(chart_path)
+        
+        # ========== SLIDE 4: Assumptions ==========
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        
+        title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.4), Inches(9), Inches(0.6))
+        title_frame = title_box.text_frame
+        title_frame.text = "Analysis Assumptions"
+        title_para = title_frame.paragraphs[0]
+        title_para.font.size = Pt(32)
+        title_para.font.bold = True
+        title_para.font.color.rgb = SALEM_NAVY
+        
+        params_box = slide.shapes.add_textbox(Inches(1), Inches(1.5), Inches(8), Inches(5))
+        params_frame = params_box.text_frame
+        params_frame.word_wrap = True
+        
+        params_text = f"""Starting Portfolio: ${starting_value:,.0f}
+
+Annual Spending: ${annual_spending:,.0f}
+
+Time Horizon: {years_retirement} years
+
+Expected Return: {expected_return:.1%}
+
+Volatility: {volatility:.1%}
+
+Inflation: {inflation:.1%}
+
+Method: Monte Carlo (10,000 trials)"""
+        
+        params_frame.text = params_text
+        for para in params_frame.paragraphs:
+            para.font.size = Pt(18)
+            para.font.color.rgb = DARK_GRAY
+            para.space_after = Pt(12)
+        
+        # Save to buffer
+        pptx_buffer = BytesIO()
+        prs.save(pptx_buffer)
+        pptx_buffer.seek(0)
+        
+        return StreamingResponse(
+            pptx_buffer,
+            media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            headers={
+                "Content-Disposition": f"attachment; filename=Portfolio_Analysis_{client_name.replace(' ', '_')}_{date.today().strftime('%Y%m%d')}.pptx"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error generating PowerPoint from results: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"PowerPoint generation failed: {str(e)}")
+
+
+@router.post("/reports/{plan_id}/export/pdf")
+async def export_pdf(plan_id: str):
+    """
+    Export portfolio analysis report as professional PDF document.
+    
+    Generates a comprehensive, Salem-branded PDF report with:
+    - Cover page with branding
+    - Executive summary with key metrics
+    - Monte Carlo wealth fan chart
+    - Success probability trends
+    - Stress test analysis
+    - Cash flow projections
+    - Planning assumptions
+    - Professional formatting and styling
+    
+    **Parameters:**
+    - plan_id: Unique plan identifier (simulation run ID)
+    
+    **Returns:**
+    - PDF file for download
+    """
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import letter, A4
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
+        from reportlab.platypus import (
+            SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
+            PageBreak, Image as RLImage, KeepTogether
+        )
+        from reportlab.pdfgen import canvas
+        from reportlab.lib.colors import HexColor
+        import matplotlib
+        matplotlib.use('Agg')  # Non-interactive backend
+        import matplotlib.pyplot as plt
+        import numpy as np
+        
+        logger.info(f"Generating PDF export for plan_id: {plan_id}")
+        
+        # Get report data
+        report = await get_report(plan_id)
+        
+        # Create PDF buffer
+        pdf_buffer = BytesIO()
+        
+        # Define Salem brand colors
+        SALEM_NAVY = HexColor('#00335D')
+        SALEM_GOLD = HexColor('#B49759')
+        SALEM_GREEN = HexColor('#4B8F29')
+        SALEM_RED = HexColor('#9E2A2B')
+        DARK_GRAY = HexColor('#333333')
+        LIGHT_GRAY = HexColor('#F5F5F5')
+        
+        # Create document
+        doc = SimpleDocTemplate(
+            pdf_buffer,
+            pagesize=letter,
+            rightMargin=0.75*inch,
+            leftMargin=0.75*inch,
+            topMargin=0.75*inch,
+            bottomMargin=0.75*inch,
+            title=f"Portfolio Analysis - {report.summary.client_name}",
+            author="Salem Investment Counselors"
+        )
+        
+        # Custom styles
+        styles = getSampleStyleSheet()
+        
+        # Helper function to add or get style
+        def add_style_if_not_exists(name, **kwargs):
+            if name not in styles:
+                styles.add(ParagraphStyle(name=name, **kwargs))
+            return styles[name]
+        
+        # Cover title style
+        add_style_if_not_exists(
+            'CoverTitle',
+            parent=styles['Heading1'],
+            fontSize=32,
+            textColor=SALEM_NAVY,
+            spaceAfter=12,
+            alignment=TA_CENTER,
+            fontName='Helvetica-Bold'
+        )
+        
+        # Cover subtitle style
+        add_style_if_not_exists(
+            'CoverSubtitle',
+            parent=styles['Normal'],
+            fontSize=18,
+            textColor=SALEM_GOLD,
+            spaceAfter=6,
+            alignment=TA_CENTER,
+            fontName='Helvetica'
+        )
+        
+        # Section heading style
+        add_style_if_not_exists(
+            'SectionHeading',
+            parent=styles['Heading1'],
+            fontSize=16,
+            textColor=SALEM_NAVY,
+            spaceAfter=12,
+            spaceBefore=20,
+            fontName='Helvetica-Bold',
+            borderWidth=0,
+            borderColor=SALEM_NAVY,
+            borderPadding=0,
+            leftIndent=0
+        )
+        
+        # Subsection heading
+        add_style_if_not_exists(
+            'SubHeading',
+            parent=styles['Heading2'],
+            fontSize=13,
+            textColor=SALEM_NAVY,
+            spaceAfter=8,
+            spaceBefore=12,
+            fontName='Helvetica-Bold'
+        )
+        
+        # Body text
+        add_style_if_not_exists(
+            'BodyText',
+            parent=styles['Normal'],
+            fontSize=10,
+            textColor=DARK_GRAY,
+            spaceAfter=8,
+            alignment=TA_JUSTIFY,
+            fontName='Helvetica'
+        )
+        
+        # Bullet style
+        add_style_if_not_exists(
+            'Bullet',
+            parent=styles['Normal'],
+            fontSize=10,
+            textColor=DARK_GRAY,
+            spaceAfter=6,
+            leftIndent=20,
+            fontName='Helvetica'
+        )
+        
+        # Build PDF content
+        story = []
+        
+        # ==========================================
+        # COVER PAGE
+        # ==========================================
+        story.append(Spacer(1, 2*inch))
+        story.append(Paragraph("Portfolio Analysis Report", styles['CoverTitle']))
+        story.append(Spacer(1, 0.3*inch))
+        story.append(Paragraph(report.summary.client_name, styles['CoverSubtitle']))
+        story.append(Paragraph(report.summary.scenario_name, styles['CoverSubtitle']))
+        story.append(Spacer(1, 0.5*inch))
+        
+        # Firm info
+        firm_style = ParagraphStyle(
+            'FirmInfo',
+            parent=styles['Normal'],
+            fontSize=12,
+            textColor=DARK_GRAY,
+            alignment=TA_CENTER
+        )
+        story.append(Paragraph(f"<b>{report.summary.firm_name}</b>", firm_style))
+        story.append(Paragraph(f"Prepared by: {report.summary.advisor_name}", firm_style))
+        story.append(Paragraph(f"As of: {report.summary.as_of_date}", firm_style))
+        
+        story.append(PageBreak())
+        
+        # ==========================================
+        # EXECUTIVE SUMMARY
+        # ==========================================
+        story.append(Paragraph("Executive Summary", styles['SectionHeading']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # Key metrics table
+        metrics_data = [['Metric', 'Value', 'Assessment']]
+        for metric in report.summary.key_metrics:
+            assessment = '✓ Strong' if metric.variant == 'success' else \
+                        '⚠ Caution' if metric.variant == 'warning' else \
+                        '✗ At Risk' if metric.variant == 'error' else 'Neutral'
+            metrics_data.append([metric.label, metric.value, assessment])
+        
+        metrics_table = Table(metrics_data, colWidths=[2.5*inch, 1.5*inch, 1.5*inch])
+        metrics_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), SALEM_NAVY),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('TOPPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), LIGHT_GRAY),
+            ('GRID', (0, 0), (-1, -1), 0.5, DARK_GRAY),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('TOPPADDING', (0, 1), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, LIGHT_GRAY]),
+        ]))
+        story.append(metrics_table)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # ==========================================
+        # MONTE CARLO ANALYSIS - Create wealth fan chart
+        # ==========================================
+        story.append(Paragraph("Monte Carlo Simulation Results", styles['SectionHeading']))
+        story.append(Spacer(1, 0.1*inch))
+        
+        # Create wealth fan chart
+        fig, ax = plt.subplots(figsize=(7, 4.5))
+        
+        years = [p.year for p in report.monte_carlo.percentile_path]
+        p5 = [p.p5 / 1_000_000 for p in report.monte_carlo.percentile_path]
+        p10 = [p.p10 / 1_000_000 for p in report.monte_carlo.percentile_path]
+        p25 = [p.p25 / 1_000_000 for p in report.monte_carlo.percentile_path]
+        p50 = [p.p50 / 1_000_000 for p in report.monte_carlo.percentile_path]
+        p75 = [p.p75 / 1_000_000 for p in report.monte_carlo.percentile_path]
+        p90 = [p.p90 / 1_000_000 for p in report.monte_carlo.percentile_path]
+        p95 = [p.p95 / 1_000_000 for p in report.monte_carlo.percentile_path]
+        
+        # Plot percentile bands
+        ax.fill_between(years, p5, p95, alpha=0.15, color='#00335D', label='5th-95th %ile')
+        ax.fill_between(years, p10, p90, alpha=0.2, color='#00335D', label='10th-90th %ile')
+        ax.fill_between(years, p25, p75, alpha=0.3, color='#00335D', label='25th-75th %ile')
+        ax.plot(years, p50, color='#00335D', linewidth=2.5, label='Median (50th %ile)')
+        
+        ax.set_xlabel('Year', fontsize=11, fontweight='bold')
+        ax.set_ylabel('Portfolio Value ($M)', fontsize=11, fontweight='bold')
+        ax.set_title('Projected Wealth Outcomes', fontsize=13, fontweight='bold', color='#00335D')
+        ax.legend(loc='best', fontsize=9, framealpha=0.9)
+        ax.grid(True, alpha=0.3, linestyle='--')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        
+        # Save chart to buffer
+        chart_buffer = BytesIO()
+        plt.tight_layout()
+        plt.savefig(chart_buffer, format='png', dpi=150, bbox_inches='tight')
+        plt.close()
+        chart_buffer.seek(0)
+        
+        # Add chart to PDF
+        chart_image = RLImage(chart_buffer, width=6*inch, height=3.75*inch)
+        story.append(chart_image)
+        story.append(Spacer(1, 0.2*inch))
+        
+        # Monte Carlo summary text
+        mc_summary = f"""
+        This Monte Carlo simulation ran {report.monte_carlo.num_runs:,} scenarios over a 
+        {report.monte_carlo.horizon_years}-year planning horizon. The median projection shows 
+        the most likely outcome, while the shaded bands represent the range of potential results. 
+        The plan demonstrates a {format_percent(report.monte_carlo.success_probability, 0)} probability 
+        of successfully meeting all financial objectives throughout the planning period.
+        """
+        story.append(Paragraph(mc_summary.strip(), styles['BodyText']))
+        
+        story.append(PageBreak())
+        
+        # ==========================================
+        # KEY FINDINGS
+        # ==========================================
+        story.append(Paragraph("Key Findings", styles['SectionHeading']))
+        story.append(Spacer(1, 0.1*inch))
+        
+        for finding in report.narrative.key_findings:
+            story.append(Paragraph(f"• {finding}", styles['Bullet']))
+        
+        story.append(Spacer(1, 0.3*inch))
+        
+        # ==========================================
+        # KEY RISKS
+        # ==========================================
+        story.append(Paragraph("Key Risks & Considerations", styles['SectionHeading']))
+        story.append(Spacer(1, 0.1*inch))
+        
+        for risk in report.narrative.key_risks:
+            story.append(Paragraph(f"• {risk}", styles['Bullet']))
+        
+        story.append(Spacer(1, 0.3*inch))
+        
+        # ==========================================
+        # RECOMMENDATIONS
+        # ==========================================
+        story.append(Paragraph("Recommendations", styles['SectionHeading']))
+        story.append(Spacer(1, 0.1*inch))
+        
+        for i, rec in enumerate(report.narrative.recommendations, 1):
+            story.append(Paragraph(f"{i}. {rec}", styles['Bullet']))
+        
+        story.append(PageBreak())
+        
+        # ==========================================
+        # STRESS TEST ANALYSIS
+        # ==========================================
+        if report.stress_tests:
+            story.append(Paragraph("Stress Test Analysis", styles['SectionHeading']))
+            story.append(Spacer(1, 0.1*inch))
+            
+            stress_intro = """
+            The following stress tests evaluate plan resilience under adverse scenarios. 
+            Each test compares baseline assumptions against stressed conditions to quantify potential impacts.
+            """
+            story.append(Paragraph(stress_intro.strip(), styles['BodyText']))
+            story.append(Spacer(1, 0.15*inch))
+            
+            for stress in report.stress_tests[:3]:
+                # Stress test header
+                story.append(Paragraph(f"<b>{stress.name}</b>", styles['SubHeading']))
+                story.append(Paragraph(stress.description, styles['BodyText']))
+                story.append(Spacer(1, 0.1*inch))
+                
+                # Comparison table
+                stress_data = [
+                    ['Scenario', 'Success Probability', 'Impact'],
+                    ['Base Case', format_percent(stress.base_success_probability, 1), '—'],
+                    ['Stressed', format_percent(stress.stressed_success_probability, 1), 
+                     format_percent(stress.stressed_success_probability - stress.base_success_probability, 1)]
+                ]
+                
+                stress_table = Table(stress_data, colWidths=[2*inch, 1.75*inch, 1.5*inch])
+                stress_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), LIGHT_GRAY),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), DARK_GRAY),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                    ('TOPPADDING', (0, 0), (-1, -1), 8),
+                    ('GRID', (0, 0), (-1, -1), 0.5, DARK_GRAY),
+                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ]))
+                story.append(stress_table)
+                story.append(Spacer(1, 0.2*inch))
+            
+            story.append(PageBreak())
+        
+        # ==========================================
+        # CASH FLOW PROJECTION (sample years)
+        # ==========================================
+        if report.cash_flow_projection:
+            story.append(Paragraph("Cash Flow Projection", styles['SectionHeading']))
+            story.append(Spacer(1, 0.1*inch))
+            
+            # Show first 10 years
+            cf_data = [['Year', 'Age', 'Beginning', 'Withdrawals', 'Income', 'Taxes', 'Return', 'Ending']]
+            for cf in report.cash_flow_projection[:10]:
+                cf_data.append([
+                    str(cf.year),
+                    str(cf.age),
+                    format_currency(cf.beginning_balance, 0),
+                    format_currency(cf.withdrawals, 0),
+                    format_currency(cf.income_sources_total, 0),
+                    format_currency(cf.taxes, 0),
+                    format_currency(cf.investment_return, 0),
+                    format_currency(cf.ending_balance, 0)
+                ])
+            
+            cf_table = Table(cf_data, colWidths=[0.4*inch, 0.4*inch, 0.85*inch, 0.85*inch, 
+                                                  0.75*inch, 0.65*inch, 0.75*inch, 0.85*inch])
+            cf_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), SALEM_NAVY),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+                ('ALIGN', (0, 0), (1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 8),
+                ('FONTSIZE', (0, 1), (-1, -1), 7),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                ('TOPPADDING', (0, 0), (-1, 0), 8),
+                ('TOPPADDING', (0, 1), (-1, -1), 5),
+                ('BOTTOMPADDING', (0, 1), (-1, -1), 5),
+                ('GRID', (0, 0), (-1, -1), 0.5, DARK_GRAY),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, LIGHT_GRAY]),
+            ]))
+            story.append(cf_table)
+            story.append(Spacer(1, 0.1*inch))
+            story.append(Paragraph(
+                "<i>Note: Table shows first 10 years. Full projection available upon request.</i>",
+                styles['BodyText']
+            ))
+            
+            story.append(PageBreak())
+        
+        # ==========================================
+        # PLANNING ASSUMPTIONS
+        # ==========================================
+        story.append(Paragraph("Planning Assumptions", styles['SectionHeading']))
+        story.append(Spacer(1, 0.1*inch))
+        
+        assumptions_text = f"""
+        <b>Planning Horizon:</b> {report.assumptions.planning_horizon_years} years<br/>
+        <b>Expected Return (Real):</b> {format_percent(report.assumptions.real_return_mean, 1)}<br/>
+        <b>Return Volatility:</b> {format_percent(report.assumptions.real_return_std, 1)}<br/>
+        <b>Inflation Rate:</b> {format_percent(report.assumptions.inflation_rate, 1)}<br/>
+        <b>Spending Rule:</b> {report.assumptions.spending_rule_description}<br/>
+        """
+        story.append(Paragraph(assumptions_text, styles['BodyText']))
+        story.append(Spacer(1, 0.15*inch))
+        
+        # Additional assumptions
+        if report.assumptions.other_assumptions:
+            story.append(Paragraph("<b>Additional Assumptions:</b>", styles['SubHeading']))
+            for key, value in list(report.assumptions.other_assumptions.items())[:8]:
+                formatted_key = key.replace('_', ' ').title()
+                story.append(Paragraph(f"• <b>{formatted_key}:</b> {value}", styles['Bullet']))
+        
+        story.append(PageBreak())
+        
+        # ==========================================
+        # APPENDIX
+        # ==========================================
+        story.append(Paragraph("Appendix", styles['SectionHeading']))
+        story.append(Spacer(1, 0.1*inch))
+        
+        for item in report.appendix:
+            story.append(Paragraph(f"<b>{item.title}</b>", styles['SubHeading']))
+            for content_item in item.content:
+                story.append(Paragraph(f"• {content_item}", styles['Bullet']))
+            story.append(Spacer(1, 0.15*inch))
+        
+        # ==========================================
+        # Build PDF
+        # ==========================================
+        def add_page_number(canvas, doc):
+            """Add page numbers to each page"""
+            page_num = canvas.getPageNumber()
+            text = f"Page {page_num}"
+            canvas.saveState()
+            canvas.setFont('Helvetica', 9)
+            canvas.setFillColor(DARK_GRAY)
+            canvas.drawRightString(7.5*inch, 0.5*inch, text)
+            canvas.drawString(0.75*inch, 0.5*inch, f"Salem Investment Counselors | {report.summary.client_name}")
+            canvas.restoreState()
+        
+        doc.build(story, onFirstPage=add_page_number, onLaterPages=add_page_number)
+        pdf_buffer.seek(0)
+        
+        # Generate filename
+        client_name = report.summary.client_name.replace(' ', '_')
+        filename = f"Portfolio_Analysis_{client_name}_{date.today().strftime('%Y%m%d')}.pdf"
+        
+        logger.info(f"PDF generated successfully for plan_id: {plan_id}")
+        
+        # Return as streaming response
+        return StreamingResponse(
+            pdf_buffer,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"'
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to generate PDF for plan_id {plan_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")

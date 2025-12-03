@@ -155,7 +155,14 @@ const ScenariosPage: React.FC = () => {
       const allResults = await Promise.all(
         parametersToAnalyze.map(async (param) => {
           try {
-            const variations = variationsByParameter[param] || [-0.03, -0.02, -0.01, 0, 0.01, 0.02, 0.03];
+            let variations = variationsByParameter[param] || [-0.03, -0.02, -0.01, 0, 0.01, 0.02, 0.03];
+            
+            // For monthly_spending, convert percentage variations to actual dollar amounts
+            // Note: monthly_spending is negative (outflow), so we need to handle the math correctly
+            if (param === 'monthly_spending') {
+              const baseSpending = Math.abs(modelInputs.monthly_spending); // Work with positive amount
+              variations = variations.map(pct => -baseSpending * (1 + pct)); // Keep negative sign
+            }
             
             const response = await apiClient.axiosClient.post('/simulation/sensitivity', {
               inputs: modelInputs,
@@ -164,12 +171,23 @@ const ScenariosPage: React.FC = () => {
             });
 
             // Transform results for this parameter
-            return response.data.results.map((result: any) => ({
-              parameter: param,
-              variation: result.parameter_value,
-              successProbability: result.success_probability,
-              impact: result.success_probability,
-            }));
+            return response.data.results.map((result: any) => {
+              let displayVariation = result.parameter_value;
+              
+              // For monthly_spending, convert back to percentage for display
+              if (param === 'monthly_spending') {
+                const baseSpending = modelInputs.monthly_spending;
+                // Calculate percentage change from baseline
+                displayVariation = (result.parameter_value - baseSpending) / Math.abs(baseSpending);
+              }
+              
+              return {
+                parameter: param,
+                variation: displayVariation,
+                successProbability: result.success_probability,
+                impact: result.success_probability,
+              };
+            });
           } catch (error) {
             console.error(`Failed to analyze ${param}:`, error);
             return [];

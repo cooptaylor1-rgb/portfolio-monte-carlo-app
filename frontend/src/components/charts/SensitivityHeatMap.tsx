@@ -13,6 +13,10 @@ import {
   ComposedChart,
 } from 'recharts';
 
+// ==========================================
+// TYPES & INTERFACES
+// ==========================================
+
 interface SensitivityDataPoint {
   parameter: string;
   variation: number;
@@ -25,24 +29,72 @@ interface SensitivityHeatMapProps {
   height?: number;
 }
 
+// ==========================================
+// SALEM BRANDING CONSTANTS
+// ==========================================
+
+const SALEM_COLORS = {
+  equityReturn: '#00335D',      // Salem Navy
+  fixedIncomeReturn: '#4B8F29', // Muted Green
+  inflationRate: '#C9A227',     // Gold/Amber
+  monthlySpending: '#9E2A2B',   // Salem Red
+  baseline: '#6B7280',          // Neutral Gray
+  gridLines: '#262A33',         // Dark Grid
+  textPrimary: '#F3F4F6',       // Light Text
+  textSecondary: '#9CA3AF',     // Muted Text
+  successStrong: '#10B981',     // Emerald (>80%)
+  successAdequate: '#F59E0B',   // Amber (60-80%)
+  successAtRisk: '#EF4444',     // Red (<60%)
+} as const;
+
+const THRESHOLD_BANDS = {
+  strong: { value: 0.80, label: 'Strong', color: SALEM_COLORS.successStrong },
+  adequate: { value: 0.60, label: 'At Risk', color: SALEM_COLORS.successAtRisk },
+} as const;
+
+// ==========================================
+// UTILITY FORMATTERS
+// ==========================================
+
+const formatters = {
+  percent: (value: number, decimals: number = 1): string => {
+    return `${(value * 100).toFixed(decimals)}%`;
+  },
+  
+  variation: (value: number): string => {
+    const sign = value >= 0 ? '+' : '';
+    return `${sign}${(value * 100).toFixed(1)}%`;
+  },
+  
+  parameterLabel: (param: string): string => {
+    const labels: Record<string, string> = {
+      'equity_return_annual': 'Equity Return',
+      'fi_return_annual': 'Fixed Income Return',
+      'inflation_annual': 'Inflation Rate',
+      'monthly_spending': 'Monthly Spending',
+    };
+    return labels[param] || param.replace(/_/g, ' ');
+  },
+  
+  successLevel: (probability: number): string => {
+    if (probability >= 0.80) return 'Strong';
+    if (probability >= 0.60) return 'Adequate';
+    return 'At Risk';
+  },
+} as const;
+
 export const SensitivityHeatMap: React.FC<SensitivityHeatMapProps> = ({
   data,
   height = 500,
 }) => {
-  const formatPercent = (value: number) => {
-    return `${(value * 100).toFixed(1)}%`;
-  };
+  // ==========================================
+  // DATA TRANSFORMATION
+  // ==========================================
 
-  const formatVariation = (value: number) => {
-    const sign = value >= 0 ? '+' : '';
-    return `${sign}${(value * 100).toFixed(1)}%`;
-  };
-
-  // Transform data for line chart
+  // Transform data for line chart - group by variation
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return [];
     
-    // Group by variation value
     const grouped = data.reduce((acc, point) => {
       const key = point.variation.toFixed(4);
       if (!acc[key]) {
@@ -55,54 +107,141 @@ export const SensitivityHeatMap: React.FC<SensitivityHeatMapProps> = ({
     return Object.values(grouped).sort((a, b) => a.variation - b.variation);
   }, [data]);
 
-  // Get unique parameters
+  // Get unique parameters present in data
   const parameters = useMemo(() => {
     return Array.from(new Set(data.map(d => d.parameter)));
   }, [data]);
 
-  // Calculate insights
+  // ==========================================
+  // INSIGHTS CALCULATION
+  // ==========================================
+
   const insights = useMemo(() => {
     if (!data || data.length === 0) return [];
     
     const results: string[] = [];
-    const baselinePoint = data.find(d => Math.abs(d.variation) < 0.001);
-    
-    if (!baselinePoint) return results;
     
     parameters.forEach(param => {
       const paramData = data.filter(d => d.parameter === param);
-      const minPoint = paramData.reduce((min, p) => p.successProbability < min.successProbability ? p : min);
-      const maxPoint = paramData.reduce((max, p) => p.successProbability > max.successProbability ? p : max);
+      if (paramData.length === 0) return;
+      
+      const minPoint = paramData.reduce((min, p) => 
+        p.successProbability < min.successProbability ? p : min
+      );
+      const maxPoint = paramData.reduce((max, p) => 
+        p.successProbability > max.successProbability ? p : max
+      );
       const range = maxPoint.successProbability - minPoint.successProbability;
       
-      const paramLabel = param.replace(/_/g, ' ').replace(/annual/g, '').trim();
+      const paramLabel = formatters.parameterLabel(param);
       
       if (range > 0.20) {
-        results.push(`${paramLabel}: Highly sensitive (${formatPercent(range)} range)`);
+        results.push(`${paramLabel}: Highly sensitive (${formatters.percent(range, 0)} range)`);
       } else if (range > 0.10) {
-        results.push(`${paramLabel}: Moderately sensitive (${formatPercent(range)} range)`);
+        results.push(`${paramLabel}: Moderately sensitive (${formatters.percent(range, 0)} range)`);
       } else {
-        results.push(`${paramLabel}: Low sensitivity (${formatPercent(range)} range)`);
+        results.push(`${paramLabel}: Low sensitivity (${formatters.percent(range, 0)} range)`);
       }
     });
     
     return results;
   }, [data, parameters]);
 
-  // Color scheme for different parameters
-  const parameterColors: Record<string, string> = {
-    'equity_return_annual': '#4CA6E8',
-    'fi_return_annual': '#7AC18D',
-    'inflation_annual': '#FFC107',
-    'monthly_spending': '#D9534F',
+  // Parameter styling configuration
+  const parameterConfig: Record<string, { color: string; label: string; zIndex: number }> = {
+    'monthly_spending': { 
+      color: SALEM_COLORS.monthlySpending, 
+      label: 'Monthly Spending',
+      zIndex: 4, // Top priority
+    },
+    'inflation_annual': { 
+      color: SALEM_COLORS.inflationRate, 
+      label: 'Inflation Rate',
+      zIndex: 3,
+    },
+    'equity_return_annual': { 
+      color: SALEM_COLORS.equityReturn, 
+      label: 'Equity Return',
+      zIndex: 2,
+    },
+    'fi_return_annual': { 
+      color: SALEM_COLORS.fixedIncomeReturn, 
+      label: 'Fixed Income Return',
+      zIndex: 1,
+    },
   };
 
-  const parameterLabels: Record<string, string> = {
-    'equity_return_annual': 'Equity Return',
-    'fi_return_annual': 'Fixed Income Return',
-    'inflation_annual': 'Inflation Rate',
-    'monthly_spending': 'Monthly Spending',
+  // ==========================================
+  // CUSTOM TOOLTIP
+  // ==========================================
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload || payload.length === 0) return null;
+
+    return (
+      <div className="bg-surface-elevated border border-border rounded-lg shadow-xl p-4 min-w-[240px]">
+        <div className="text-text-secondary text-xs font-medium mb-2 pb-2 border-b border-border">
+          Parameter Shift: {formatters.variation(label)}
+        </div>
+        <div className="space-y-2">
+          {payload.map((entry: any, index: number) => {
+            const config = parameterConfig[entry.dataKey];
+            if (!config) return null;
+            
+            return (
+              <div key={index} className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: entry.color }}
+                  />
+                  <span className="text-text-primary text-sm font-medium">
+                    {config.label}
+                  </span>
+                </div>
+                <span className="text-text-primary text-sm font-semibold">
+                  {formatters.percent(entry.value, 1)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
+
+  // ==========================================
+  // CUSTOM LEGEND
+  // ==========================================
+
+  const CustomLegend = ({ payload }: any) => {
+    if (!payload || payload.length === 0) return null;
+
+    return (
+      <div className="flex flex-wrap items-center justify-center gap-6 px-4 py-3">
+        {payload.map((entry: any, index: number) => {
+          const config = parameterConfig[entry.dataKey];
+          if (!config) return null;
+          
+          return (
+            <div key={index} className="flex items-center gap-2">
+              <div 
+                className="w-3 h-3 rounded-full" 
+                style={{ backgroundColor: entry.color }}
+              />
+              <span className="text-text-primary text-sm font-medium">
+                {config.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // ==========================================
+  // RENDER
+  // ==========================================
 
   if (!data || data.length === 0) {
     return (
@@ -116,144 +255,233 @@ export const SensitivityHeatMap: React.FC<SensitivityHeatMapProps> = ({
     <div className="space-y-6">
       {/* Chart */}
       <ResponsiveContainer width="100%" height={height}>
-        <ComposedChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+        <ComposedChart 
+          data={chartData} 
+          margin={{ top: 20, right: 40, left: 20, bottom: 70 }}
+        >
           <defs>
-            <linearGradient id="successGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#4CAF50" stopOpacity={0.1} />
-              <stop offset="100%" stopColor="#4CAF50" stopOpacity={0} />
+            {/* Success band gradients */}
+            <linearGradient id="strongGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={SALEM_COLORS.successStrong} stopOpacity={0.05} />
+              <stop offset="100%" stopColor={SALEM_COLORS.successStrong} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#262A33" />
+          
+          {/* Grid */}
+          <CartesianGrid 
+            strokeDasharray="3 3" 
+            stroke={SALEM_COLORS.gridLines}
+            opacity={0.5}
+          />
+          
+          {/* X-Axis */}
           <XAxis
             dataKey="variation"
-            tickFormatter={formatVariation}
-            stroke="#9CA3AF"
-            style={{ fontSize: '12px' }}
+            tickFormatter={formatters.variation}
+            stroke={SALEM_COLORS.textSecondary}
+            style={{ fontSize: '13px', fontWeight: 500 }}
+            tick={{ fill: SALEM_COLORS.textSecondary }}
             label={{
               value: 'Parameter Change from Baseline',
               position: 'insideBottom',
-              offset: -45,
-              fill: '#9CA3AF',
-              style: { fontSize: '13px' },
+              offset: -50,
+              fill: SALEM_COLORS.textPrimary,
+              style: { fontSize: '14px', fontWeight: 600 },
             }}
+            axisLine={{ stroke: SALEM_COLORS.textSecondary, strokeWidth: 1 }}
+            tickLine={{ stroke: SALEM_COLORS.textSecondary }}
           />
+          
+          {/* Y-Axis */}
           <YAxis
-            tickFormatter={formatPercent}
-            stroke="#9CA3AF"
-            style={{ fontSize: '12px' }}
-            domain={['dataMin - 0.05', 'dataMax + 0.05']}
+            tickFormatter={(value) => formatters.percent(value, 0)}
+            stroke={SALEM_COLORS.textSecondary}
+            style={{ fontSize: '13px', fontWeight: 500 }}
+            tick={{ fill: SALEM_COLORS.textSecondary }}
+            domain={[0, 1]}
+            ticks={[0, 0.2, 0.4, 0.6, 0.8, 1.0]}
             label={{
               value: 'Success Probability',
               angle: -90,
               position: 'insideLeft',
-              fill: '#9CA3AF',
-              style: { fontSize: '13px' },
+              fill: SALEM_COLORS.textPrimary,
+              style: { fontSize: '14px', fontWeight: 600 },
             }}
+            axisLine={{ stroke: SALEM_COLORS.textSecondary, strokeWidth: 1 }}
+            tickLine={{ stroke: SALEM_COLORS.textSecondary }}
           />
           
-          {/* Baseline reference line */}
-          <ReferenceLine 
-            x={0} 
-            stroke="#B49759" 
-            strokeDasharray="3 3" 
-            strokeWidth={2}
-            label={{ 
-              value: 'Baseline', 
-              position: 'top', 
-              fill: '#B49759',
-              fontSize: 12,
-            }}
-          />
+          {/* Tooltip */}
+          <Tooltip content={<CustomTooltip />} />
           
-          {/* Critical success thresholds */}
-          <ReferenceLine 
-            y={0.85} 
-            stroke="#4CAF50" 
-            strokeDasharray="2 2" 
-            strokeOpacity={0.3}
-            label={{ 
-              value: 'Strong (85%)', 
-              position: 'right', 
-              fill: '#4CAF50',
-              fontSize: 11,
-            }}
-          />
-          <ReferenceLine 
-            y={0.70} 
-            stroke="#FFC107" 
-            strokeDasharray="2 2" 
-            strokeOpacity={0.3}
-            label={{ 
-              value: 'Adequate (70%)', 
-              position: 'right', 
-              fill: '#FFC107',
-              fontSize: 11,
-            }}
-          />
-          
-          <Tooltip
-            contentStyle={{
-              backgroundColor: '#12141A',
-              border: '1px solid #262A33',
-              borderRadius: '8px',
-              padding: '12px',
-            }}
-            labelStyle={{ color: '#E6E8EC', fontWeight: 600, marginBottom: '8px' }}
-            formatter={(value: any, name: string) => {
-              const label = parameterLabels[name] || name;
-              return [formatPercent(value), label];
-            }}
-            labelFormatter={(value) => `Change: ${formatVariation(value)}`}
-          />
+          {/* Legend */}
           <Legend 
-            wrapperStyle={{ paddingTop: '20px' }}
-            formatter={(value) => parameterLabels[value] || value}
+            content={<CustomLegend />}
+            wrapperStyle={{ paddingTop: '24px' }}
           />
           
-          {/* Plot lines for each parameter */}
-          {parameters.map((param, index) => (
-            <Line
-              key={param}
-              type="monotone"
-              dataKey={param}
-              stroke={parameterColors[param] || '#94A3B8'}
-              strokeWidth={3}
-              dot={{ r: 5, strokeWidth: 2, fill: '#12141A' }}
-              activeDot={{ r: 7 }}
-              name={param}
-            />
-          ))}
+          {/* Baseline Reference Line */}
+          <ReferenceLine
+            x={0}
+            stroke={SALEM_COLORS.baseline}
+            strokeWidth={1.5}
+            strokeDasharray="4 4"
+            strokeOpacity={0.6}
+          >
+            <text
+              x={0}
+              y={15}
+              textAnchor="middle"
+              fill={SALEM_COLORS.textPrimary}
+              fontSize={12}
+              fontWeight={600}
+              style={{ 
+                textShadow: '0 0 4px rgba(0,0,0,0.8)',
+              }}
+            >
+              Baseline
+            </text>
+          </ReferenceLine>
+
+          {/* Success Threshold Bands */}
+          <ReferenceLine
+            y={THRESHOLD_BANDS.strong.value}
+            stroke={THRESHOLD_BANDS.strong.color}
+            strokeWidth={1}
+            strokeDasharray="4 4"
+            strokeOpacity={0.25}
+          >
+            <text
+              x="95%"
+              y={THRESHOLD_BANDS.strong.value * height - 10}
+              textAnchor="end"
+              fill={THRESHOLD_BANDS.strong.color}
+              fontSize={11}
+              fontWeight={500}
+              opacity={0.6}
+            >
+              {THRESHOLD_BANDS.strong.label}
+            </text>
+          </ReferenceLine>
+          
+          <ReferenceLine
+            y={THRESHOLD_BANDS.adequate.value}
+            stroke={THRESHOLD_BANDS.adequate.color}
+            strokeWidth={1}
+            strokeDasharray="4 4"
+            strokeOpacity={0.25}
+          >
+            <text
+              x="95%"
+              y={THRESHOLD_BANDS.adequate.value * height + 20}
+              textAnchor="end"
+              fill={THRESHOLD_BANDS.adequate.color}
+              fontSize={11}
+              fontWeight={500}
+              opacity={0.6}
+            >
+              {THRESHOLD_BANDS.adequate.label}
+            </text>
+          </ReferenceLine>
+
+          {/* Lines for each parameter - ordered by z-index */}
+          {parameters
+            .sort((a, b) => {
+              const zIndexA = parameterConfig[a]?.zIndex || 0;
+              const zIndexB = parameterConfig[b]?.zIndex || 0;
+              return zIndexA - zIndexB;
+            })
+            .map((param) => {
+              const config = parameterConfig[param];
+              if (!config) return null;
+              
+              return (
+                <Line
+                  key={param}
+                  type="monotone"
+                  dataKey={param}
+                  stroke={config.color}
+                  strokeWidth={3}
+                  dot={{ 
+                    fill: config.color, 
+                    r: 4,
+                    strokeWidth: 2,
+                    stroke: '#1A1D24',
+                  }}
+                  activeDot={{ 
+                    r: 7, 
+                    strokeWidth: 3, 
+                    stroke: SALEM_COLORS.textPrimary,
+                    fill: config.color,
+                  }}
+                  name={param}
+                  connectNulls
+                />
+              );
+            })
+          }
         </ComposedChart>
       </ResponsiveContainer>
 
-      {/* Key Insights */}
+      {/* Insights Panel */}
       {insights.length > 0 && (
-        <div className="bg-background-elevated border border-background-border rounded-lg p-5">
-          <h4 className="text-h4 font-semibold text-text-primary mb-3 flex items-center gap-2">
-            <svg className="w-5 h-5 text-accent-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Key Sensitivity Insights
-          </h4>
-          <div className="space-y-2">
-            {insights.map((insight, idx) => (
-              <div key={idx} className="flex items-start gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-accent-gold mt-2 flex-shrink-0" />
-                <p className="text-body text-text-secondary">{insight}</p>
-              </div>
-            ))}
+        <div className="bg-surface-elevated border border-border rounded-lg p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-brand-primary/10 flex items-center justify-center">
+              <svg
+                className="w-5 h-5 text-brand-primary"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-text-primary">
+              Sensitivity Analysis Insights
+            </h3>
+          </div>
+          <div className="grid gap-3">
+            {insights.map((insight, index) => {
+              // Extract parameter name to show colored indicator
+              const paramMatch = insight.match(/^([^:]+):/);
+              const paramName = paramMatch ? paramMatch[1].toLowerCase() : '';
+              
+              let indicatorColor = SALEM_COLORS.textSecondary;
+              if (paramName.includes('equity')) indicatorColor = SALEM_COLORS.equityReturn;
+              else if (paramName.includes('fixed') || paramName.includes('income')) indicatorColor = SALEM_COLORS.fixedIncomeReturn;
+              else if (paramName.includes('inflation')) indicatorColor = SALEM_COLORS.inflationRate;
+              else if (paramName.includes('spending')) indicatorColor = SALEM_COLORS.monthlySpending;
+              
+              return (
+                <div key={index} className="flex items-start gap-3 group">
+                  <div 
+                    className="w-1 h-6 rounded-full flex-shrink-0 mt-0.5"
+                    style={{ backgroundColor: indicatorColor }}
+                  />
+                  <span className="text-text-secondary text-sm leading-relaxed group-hover:text-text-primary transition-colors">
+                    {insight}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          
+          {/* Interpretation Guide */}
+          <div className="mt-6 pt-6 border-t border-border">
+            <p className="text-text-tertiary text-xs leading-relaxed">
+              <span className="font-semibold text-text-secondary">How to interpret:</span> Higher sensitivity indicates 
+              greater impact on success probability. Parameters with wider ranges require more careful planning and 
+              may benefit from conservative assumptions or risk mitigation strategies.
+            </p>
           </div>
         </div>
       )}
-
-      {/* Legend explanation */}
-      <div className="bg-background-base bg-opacity-50 rounded-lg p-4 border border-background-border">
-        <p className="text-small text-text-tertiary">
-          <strong className="text-text-secondary">How to interpret:</strong> Steeper lines indicate greater sensitivity. 
-          Parameters with flatter lines have less impact on success probability. Focus risk management efforts on 
-          the most sensitive parameters (steepest lines).
-        </p>
-      </div>
     </div>
   );
 };
