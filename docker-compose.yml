@@ -7,7 +7,7 @@ version: '3.9'
 
 services:
   # ============================================================
-  # Main Application Service
+  # FastAPI Backend Service
   # ============================================================
   app:
     build:
@@ -15,9 +15,9 @@ services:
       dockerfile: Dockerfile
       target: runtime
     image: portfolio-analyzer:local
-    container_name: portfolio-analyzer-app
+    container_name: portfolio-analyzer-api
     ports:
-      - "8501:8501"  # Streamlit UI
+      - "8000:8000"  # FastAPI API
     environment:
       # Application config
       - APP_ENV=development
@@ -48,19 +48,11 @@ services:
       - RATE_LIMIT_ENABLED=false
       - ALLOWED_ORIGINS=*
     volumes:
-      # Mount code for hot-reloading during development
-      - ./app.py:/app/app.py:ro
-      - ./charts_institutional.py:/app/charts_institutional.py:ro
-      - ./scenario_intelligence.py:/app/scenario_intelligence.py:ro
-      - ./ai_engine.py:/app/ai_engine.py:ro
-      - ./ai_stress_audit.py:/app/ai_stress_audit.py:ro
-      - ./performance_optimizer.py:/app/performance_optimizer.py:ro
+      # Mount backend code for hot-reloading during development
+      - ./backend:/app/backend:ro
       
       # Persist audit logs
       - ./audit_logs:/app/audit_logs
-      
-      # Mount static assets
-      - "./Salem logo.png:/app/Salem logo.png:ro"
     networks:
       - portfolio-net
     healthcheck:
@@ -223,8 +215,8 @@ volumes:
 # 7. View resource usage:
 #    docker-compose stats
 #
-# 8. Access application:
-#    http://localhost:8501
+# 8. Access FastAPI API:
+#    http://localhost:8000/api/docs
 #
 # 9. Access Prometheus (if enabled):
 #    http://localhost:9090

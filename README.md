@@ -40,27 +40,22 @@ npm run dev  # Runs on http://localhost:3000
 
 - **[MIGRATION_README.md](MIGRATION_README.md)** - Full architecture documentation
 - **[QUICKSTART.md](QUICKSTART.md)** - Setup and first steps guide
-- **[STREAMLIT_ANALYSIS.md](STREAMLIT_ANALYSIS.md)** - Detailed migration analysis
 - **[MIGRATION_SUMMARY.md](MIGRATION_SUMMARY.md)** - Migration summary report
 - **API Docs**: http://localhost:8000/api/docs (when backend running)
-
-### ⚠️ Original Streamlit App
-
-The original Streamlit application (`app.py`) is **DEPRECATED** as of December 2025 but kept for reference. All new development uses the React + FastAPI stack.
 
 ---
 
 ## 💻 New Architecture Benefits
 
-| Feature | Streamlit (Old) | React + FastAPI (New) |
-|---------|-----------------|------------------------|
-| **Performance** | ~10-30 seconds | ~2-5 seconds (10-50x faster) |
-| **UI Framework** | Python-based | Professional React SPA |
-| **Type Safety** | Partial | 100% (Pydantic + TypeScript) |
-| **API** | None | RESTful with OpenAPI docs |
-| **Scalability** | Monolithic | Microservices-ready |
-| **Testing** | Limited | Comprehensive test suite |
-| **Mobile** | Basic | Responsive design |
+**Key Architecture Features:**
+
+- ⚡ **High Performance**: Vectorized Monte Carlo simulations (2-5 second response times)
+- 🎨 **Modern UI**: Professional React SPA with TypeScript
+- 🔒 **Type Safety**: 100% type-safe with Pydantic (backend) and TypeScript (frontend)
+- 📡 **RESTful API**: OpenAPI/Swagger documentation at `/api/docs`
+- 📈 **Scalable**: Microservices-ready architecture
+- ✅ **Well-Tested**: Comprehensive test suite for reliability
+- 📱 **Responsive**: Mobile-friendly design system
 
 ---
 
@@ -177,54 +172,27 @@ New Architecture:
 
 1. Open the repository in a **Codespace**
 2. Open a terminal inside the Codespace
-3. Install dependencies:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Run the Streamlit app:
-
-   ```bash
-   streamlit run app.py
-   ```
-
-5. The app will be available on port 8501 (Codespaces will forward the port automatically)
-
-### Local Installation
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd portfolio-monte-carlo-app
-
-# Create virtual environment (optional but recommended)
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the app
-streamlit run app.py
-```
-
-The app will open in your browser at `http://localhost:8501`
-
 ---
 
-## 📦 Dependencies
+## 🛠️ Technical Stack
 
-```
-streamlit>=1.30.0
-pandas>=2.0.0
-numpy>=1.24.0
-altair>=5.0.0
-xlsxwriter>=3.1.0
-openpyxl>=3.1.0
-```
+**Backend:**
+- FastAPI (Python 3.12+)
+- Pydantic for data validation
+- NumPy for high-performance Monte Carlo simulations
+- Pandas for data manipulation
 
-Install with: `pip install -r requirements.txt`
+**Frontend:**
+- React 18 with TypeScript
+- Vite for blazing-fast development
+- Tailwind CSS for styling
+- Recharts for data visualization
+- Axios for API communication
+
+**Development Tools:**
+- pytest for backend testing
+- ESLint & Prettier for code quality
+- Docker for containerization
 
 ---
 
@@ -393,24 +361,23 @@ Quantify tax savings from optimal account withdrawal sequencing.
 ### Project Structure
 ```
 portfolio-monte-carlo-app/
-├── app.py                              # Main Streamlit application (5,912 lines)
-├── requirements.txt                    # Python dependencies
-├── README.md                           # This file
-├── PHASE1_IMPLEMENTATION_SUMMARY.md    # Phase 1 details
-├── PHASE2_IMPLEMENTATION_SUMMARY.md    # Phase 2 details
-├── PHASE3_IMPLEMENTATION_SUMMARY.md    # Phase 3 details  (if exists)
-├── PHASE4_IMPLEMENTATION_SUMMARY.md    # Phase 4 details
-└── IMPLEMENTATION_ROADMAP.md           # Overall roadmap
+├── backend/                            # FastAPI application
+│   ├── main.py                         # API entry point
+│   ├── requirements.txt                # Python dependencies
+│   ├── api/                            # API endpoints
+│   ├── core/                           # Business logic
+│   └── models/                         # Data models
+├── frontend/                           # React application
+│   ├── src/                            # TypeScript source
+│   ├── package.json                    # Node dependencies
+│   └── vite.config.ts                  # Build configuration
+├── docs/                               # Documentation
+├── k8s/                                # Kubernetes deployment files
+└── README.md                           # This file
 ```
 
-### Code Statistics
-- **Total Lines**: 6,635
-- **Functions**: 70+
-- **Features**: 40+
-- **Phases Complete**: 5/5 (100% core features)
-
 ### Contributing
-This is a demonstration project. Feel free to fork and enhance!
+This is an open-source project. Feel free to fork and enhance!
 
 ---
 
@@ -477,12 +444,13 @@ For questions or issues:
 
 ---
 
-**Version**: 2.5  
-**Last Updated**: December 2, 2025  
+**Version**: 2.0  
+**Last Updated**: December 3, 2025  
 **Status**: Production-Ready  
-**Phases Complete**: 1, 2, 3, 4, 5 ✅
+**Architecture**: React + FastAPI
 
 ---
 
-*Built with ❤️ using Streamlit, NumPy, Pandas, and Altair*
+*Built with ❤️ using React, FastAPI, TypeScript, NumPy, and Pandas*
+
 

@@ -172,16 +172,8 @@ class RateLimiter:
     
     def _get_client_id(self, request) -> str:
         """Extract client identifier from request."""
-        # For Streamlit, we can use session ID or IP
-        # In production, use user ID or IP address
-        try:
-            import streamlit as st
-            if hasattr(st, 'session_state') and hasattr(st.session_state, 'session_id'):
-                return st.session_state.session_id
-        except:
-            pass
-        
-        # Fallback to a generic client (not ideal for production)
+        # For FastAPI, use client IP from request
+        # In production, use authenticated user ID or IP address
         return "default_client"
     
     def _cleanup_old_buckets(self):
@@ -326,32 +318,6 @@ class SecurityHeaders:
 def hash_sensitive_data(data: str) -> str:
     """Hash sensitive data for logging/storage."""
     return hashlib.sha256(data.encode()).hexdigest()[:16]
-
-
-def validate_session():
-    """Validate user session."""
-    try:
-        import streamlit as st
-        
-        # Check if session exists
-        if not hasattr(st, 'session_state'):
-            return False
-        
-        # Check session timeout (example: 1 hour)
-        if 'session_start' not in st.session_state:
-            st.session_state.session_start = datetime.now()
-            return True
-        
-        session_age = datetime.now() - st.session_state.session_start
-        if session_age > timedelta(hours=1):
-            logger.warning("Session expired")
-            return False
-        
-        return True
-    
-    except Exception as e:
-        logger.error(f"Session validation failed: {e}")
-        return False
 
 
 # Initialize global rate limiter

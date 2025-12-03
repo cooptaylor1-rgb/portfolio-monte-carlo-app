@@ -60,16 +60,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONHASHSEED=random \
     PATH="/opt/venv/bin:$PATH" \
-    # Streamlit configuration
-    STREAMLIT_SERVER_PORT=8501 \
-    STREAMLIT_SERVER_ADDRESS=0.0.0.0 \
-    STREAMLIT_SERVER_HEADLESS=true \
-    STREAMLIT_BROWSER_GATHER_USAGE_STATS=false \
-    STREAMLIT_SERVER_FILE_WATCHER_TYPE=none \
     # Application configuration
     APP_ENV=production \
     LOG_LEVEL=INFO \
-    ENABLE_METRICS=true
+    ENABLE_METRICS=true \
+    # FastAPI configuration
+    API_PORT=8000 \
+    API_HOST=0.0.0.0
 
 # Install runtime dependencies only (minimal)
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -93,22 +90,10 @@ COPY --from=builder --chown=appuser:appuser /opt/venv /opt/venv
 # Set working directory
 WORKDIR /app
 
-# Copy application code
-COPY --chown=appuser:appuser app.py .
-COPY --chown=appuser:appuser config.py .
-COPY --chown=appuser:appuser observability.py .
-COPY --chown=appuser:appuser security.py .
-COPY --chown=appuser:appuser healthcheck.py .
-COPY --chown=appuser:appuser charts_institutional.py .
-COPY --chown=appuser:appuser scenario_intelligence.py .
-COPY --chown=appuser:appuser ai_engine.py .
-COPY --chown=appuser:appuser ai_stress_audit.py .
-COPY --chown=appuser:appuser performance_optimizer.py .
+# Copy backend application code
+COPY --chown=appuser:appuser backend/ ./backend/
 
-# Copy static assets (using wildcard to handle spaces in filenames)
-COPY --chown=appuser:appuser *.png ./
-
-# Create health check script
+# Create health check script for FastAPI
 COPY --chown=appuser:appuser <<'EOF' /app/healthcheck.py
 #!/usr/bin/env python3
 """Health check script for container orchestration."""
@@ -117,9 +102,9 @@ import urllib.request
 import urllib.error
 
 def check_health():
-    """Check if application is healthy."""
+    """Check if FastAPI application is healthy."""
     try:
-        with urllib.request.urlopen('http://localhost:8501/health', timeout=2) as response:
+        with urllib.request.urlopen('http://localhost:8000/api/health', timeout=2) as response:
             if response.status == 200:
                 return 0
             return 1
@@ -135,8 +120,8 @@ RUN chmod +x /app/healthcheck.py
 # Switch to non-root user
 USER appuser
 
-# Expose Streamlit port
-EXPOSE 8501
+# Expose FastAPI port
+EXPOSE 8000
 
 # Health check configuration
 # Check every 30s, timeout after 3s, start after 30s, allow 3 retries
@@ -144,19 +129,18 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
     CMD python /app/healthcheck.py || exit 1
 
 # Add metadata labels
-LABEL org.opencontainers.image.title="Portfolio Monte Carlo Analysis"
-LABEL org.opencontainers.image.description="AI-powered retirement portfolio analysis platform"
+LABEL org.opencontainers.image.title="Portfolio Monte Carlo Analysis - FastAPI Backend"
+LABEL org.opencontainers.image.description="AI-powered retirement portfolio analysis platform - REST API"
 LABEL org.opencontainers.image.vendor="Salem Investment Counselors"
 LABEL org.opencontainers.image.source="https://github.com/cooptaylor1-rgb/portfolio-monte-carlo-app"
 
-# Set entrypoint and command
-ENTRYPOINT ["streamlit", "run"]
-CMD ["app.py", \
-     "--server.port=8501", \
-     "--server.address=0.0.0.0", \
-     "--server.headless=true", \
-     "--browser.gatherUsageStats=false", \
-     "--server.fileWatcherType=none"]
+# Set entrypoint and command for FastAPI with uvicorn
+WORKDIR /app/backend
+ENTRYPOINT ["python", "-m", "uvicorn"]
+CMD ["main:app", \
+     "--host", "0.0.0.0", \
+     "--port", "8000", \
+     "--workers", "4"]
 
 # ============================================================
 # Build Instructions:
@@ -165,16 +149,16 @@ CMD ["app.py", \
 #   docker build -t portfolio-analyzer:dev .
 #
 # Production build with version tag:
-#   docker build -t portfolio-analyzer:1.0.0 \
+#   docker build -t portfolio-analyzer:2.0.0 \
 #                -t portfolio-analyzer:latest .
 #
 # Build with build args:
-#   docker build --build-arg APP_VERSION=1.0.0 \
+#   docker build --build-arg APP_VERSION=2.0.0 \
 #                --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
-#                -t portfolio-analyzer:1.0.0 .
+#                -t portfolio-analyzer:2.0.0 .
 #
 # Run container:
-#   docker run -p 8501:8501 \
+#   docker run -p 8000:8000 \
 #              -e APP_ENV=production \
 #              -e LOG_LEVEL=INFO \
 #              portfolio-analyzer:latest
@@ -184,5 +168,4 @@ CMD ["app.py", \
 #
 # Image size check:
 #   docker images portfolio-analyzer:latest
-#   Expected size: ~500MB (optimized from ~1GB)
 # ============================================================

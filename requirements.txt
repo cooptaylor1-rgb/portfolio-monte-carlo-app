@@ -1,7 +1,5 @@
-streamlit
 numpy
 pandas
-altair
 reportlab
 pillow
 openpyxl
