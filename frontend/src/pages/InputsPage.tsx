@@ -27,7 +27,8 @@ import {
   Settings,
   Zap,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 
 const InputsPage: React.FC = () => {
@@ -67,20 +68,94 @@ const InputsPage: React.FC = () => {
   };
 
   const handleRunSimulation = async () => {
+    console.log('=== RUN SIMULATION CLICKED ===');
+    console.log('Client Info:', JSON.stringify(clientInfo, null, 2));
+    console.log('Model Inputs (raw):', JSON.stringify(modelInputs, null, 2));
+    console.log('health_adjustment value:', modelInputs.health_adjustment, 'type:', typeof modelInputs.health_adjustment);
+    
     try {
       setIsLoading(true);
       setError(null);
-      const response = await apiClient.axiosClient.post('/simulation/run', {
+      
+      // Convert all numeric string fields to actual numbers
+      const sanitizedInputs = Object.entries(modelInputs).reduce((acc, [key, value]) => {
+        // Special handling for health_adjustment
+        if (key === 'health_adjustment') {
+          if (value === 'average' || value === 'poor' || value === 'excellent') {
+            // Convert string health values to numbers
+            const healthMap: Record<string, number> = {
+              'poor': -5,
+              'average': 0,
+              'excellent': 5
+            };
+            acc[key] = healthMap[value as string] || 0;
+          } else if (typeof value === 'string') {
+            acc[key] = parseInt(value, 10) || 0;
+          } else {
+            acc[key] = value;
+          }
+        }
+        // Convert other string numbers to actual numbers
+        else if (typeof value === 'string' && !isNaN(Number(value)) && value !== '') {
+          acc[key] = Number(value);
+        } else {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as any);
+      
+      const payload = {
         client_info: clientInfo,
-        model_inputs: modelInputs,
-      });
+        inputs: sanitizedInputs,
+      };
+      
+      console.log('health_adjustment after sanitization:', sanitizedInputs.health_adjustment);
+      console.log('Sanitized inputs:', JSON.stringify(sanitizedInputs, null, 2));
+      console.log('Sending request to /api/simulation/run');
+      
+      const response = await apiClient.axiosClient.post('/simulation/run', payload);
+      
+      console.log('Response received:', response.data);
       setSimulationResults(response.data);
       setHasRunSimulation(true);
+      console.log('Navigating to dashboard...');
       navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Simulation failed');
+      console.error('=== ERROR OCCURRED ===');
+      console.error('Error object:', err);
+      console.error('Error message:', err.message);
+      console.error('Error response:', err.response);
+      console.error('Error response data:', err.response?.data);
+      console.error('Error response status:', err.response?.status);
+      
+      let errorMessage = 'Simulation failed';
+      
+      if (err.response?.data) {
+        if (typeof err.response.data === 'string') {
+          errorMessage = err.response.data;
+        } else if (err.response.data.detail) {
+          if (Array.isArray(err.response.data.detail)) {
+            // Pydantic validation errors
+            errorMessage = err.response.data.detail.map((e: any) => 
+              `${e.loc?.join('.')} : ${e.msg}`
+            ).join('\n');
+          } else {
+            errorMessage = err.response.data.detail;
+          }
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        } else {
+          errorMessage = JSON.stringify(err.response.data);
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
+      alert('ERROR:\n\n' + errorMessage);
     } finally {
       setIsLoading(false);
+      console.log('=== RUN SIMULATION COMPLETE ===');
     }
   };
 
@@ -580,25 +655,32 @@ const InputsPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button
-              variant="tertiary"
-              size="md"
+            <button
               onClick={handleValidate}
-              loading={isLoading}
+              type="button"
               disabled={isLoading}
+              className="px-6 py-3 text-body font-semibold rounded-sm transition-all bg-background-hover text-text-secondary hover:bg-background-border hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Validate Inputs
-            </Button>
-            <Button
-              variant="primary"
-              size="md"
+              {isLoading ? 'Validating...' : 'Validate Inputs'}
+            </button>
+            <button
               onClick={handleRunSimulation}
-              loading={isLoading}
+              type="button"
               disabled={isLoading}
-              icon={<Zap size={18} />}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 text-body font-semibold rounded-sm transition-all bg-accent-gold text-text-primary hover:bg-accent-gold-light shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Run Monte Carlo Simulation
-            </Button>
+              {isLoading ? (
+                <>
+                  <Loader2 className="animate-spin" size={20} />
+                  Running...
+                </>
+              ) : (
+                <>
+                  <Zap size={18} />
+                  Run Monte Carlo Simulation
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>

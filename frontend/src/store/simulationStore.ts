@@ -96,7 +96,7 @@ const defaultModelInputs: ModelInputs = {
   estate_tax_rate: 0.40,
   legacy_goal: 0,
   use_actuarial_tables: false,
-  health_adjustment: 'average',
+  health_adjustment: 0,
   use_glide_path: false,
   target_equity_pct: 0.40,
   glide_start_age: 65,
