@@ -1,14 +1,29 @@
 /**
  * Print-Optimized Styles for Professional Reports
  * Ensures clean PDF/print output with proper page breaks and formatting
+ * Optimized for grayscale printing with good contrast ratios
  */
 
 /* Print-specific styles */
 @media print {
-  /* Reset background colors for print */
+  /* Reset for clean print output */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Page setup */
+  @page {
+    size: letter;
+    margin: 0.75in 0.75in 1in 0.75in;
+  }
+
   body {
     background: white !important;
-    color: #000 !important;
+    color: #1a1a1a !important;
+    font-size: 11pt;
+    line-height: 1.5;
   }
 
   /* Hide navigation and UI elements */
@@ -19,18 +34,18 @@
     display: none !important;
   }
 
-  /* Page setup */
-  @page {
-    size: letter;
-    margin: 0.75in 0.75in 1in 0.75in;
+  /* Show only report content */
+  .report-content {
+    display: block !important;
   }
 
-  /* Ensure proper page breaks */
+  /* Page breaks */
   .print\\:break-before-page {
     page-break-before: always;
   }
 
-  .print\\:break-inside-avoid {
+  .print\\:break-inside-avoid,
+  .report-section {
     page-break-inside: avoid;
   }
 
@@ -38,177 +53,181 @@
     page-break-after: always;
   }
 
-  /* Report sections */
-  .report-section {
-    page-break-inside: avoid;
-  }
-
-  /* Table handling */
+  /* Table handling - prevent breaks in headers */
   table {
     page-break-inside: avoid;
+    width: 100%;
+    border-collapse: collapse;
   }
 
   thead {
     display: table-header-group;
   }
 
-  /* Chart sizing for print */
-  .recharts-wrapper {
+  tbody tr {
+    page-break-inside: avoid;
+  }
+
+  /* Ensure chart visibility in print */
+  .recharts-wrapper,
+  .recharts-surface {
     max-width: 100% !important;
     height: auto !important;
   }
 
-  /* Adjust typography for print */
-  .print\\:text-4xl {
-    font-size: 2.25rem !important;
+  /* Card backgrounds - subtle for print */
+  [class*="bg-background"] {
+    background-color: white !important;
+    border: 1px solid #d1d5db !important;
   }
 
-  .print\\:text-2xl {
-    font-size: 1.5rem !important;
-  }
-
-  .print\\:text-xl {
-    font-size: 1.25rem !important;
-  }
-
-  .print\\:text-lg {
-    font-size: 1.125rem !important;
-  }
-
-  .print\\:text-base {
-    font-size: 1rem !important;
-  }
-
-  /* Spacing adjustments */
-  .print\\:p-6 {
-    padding: 1.5rem !important;
-  }
-
-  .print\\:p-4 {
-    padding: 1rem !important;
-  }
-
-  .print\\:p-3 {
-    padding: 0.75rem !important;
-  }
-
-  .print\\:mb-8 {
-    margin-bottom: 2rem !important;
-  }
-
-  .print\\:mb-6 {
-    margin-bottom: 1.5rem !important;
-  }
-
-  .print\\:mb-4 {
-    margin-bottom: 1rem !important;
-  }
-
-  .print\\:pb-6 {
-    padding-bottom: 1.5rem !important;
-  }
-
-  .print\\:gap-4 {
-    gap: 1rem !important;
-  }
-
-  .print\\:gap-3 {
-    gap: 0.75rem !important;
-  }
-
-  .print\\:h-12 {
-    height: 3rem !important;
-  }
-
-  .print\\:h-64 {
-    height: 16rem !important;
-  }
-
-  .print\\:grid-cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  }
-
-  /* Ensure colors are visible in print */
+  /* Text contrast for grayscale */
   .text-text-primary,
-  .text-text-secondary {
+  h1, h2, h3, h4, h5, h6 {
     color: #1a1a1a !important;
   }
 
-  .text-text-tertiary {
-    color: #4a4a4a !important;
+  .text-text-secondary {
+    color: #374151 !important;
   }
 
-  /* Border colors for print */
-  .border-background-border,
-  .border-accent-navy {
+  .text-text-tertiary {
+    color: #6b7280 !important;
+  }
+
+  /* Status colors optimized for grayscale */
+  .text-status-success-base,
+  [style*="color: rgb(76, 175, 80)"],
+  [style*="color: #4CAF50"] {
+    color: #1a7a1f !important; /* Darker green for print */
+  }
+
+  .text-status-warning-base,
+  [style*="color: rgb(255, 193, 7)"],
+  [style*="color: #FFC107"] {
+    color: #b5750a !important; /* Darker amber for print */
+  }
+
+  .text-status-error-base,
+  [style*="color: rgb(217, 83, 79)"],
+  [style*="color: #D9534F"] {
+    color: #a71d2a !important; /* Darker red for print */
+  }
+
+  /* Salem brand colors for print */
+  [style*="color: rgb(0, 51, 93)"],
+  [style*="color: #00335D"] {
+    color: #00335D !important; /* Navy - good in grayscale */
+  }
+
+  [style*="color: rgb(75, 143, 41)"],
+  [style*="color: #4B8F29"] {
+    color: #2d5419 !important; /* Darker green for print */
+  }
+
+  /* Border colors */
+  .border-background-border {
     border-color: #d1d5db !important;
   }
 
-  .border-status-success-base {
-    border-color: #4CAF50 !important;
-  }
-
-  .border-status-warning-base {
-    border-color: #FFC107 !important;
-  }
-
-  .border-status-error-base {
-    border-color: #D9534F !important;
-  }
-
-  /* Background colors for emphasis */
-  .bg-background-elevated,
-  .bg-background-base {
-    background-color: #f9fafb !important;
-  }
-
-  .bg-status-success-base {
-    background-color: rgba(76, 175, 80, 0.1) !important;
-  }
-
-  .bg-status-warning-base {
-    background-color: rgba(255, 193, 7, 0.1) !important;
-  }
-
-  .bg-status-error-base {
-    background-color: rgba(217, 83, 79, 0.1) !important;
-  }
-
-  /* Chart colors */
-  .bg-chart-blue {
-    background-color: #4CA6E8 !important;
-  }
-
-  .bg-chart-green {
-    background-color: #7AC18D !important;
-  }
-
-  .bg-accent-gold {
-    background-color: #B49759 !important;
-  }
-
-  /* Links */
-  a {
-    color: #0F3B63 !important;
-    text-decoration: none !important;
-  }
-
-  /* Shadows - remove or minimize for print */
+  /* Remove shadows for cleaner print */
   .shadow-lg,
   .shadow-md,
   .shadow {
     box-shadow: none !important;
   }
 
-  /* Ensure icons print well */
+  /* Typography sizing for print */
+  .text-h1 {
+    font-size: 24pt !important;
+    font-weight: bold !important;
+  }
+
+  .text-h2 {
+    font-size: 20pt !important;
+    font-weight: 600 !important;
+  }
+
+  .text-h3 {
+    font-size: 16pt !important;
+    font-weight: 600 !important;
+  }
+
+  .text-h4 {
+    font-size: 14pt !important;
+    font-weight: 600 !important;
+  }
+
+  .text-body {
+    font-size: 11pt !important;
+  }
+
+  .text-small {
+    font-size: 9pt !important;
+  }
+
+  /* Spacing adjustments for print */
+  .space-y-xl > * + * {
+    margin-top: 1.5rem !important;
+  }
+
+  .pb-24 {
+    padding-bottom: 0 !important;
+  }
+
+  /* Links */
+  a {
+    color: #00335D !important;
+    text-decoration: none !important;
+  }
+
+  /* Ensure SVG icons print */
   svg {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
 
-  /* Logo sizing */
-  .report-header img {
-    max-height: 3rem !important;
+  /* Chart legend positioning */
+  .recharts-legend-wrapper {
+    position: relative !important;
+    margin-top: 1rem !important;
+  }
+
+  /* Responsive container fixes for print */
+  .recharts-responsive-container {
+    min-height: 300px !important;
+  }
+
+  /* Badge styling for print */
+  .badge {
+    border: 1px solid currentColor !important;
+    background-color: transparent !important;
+  }
+
+  /* Grid layouts */
+  .grid {
+    gap: 0.75rem !important;
+  }
+
+  /* Metrics table */
+  table td,
+  table th {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 10pt !important;
+  }
+
+  /* Avoid breaking metric cards */
+  .grid > div {
+    page-break-inside: avoid;
+  }
+
+  /* Chart containers */
+  .h-96 {
+    height: 5in !important;
+  }
+
+  .h-80 {
+    height: 4in !important;
   }
 }
 
@@ -227,3 +246,4 @@
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   }
 }
+

@@ -1,29 +1,101 @@
 /**
  * Report Formatting Utilities
  * Professional formatting functions for advisor-grade reports
+ * All formatters handle null/undefined/NaN gracefully
  */
 
 /**
- * Format a number as currency with proper commas and no decimals
+ * Validate and sanitize numeric input
  */
-export const formatCurrency = (value: number, decimals: number = 0): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  }).format(value);
+const sanitizeNumber = (value: number | null | undefined, defaultValue: number = 0): number => {
+  if (value === null || value === undefined || isNaN(value) || !isFinite(value)) {
+    return defaultValue;
+  }
+  return value;
 };
 
 /**
- * Format a number as a percentage with specified precision
+ * Format currency with smart abbreviations (K/M/B) for chart display
+ * Uses consistent formatting: $1.2M, $350K, $45 (no decimals for whole dollars)
  */
-export const formatPercent = (value: number, decimals: number = 1): string => {
+export const formatCurrency = (
+  value: number | null | undefined,
+  options: { abbreviated?: boolean; decimals?: number } = {}
+): string => {
+  const sanitized = sanitizeNumber(value, 0);
+  const { abbreviated = true, decimals } = options;
+
+  // Handle negative values
+  const isNegative = sanitized < 0;
+  const absValue = Math.abs(sanitized);
+
+  if (!abbreviated || absValue < 1000) {
+    // Full format for small values or when abbreviation disabled
+    const formatted = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: decimals ?? 0,
+      maximumFractionDigits: decimals ?? 0,
+    }).format(absValue);
+    return isNegative ? `-${formatted}` : formatted;
+  }
+
+  // Abbreviated format for large values
+  let formatted: string;
+  if (absValue >= 1e9) {
+    formatted = `$${(absValue / 1e9).toFixed(decimals ?? 1)}B`;
+  } else if (absValue >= 1e6) {
+    formatted = `$${(absValue / 1e6).toFixed(decimals ?? 1)}M`;
+  } else {
+    formatted = `$${(absValue / 1e3).toFixed(decimals ?? 0)}K`;
+  }
+
+  return isNegative ? `-${formatted}` : formatted;
+};
+
+/**
+ * Format currency for detailed tables (no abbreviation, full precision)
+ */
+export const formatCurrencyFull = (value: number | null | undefined, decimals: number = 0): string => {
+  return formatCurrency(value, { abbreviated: false, decimals });
+};
+
+/**
+ * Format percentage with validation (clamps to 0-100% range)
+ * Handles decimal input (0.85 -> 85.0%) and percentage input (85 -> 85.0%)
+ */
+export const formatPercent = (
+  value: number | null | undefined,
+  decimals: number = 1
+): string => {
+  let sanitized = sanitizeNumber(value, 0);
+  
+  // Clamp to valid percentage range
+  // If value is in decimal form (0-1), convert to percentage
+  if (sanitized >= 0 && sanitized <= 1) {
+    sanitized = sanitized * 100;
+  }
+  
+  // Clamp to 0-100 range
+  sanitized = Math.max(0, Math.min(100, sanitized));
+
+  return `${sanitized.toFixed(decimals)}%`;
+};
+
+/**
+ * Format percentage as decimal (for Intl.NumberFormat)
+ */
+export const formatPercentDecimal = (
+  value: number | null | undefined,
+  decimals: number = 1
+): string => {
+  const sanitized = Math.max(0, Math.min(1, sanitizeNumber(value, 0)));
+  
   return new Intl.NumberFormat('en-US', {
     style: 'percent',
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
-  }).format(value);
+  }).format(sanitized);
 };
 
 /**
@@ -59,18 +131,35 @@ export const formatGeneratedDate = (): string => {
 /**
  * Determine success probability rating category
  */
-export const getSuccessRating = (probability: number): {
+export const getSuccessRating = (probability: number | null | undefined): {
   label: string;
   variant: 'success' | 'warning' | 'error';
   color: string;
 } => {
-  if (probability >= 0.85) {
+  const p = sanitizeNumber(probability, 0);
+  
+  if (p >= 0.85) {
     return { label: 'Strong', variant: 'success', color: '#4CAF50' };
   }
-  if (probability >= 0.70) {
+  if (p >= 0.70) {
     return { label: 'Moderate', variant: 'warning', color: '#FFC107' };
   }
   return { label: 'Low', variant: 'error', color: '#D9534F' };
+};
+
+/**
+ * Validate array has data
+ */
+export const hasValidData = <T>(data: T[] | null | undefined): data is T[] => {
+  return Array.isArray(data) && data.length > 0;
+};
+
+/**
+ * Safe array accessor with default
+ */
+export const getLastElement = <T>(array: T[] | null | undefined, defaultValue?: T): T | undefined => {
+  if (!hasValidData(array)) return defaultValue;
+  return array[array.length - 1] ?? defaultValue;
 };
 
 /**
