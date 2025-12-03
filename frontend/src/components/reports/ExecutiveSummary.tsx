@@ -79,7 +79,7 @@ export const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({
               </p>
             </div>
           </div>
-          <Badge variant={successRating.variant} size="lg">
+          <Badge variant={successRating.variant} size="md">
             {successRating.label}
           </Badge>
         </div>

@@ -6,9 +6,7 @@ import React from 'react';
 import type { ModelInputs, ClientInfo } from '../../types';
 import { 
   formatCurrency, 
-  formatPercent, 
-  formatAgeRange,
-  formatSpendingSummary 
+  formatPercent 
 } from '../../utils/reportFormatters';
 
 interface AssumptionsSectionProps {
@@ -18,7 +16,6 @@ interface AssumptionsSectionProps {
 
 export const AssumptionsSection: React.FC<AssumptionsSectionProps> = ({
   modelInputs,
-  clientInfo,
 }) => {
   return (
     <div className="report-section mb-12 print:mb-8 print:break-before-page">

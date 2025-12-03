@@ -195,11 +195,11 @@ export const generateRiskAssessment = (
  */
 export const generateRecommendations = (
   successProbability: number,
-  depletionProbability: number,
+  _depletionProbability: number,
   medianEnding: number,
   startingPortfolio: number,
-  monthlySpending: number,
-  equityPct: number
+  _monthlySpending: number,
+  _equityPct: number
 ): string[] => {
   const recommendations: string[] = [];
 

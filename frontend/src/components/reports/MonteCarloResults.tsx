@@ -4,9 +4,8 @@
  */
 import React from 'react';
 import type { MonthlyStats, ModelInputs, SimulationMetrics } from '../../types';
-import { formatCurrency, formatPercent } from '../../utils/reportFormatters';
+import { formatCurrency } from '../../utils/reportFormatters';
 import {
-  LineChart,
   Line,
   Area,
   AreaChart,
