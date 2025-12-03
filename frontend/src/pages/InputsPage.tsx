@@ -594,7 +594,7 @@ const InputsPage: React.FC = () => {
               size="md"
               onClick={handleRunSimulation}
               loading={isLoading}
-              disabled={isLoading || validationErrors.length > 0}
+              disabled={isLoading}
               icon={<Zap size={18} />}
             >
               Run Monte Carlo Simulation
