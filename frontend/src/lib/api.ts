@@ -11,6 +11,7 @@ import type {
   ValidationResult,
   HealthCheck,
 } from '../types';
+import type { ReportData } from '../types/reports';
 
 class ApiClient {
   private client: AxiosInstance;
@@ -93,6 +94,12 @@ class ApiClient {
   // Get specific preset
   async getPreset(name: string): Promise<AssumptionPreset> {
     const response = await this.client.get<AssumptionPreset>(`/presets/${name}`);
+    return response.data;
+  }
+
+  // Get Salem-branded report for a plan
+  async fetchReport(planId: string): Promise<ReportData> {
+    const response = await this.client.get<ReportData>(`/reports/${planId}`);
     return response.data;
   }
 

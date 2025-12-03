@@ -1,0 +1,340 @@
+/**
+ * Salem Investment Counselors Theme
+ * Conservative wealth management aesthetic
+ */
+
+:root {
+  /* Primary Colors */
+  --salem-navy-primary: #00335d;
+  --salem-navy-dark: #002546;
+  --salem-navy-light: #004c87;
+  --salem-green: #4b8f29;
+  --salem-green-dark: #3a7020;
+  --salem-green-light: #5fa837;
+
+  /* Neutrals */
+  --salem-white: #ffffff;
+  --salem-gray-50: #f8f9fa;
+  --salem-gray-100: #e9ecef;
+  --salem-gray-200: #dee2e6;
+  --salem-gray-300: #ced4da;
+  --salem-gray-400: #adb5bd;
+  --salem-gray-500: #6c757d;
+  --salem-gray-600: #495057;
+  --salem-gray-700: #343a40;
+  --salem-gray-800: #212529;
+
+  /* Status Colors */
+  --salem-success: var(--salem-green);
+  --salem-warning: #d97706;
+  --salem-danger: #dc2626;
+  --salem-info: var(--salem-navy-primary);
+
+  /* Typography */
+  --salem-font-serif: Georgia, 'Times New Roman', serif;
+  --salem-font-sans: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --salem-font-mono: 'Courier New', monospace;
+
+  /* Spacing */
+  --salem-spacing-xs: 0.5rem;
+  --salem-spacing-sm: 1rem;
+  --salem-spacing-md: 1.5rem;
+  --salem-spacing-lg: 2rem;
+  --salem-spacing-xl: 3rem;
+
+  /* Typography Sizes */
+  --salem-text-xs: 0.75rem;
+  --salem-text-sm: 0.875rem;
+  --salem-text-base: 1rem;
+  --salem-text-lg: 1.125rem;
+  --salem-text-xl: 1.25rem;
+  --salem-text-2xl: 1.5rem;
+  --salem-text-3xl: 1.875rem;
+  --salem-text-4xl: 2.25rem;
+
+  /* Line Heights */
+  --salem-leading-tight: 1.25;
+  --salem-leading-normal: 1.5;
+  --salem-leading-relaxed: 1.75;
+
+  /* Shadows */
+  --salem-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --salem-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --salem-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+
+  /* Borders */
+  --salem-border-radius: 0.25rem;
+  --salem-border-color: var(--salem-gray-300);
+}
+
+/* Salem Report Container */
+.salem-report {
+  font-family: var(--salem-font-sans);
+  color: var(--salem-gray-800);
+  background-color: var(--salem-white);
+  line-height: var(--salem-leading-normal);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--salem-spacing-lg);
+}
+
+/* Typography */
+.salem-report h1,
+.salem-report h2,
+.salem-report h3,
+.salem-report h4 {
+  font-family: var(--salem-font-serif);
+  color: var(--salem-navy-primary);
+  font-weight: 600;
+  margin-bottom: var(--salem-spacing-md);
+}
+
+.salem-report h1 {
+  font-size: var(--salem-text-4xl);
+  border-bottom: 3px solid var(--salem-navy-primary);
+  padding-bottom: var(--salem-spacing-sm);
+  margin-bottom: var(--salem-spacing-xl);
+}
+
+.salem-report h2 {
+  font-size: var(--salem-text-3xl);
+  border-bottom: 2px solid var(--salem-green);
+  padding-bottom: var(--salem-spacing-xs);
+  margin-top: var(--salem-spacing-xl);
+  margin-bottom: var(--salem-spacing-lg);
+}
+
+.salem-report h3 {
+  font-size: var(--salem-text-2xl);
+  margin-top: var(--salem-spacing-lg);
+}
+
+.salem-report h4 {
+  font-size: var(--salem-text-xl);
+  color: var(--salem-gray-700);
+  margin-top: var(--salem-spacing-md);
+}
+
+.salem-report p {
+  margin-bottom: var(--salem-spacing-md);
+  line-height: var(--salem-leading-relaxed);
+}
+
+.salem-report ul,
+.salem-report ol {
+  margin-left: var(--salem-spacing-lg);
+  margin-bottom: var(--salem-spacing-md);
+}
+
+.salem-report li {
+  margin-bottom: var(--salem-spacing-xs);
+  line-height: var(--salem-leading-relaxed);
+}
+
+/* Cards and Sections */
+.salem-card {
+  background-color: var(--salem-white);
+  border: 1px solid var(--salem-border-color);
+  border-radius: var(--salem-border-radius);
+  padding: var(--salem-spacing-lg);
+  margin-bottom: var(--salem-spacing-lg);
+  box-shadow: var(--salem-shadow-sm);
+}
+
+.salem-section {
+  margin-bottom: var(--salem-spacing-xl);
+  page-break-inside: avoid;
+}
+
+/* Header */
+.salem-header {
+  text-align: center;
+  padding: var(--salem-spacing-xl) 0;
+  border-bottom: 3px solid var(--salem-navy-primary);
+  margin-bottom: var(--salem-spacing-xl);
+}
+
+.salem-logo {
+  color: var(--salem-navy-primary);
+  font-family: var(--salem-font-serif);
+  font-size: var(--salem-text-2xl);
+  font-weight: 700;
+  margin-bottom: var(--salem-spacing-sm);
+}
+
+/* Metrics Grid */
+.salem-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--salem-spacing-md);
+  margin-bottom: var(--salem-spacing-lg);
+}
+
+.salem-metric {
+  padding: var(--salem-spacing-md);
+  background-color: var(--salem-gray-50);
+  border-left: 4px solid var(--salem-navy-primary);
+  border-radius: var(--salem-border-radius);
+}
+
+.salem-metric.success {
+  border-left-color: var(--salem-success);
+  background-color: rgba(75, 143, 41, 0.05);
+}
+
+.salem-metric.warning {
+  border-left-color: var(--salem-warning);
+  background-color: rgba(217, 119, 6, 0.05);
+}
+
+.salem-metric.danger {
+  border-left-color: var(--salem-danger);
+  background-color: rgba(220, 38, 38, 0.05);
+}
+
+.salem-metric-label {
+  font-size: var(--salem-text-sm);
+  color: var(--salem-gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--salem-spacing-xs);
+}
+
+.salem-metric-value {
+  font-size: var(--salem-text-2xl);
+  font-weight: 600;
+  color: var(--salem-navy-primary);
+  font-family: var(--salem-font-mono);
+}
+
+/* Tables */
+.salem-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: var(--salem-spacing-lg);
+}
+
+.salem-table th {
+  background-color: var(--salem-navy-primary);
+  color: var(--salem-white);
+  padding: var(--salem-spacing-sm);
+  text-align: left;
+  font-weight: 600;
+  font-size: var(--salem-text-sm);
+}
+
+.salem-table td {
+  padding: var(--salem-spacing-sm);
+  border-bottom: 1px solid var(--salem-border-color);
+}
+
+.salem-table tbody tr:hover {
+  background-color: var(--salem-gray-50);
+}
+
+/* Footer */
+.salem-footer {
+  margin-top: var(--salem-spacing-xl);
+  padding-top: var(--salem-spacing-lg);
+  border-top: 2px solid var(--salem-gray-300);
+  font-size: var(--salem-text-sm);
+  color: var(--salem-gray-600);
+  text-align: center;
+}
+
+/* Print Styles */
+@media print {
+  .salem-report {
+    padding: 0;
+    max-width: 100%;
+  }
+
+  .salem-section {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .salem-card {
+    border: 1px solid var(--salem-gray-300);
+    box-shadow: none;
+    page-break-inside: avoid;
+  }
+
+  .salem-header {
+    page-break-after: avoid;
+  }
+
+  h2 {
+    page-break-after: avoid;
+    page-break-before: always;
+  }
+
+  h2:first-of-type {
+    page-break-before: auto;
+  }
+
+  h3,
+  h4 {
+    page-break-after: avoid;
+  }
+
+  .salem-metrics-grid {
+    page-break-inside: avoid;
+  }
+
+  .salem-table {
+    page-break-inside: avoid;
+  }
+
+  .salem-footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+  }
+
+  /* Hide interactive elements */
+  button,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Ensure good contrast */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Charts and images */
+  svg,
+  img {
+    max-width: 100%;
+    page-break-inside: avoid;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .salem-report {
+    padding: var(--salem-spacing-md);
+  }
+
+  .salem-report h1 {
+    font-size: var(--salem-text-3xl);
+  }
+
+  .salem-report h2 {
+    font-size: var(--salem-text-2xl);
+  }
+
+  .salem-report h3 {
+    font-size: var(--salem-text-xl);
+  }
+
+  .salem-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .salem-table {
+    font-size: var(--salem-text-sm);
+  }
+}

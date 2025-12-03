@@ -181,3 +181,96 @@ class HealthCheckResponse(BaseModel):
     status: str
     version: str
     timestamp: str
+
+
+# ============================================================================
+# Salem-Branded Report Models
+# ============================================================================
+
+class KeyMetric(BaseModel):
+    """Single key metric for display"""
+    label: str = Field(description="Metric label for display")
+    value: str = Field(description="Formatted value (e.g., '$4.5M', '85%')")
+    tooltip: Optional[str] = Field(default=None, description="Optional explanatory tooltip")
+    variant: Optional[str] = Field(default="neutral", description="Visual variant: success|warning|error|neutral")
+
+
+class ReportSummary(BaseModel):
+    """High-level report summary and metadata"""
+    client_name: str = Field(description="Client full name")
+    scenario_name: str = Field(default="Base Case Analysis", description="Scenario identifier")
+    as_of_date: str = Field(description="Report generation date (YYYY-MM-DD)")
+    advisor_name: str = Field(description="Advising professional name")
+    firm_name: str = Field(default="Salem Investment Counselors", description="Advisory firm name")
+    key_metrics: List[KeyMetric] = Field(description="Key metrics cards for summary")
+
+
+class NarrativeBlock(BaseModel):
+    """Narrative content block with findings, risks, recommendations"""
+    key_findings: List[str] = Field(default_factory=list, description="Key findings (bullet points)")
+    key_risks: List[str] = Field(default_factory=list, description="Key risks (bullet points)")
+    recommendations: List[str] = Field(default_factory=list, description="Recommendations (bullet points)")
+
+
+class PercentilePathPoint(BaseModel):
+    """Single point in percentile path"""
+    year: int = Field(description="Year number (0 = start)")
+    p10: float = Field(description="10th percentile portfolio value")
+    p50: float = Field(description="50th percentile (median) portfolio value")
+    p90: float = Field(description="90th percentile portfolio value")
+
+
+class MonteCarloBlock(BaseModel):
+    """Monte Carlo simulation results"""
+    percentile_path: List[PercentilePathPoint] = Field(description="Yearly percentile paths")
+    success_probability: float = Field(ge=0, le=1, description="Success probability (0-1)")
+    num_runs: int = Field(description="Number of Monte Carlo scenarios")
+    horizon_years: int = Field(description="Planning horizon in years")
+    first_failure_year: Optional[int] = Field(default=None, description="Year of first failure (if any)")
+
+
+class StressMetric(BaseModel):
+    """Key metric under stress scenario"""
+    label: str = Field(description="Metric label")
+    base_value: str = Field(description="Formatted base case value")
+    stressed_value: str = Field(description="Formatted stressed value")
+    change: str = Field(description="Formatted change (e.g., '-15%', '$-500K')")
+
+
+class StressScenarioResult(BaseModel):
+    """Stress test scenario result"""
+    id: str = Field(description="Scenario identifier")
+    name: str = Field(description="Scenario display name")
+    description: str = Field(description="Scenario description")
+    base_success_probability: float = Field(ge=0, le=1, description="Base case success probability")
+    stressed_success_probability: float = Field(ge=0, le=1, description="Stressed success probability")
+    base_key_metrics: List[KeyMetric] = Field(description="Base case metrics")
+    stressed_key_metrics: List[KeyMetric] = Field(description="Stressed metrics")
+    impact_severity: str = Field(default="medium", description="Impact severity: low|medium|high")
+
+
+class AssumptionsBlock(BaseModel):
+    """Planning assumptions"""
+    planning_horizon_years: int = Field(description="Total planning years")
+    real_return_mean: float = Field(description="Mean real return assumption")
+    real_return_std: float = Field(description="Standard deviation of real returns")
+    inflation_rate: float = Field(description="Annual inflation assumption")
+    spending_rule_description: str = Field(description="Description of spending strategy")
+    other_assumptions: Optional[dict] = Field(default_factory=dict, description="Additional assumptions")
+
+
+class AppendixItem(BaseModel):
+    """Appendix content item"""
+    title: str = Field(description="Section title")
+    content: List[str] = Field(description="Content items (paragraphs or bullets)")
+
+
+class ReportData(BaseModel):
+    """Complete Salem-branded report data structure"""
+    report_id: str = Field(description="Unique report identifier")
+    summary: ReportSummary = Field(description="Report summary and metadata")
+    narrative: NarrativeBlock = Field(description="Key findings, risks, recommendations")
+    monte_carlo: MonteCarloBlock = Field(description="Monte Carlo simulation results")
+    stress_tests: List[StressScenarioResult] = Field(default_factory=list, description="Stress test scenarios")
+    assumptions: AssumptionsBlock = Field(description="Planning assumptions")
+    appendix: List[AppendixItem] = Field(default_factory=list, description="Appendix sections")
