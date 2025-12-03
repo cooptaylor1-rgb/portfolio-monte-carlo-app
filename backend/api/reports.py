@@ -14,6 +14,10 @@ from models.schemas import (
     KeyMetric,
     PercentilePathPoint,
     StressMetric,
+    SuccessProbabilityPoint,
+    TerminalWealthBucket,
+    CashFlowProjection,
+    IncomeSourcesTimeline,
 )
 from datetime import date
 import logging
@@ -248,23 +252,76 @@ async def get_report(plan_id: str):
             recommendations=generate_recommendations(success_prob, median_ending, starting_portfolio)
         )
         
-        # Build percentile path (yearly data points)
+        # Build percentile path (yearly data points with 5 percentiles)
         percentile_path = []
         for year in range(years + 1):
             # Generate representative percentile values
             # In production, these would come from actual simulation results
             growth_factor_p50 = 1.06 ** year
+            growth_factor_p5 = 0.92 ** year
             growth_factor_p10 = 0.98 ** year
+            growth_factor_p25 = 1.02 ** year
+            growth_factor_p75 = 1.10 ** year
             growth_factor_p90 = 1.12 ** year
+            growth_factor_p95 = 1.14 ** year
             
             percentile_path.append(
                 PercentilePathPoint(
                     year=year,
+                    p5=starting_portfolio * growth_factor_p5,
                     p10=starting_portfolio * growth_factor_p10,
+                    p25=starting_portfolio * growth_factor_p25,
                     p50=starting_portfolio * growth_factor_p50,
-                    p90=starting_portfolio * growth_factor_p90
+                    p75=starting_portfolio * growth_factor_p75,
+                    p90=starting_portfolio * growth_factor_p90,
+                    p95=starting_portfolio * growth_factor_p95
                 )
             )
+        
+        # Generate success probability over time
+        success_prob_over_time = []
+        for year in range(1, years + 1):
+            # Success probability tends to decrease over time as scenarios diverge
+            year_success = success_prob * (0.98 ** (year / 10))  # Slight decay
+            success_prob_over_time.append(
+                SuccessProbabilityPoint(
+                    year=year,
+                    success_probability=min(1.0, year_success)
+                )
+            )
+        
+        # Generate terminal wealth distribution (histogram)
+        terminal_wealth_dist = []
+        bucket_ranges = [
+            (0, 500_000, "$0-$500K"),
+            (500_000, 1_000_000, "$500K-$1M"),
+            (1_000_000, 2_000_000, "$1M-$2M"),
+            (2_000_000, 3_000_000, "$2M-$3M"),
+            (3_000_000, 5_000_000, "$3M-$5M"),
+            (5_000_000, 7_500_000, "$5M-$7.5M"),
+            (7_500_000, 10_000_000, "$7.5M-$10M"),
+            (10_000_000, float('inf'), "$10M+"),
+        ]
+        
+        # Simulate distribution (in production, use actual simulation results)
+        import random
+        random.seed(42)  # For reproducibility
+        terminal_values = [
+            median_ending * random.lognormvariate(0, 0.5) for _ in range(num_runs)
+        ]
+        
+        for min_val, max_val, label in bucket_ranges:
+            count = sum(1 for v in terminal_values if min_val <= v < max_val)
+            if count > 0:
+                terminal_wealth_dist.append(
+                    TerminalWealthBucket(
+                        bucket_label=label,
+                        count=count,
+                        min_value=min_val,
+                        max_value=max_val if max_val != float('inf') else max(terminal_values),
+                        percentage=count / num_runs
+                    )
+                )
         
         # Build Monte Carlo block
         monte_carlo = MonteCarloBlock(
@@ -272,8 +329,73 @@ async def get_report(plan_id: str):
             success_probability=success_prob,
             num_runs=num_runs,
             horizon_years=years,
-            first_failure_year=None if success_prob > 0.50 else 22
+            first_failure_year=None if success_prob > 0.50 else 22,
+            success_probability_over_time=success_prob_over_time,
+            terminal_wealth_distribution=terminal_wealth_dist
         )
+        
+        # Generate cash flow projections
+        current_age = 48  # TODO: Get from plan data
+        annual_spending = 240_000
+        ss_income = 48_000
+        ss_start_age = 67
+        
+        cash_flow_projections = []
+        balance = starting_portfolio
+        
+        for year in range(1, years + 1):
+            age = current_age + year
+            
+            # Income sources
+            ss_this_year = ss_income if age >= ss_start_age else 0
+            pension_this_year = 0  # TODO: Add pension logic
+            total_income = ss_this_year + pension_this_year
+            
+            # Withdrawals (negative)
+            withdrawals = -annual_spending * (1.03 ** year)  # Inflation adjusted
+            
+            # Taxes (simplified)
+            taxable_income = max(0, -withdrawals + total_income)
+            taxes = -taxable_income * 0.25
+            
+            # Investment return (simplified - use median growth)
+            inv_return = balance * 0.06
+            
+            # Ending balance
+            ending = balance + withdrawals + total_income + taxes + inv_return
+            
+            cash_flow_projections.append(
+                CashFlowProjection(
+                    year=year,
+                    age=age,
+                    beginning_balance=balance,
+                    withdrawals=withdrawals,
+                    income_sources_total=total_income,
+                    taxes=taxes,
+                    investment_return=inv_return,
+                    ending_balance=ending
+                )
+            )
+            
+            balance = ending
+        
+        # Generate income timeline
+        income_timeline = []
+        for year in range(1, years + 1):
+            age = current_age + year
+            ss_this_year = ss_income if age >= ss_start_age else 0
+            withdrawals_this_year = annual_spending * (1.03 ** year)
+            
+            income_timeline.append(
+                IncomeSourcesTimeline(
+                    year=year,
+                    social_security=ss_this_year,
+                    pension=0,  # TODO: Add pension
+                    annuity=0,  # TODO: Add annuity
+                    portfolio_withdrawals=withdrawals_this_year,
+                    other_income=0
+                )
+            )
         
         # Generate stress test scenarios
         stress_tests = [
@@ -388,7 +510,9 @@ async def get_report(plan_id: str):
             monte_carlo=monte_carlo,
             stress_tests=stress_tests,
             assumptions=assumptions,
-            appendix=appendix
+            appendix=appendix,
+            cash_flow_projection=cash_flow_projections,
+            income_timeline=income_timeline
         )
         
         logger.info(f"Report generated successfully for plan_id: {plan_id}")

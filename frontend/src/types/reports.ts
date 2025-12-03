@@ -26,9 +26,46 @@ export interface NarrativeBlock {
 
 export interface PercentilePathPoint {
   year: number;
+  p5?: number;
   p10: number;
+  p25?: number;
   p50: number;
+  p75?: number;
   p90: number;
+  p95?: number;
+}
+
+export interface SuccessProbabilityPoint {
+  year: number;
+  success_probability: number;
+}
+
+export interface TerminalWealthBucket {
+  bucket_label: string;
+  count: number;
+  min_value: number;
+  max_value: number;
+  percentage: number;
+}
+
+export interface CashFlowProjection {
+  year: number;
+  age?: number;
+  beginning_balance: number;
+  withdrawals: number;
+  income_sources_total: number;
+  taxes: number;
+  investment_return: number;
+  ending_balance: number;
+}
+
+export interface IncomeSourcesTimeline {
+  year: number;
+  social_security: number;
+  pension: number;
+  annuity: number;
+  portfolio_withdrawals: number;
+  other_income: number;
 }
 
 export interface MonteCarloBlock {
@@ -36,6 +73,8 @@ export interface MonteCarloBlock {
   success_probability: number;
   num_runs: number;
   horizon_years: number;
+  success_probability_over_time?: SuccessProbabilityPoint[];
+  terminal_wealth_distribution?: TerminalWealthBucket[];
 }
 
 export interface StressMetric {
@@ -77,4 +116,6 @@ export interface ReportData {
   stress_tests: StressScenarioResult[];
   assumptions: AssumptionsBlock;
   appendix: AppendixItem[];
+  cash_flow_projection?: CashFlowProjection[];
+  income_timeline?: IncomeSourcesTimeline[];
 }

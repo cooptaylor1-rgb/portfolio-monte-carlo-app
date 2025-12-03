@@ -15,6 +15,11 @@ import {
   AssumptionsSection,
   AppendixSection,
   SalemFooter,
+  SuccessProbabilityChart,
+  StressTestChart,
+  TerminalWealthHistogram,
+  CashFlowTable,
+  IncomeTimelineChart,
 } from '../components/salem-reports';
 import '../styles/salem-theme.css';
 
@@ -164,8 +169,45 @@ export const SalemReportPage: React.FC = () => {
       <ReportHeader summary={reportData.summary} />
       <SummarySection summary={reportData.summary} />
       <NarrativeSection narrative={reportData.narrative} />
+      
+      {/* Monte Carlo Results with New Charts */}
       <MonteCarloChart data={reportData.monte_carlo} />
-      <StressTestsSection stressTests={reportData.stress_tests} />
+      
+      {/* Success Probability Over Time */}
+      {reportData.monte_carlo.success_probability_over_time && (
+        <SuccessProbabilityChart data={reportData.monte_carlo.success_probability_over_time} />
+      )}
+      
+      {/* Terminal Wealth Distribution */}
+      {reportData.monte_carlo.terminal_wealth_distribution && (
+        <TerminalWealthHistogram data={reportData.monte_carlo.terminal_wealth_distribution} />
+      )}
+      
+      {/* Stress Tests with Comparison Chart */}
+      <section className="salem-section">
+        <h2>Stress Test Analysis</h2>
+        <p style={{ marginBottom: 'var(--salem-spacing-lg)', color: 'var(--salem-gray-700)' }}>
+          Testing plan resilience under adverse market conditions
+        </p>
+        {reportData.stress_tests.length > 0 && (
+          <StressTestChart scenarios={reportData.stress_tests} />
+        )}
+        <StressTestsSection stressTests={reportData.stress_tests} />
+      </section>
+      
+      {/* Cash Flow Details */}
+      {reportData.cash_flow_projection && reportData.cash_flow_projection.length > 0 && (
+        <section className="salem-section">
+          <h2>Financial Projections</h2>
+          <CashFlowTable data={reportData.cash_flow_projection} />
+        </section>
+      )}
+      
+      {/* Income Timeline */}
+      {reportData.income_timeline && reportData.income_timeline.length > 0 && (
+        <IncomeTimelineChart data={reportData.income_timeline} />
+      )}
+      
       <AssumptionsSection assumptions={reportData.assumptions} />
       <AppendixSection items={reportData.appendix} />
       <SalemFooter />

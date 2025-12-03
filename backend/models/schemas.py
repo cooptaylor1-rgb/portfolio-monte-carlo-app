@@ -237,9 +237,50 @@ class NarrativeBlock(BaseModel):
 class PercentilePathPoint(BaseModel):
     """Single point in percentile path"""
     year: int = Field(description="Year number (0 = start)")
+    p5: Optional[float] = Field(default=None, description="5th percentile portfolio value")
     p10: float = Field(description="10th percentile portfolio value")
+    p25: Optional[float] = Field(default=None, description="25th percentile portfolio value")
     p50: float = Field(description="50th percentile (median) portfolio value")
+    p75: Optional[float] = Field(default=None, description="75th percentile portfolio value")
     p90: float = Field(description="90th percentile portfolio value")
+    p95: Optional[float] = Field(default=None, description="95th percentile portfolio value")
+
+
+class SuccessProbabilityPoint(BaseModel):
+    """Success probability at a given year"""
+    year: int = Field(description="Year number")
+    success_probability: float = Field(ge=0, le=1, description="Success probability at this year")
+
+
+class TerminalWealthBucket(BaseModel):
+    """Histogram bucket for terminal wealth distribution"""
+    bucket_label: str = Field(description="Bucket label (e.g., '$0-$250K')")
+    count: int = Field(ge=0, description="Number of scenarios in this bucket")
+    min_value: float = Field(description="Minimum value in bucket")
+    max_value: float = Field(description="Maximum value in bucket")
+    percentage: float = Field(ge=0, le=1, description="Percentage of total scenarios")
+
+
+class CashFlowProjection(BaseModel):
+    """Annual cash flow projection"""
+    year: int = Field(description="Year number")
+    age: Optional[int] = Field(default=None, description="Client age")
+    beginning_balance: float = Field(description="Portfolio value at start of year")
+    withdrawals: float = Field(description="Total withdrawals (negative)")
+    income_sources_total: float = Field(description="Total income (SS, pension, etc.)")
+    taxes: float = Field(description="Taxes paid (negative)")
+    investment_return: float = Field(description="Investment return for year")
+    ending_balance: float = Field(description="Portfolio value at end of year")
+
+
+class IncomeSourcesTimeline(BaseModel):
+    """Income sources breakdown by year"""
+    year: int = Field(description="Year number")
+    social_security: float = Field(default=0, description="Social Security income")
+    pension: float = Field(default=0, description="Pension income")
+    annuity: float = Field(default=0, description="Annuity income")
+    portfolio_withdrawals: float = Field(description="Portfolio withdrawals")
+    other_income: float = Field(default=0, description="Other income sources")
 
 
 class MonteCarloBlock(BaseModel):
@@ -249,6 +290,14 @@ class MonteCarloBlock(BaseModel):
     num_runs: int = Field(description="Number of Monte Carlo scenarios")
     horizon_years: int = Field(description="Planning horizon in years")
     first_failure_year: Optional[int] = Field(default=None, description="Year of first failure (if any)")
+    success_probability_over_time: Optional[List[SuccessProbabilityPoint]] = Field(
+        default=None, 
+        description="Success probability evolution over time"
+    )
+    terminal_wealth_distribution: Optional[List[TerminalWealthBucket]] = Field(
+        default=None,
+        description="Histogram of terminal wealth outcomes"
+    )
 
 
 class StressMetric(BaseModel):
@@ -296,3 +345,11 @@ class ReportData(BaseModel):
     stress_tests: List[StressScenarioResult] = Field(default_factory=list, description="Stress test scenarios")
     assumptions: AssumptionsBlock = Field(description="Planning assumptions")
     appendix: List[AppendixItem] = Field(default_factory=list, description="Appendix sections")
+    cash_flow_projection: Optional[List[CashFlowProjection]] = Field(
+        default=None,
+        description="Year-by-year cash flow projections"
+    )
+    income_timeline: Optional[List[IncomeSourcesTimeline]] = Field(
+        default=None,
+        description="Income sources breakdown over time"
+    )

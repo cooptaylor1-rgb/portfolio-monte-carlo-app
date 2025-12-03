@@ -10,3 +10,8 @@ export { StressTestsSection } from './StressTestsSection';
 export { AssumptionsSection } from './AssumptionsSection';
 export { AppendixSection } from './AppendixSection';
 export { SalemFooter } from './SalemFooter';
+export { SuccessProbabilityChart } from './SuccessProbabilityChart';
+export { StressTestChart } from './StressTestChart';
+export { TerminalWealthHistogram } from './TerminalWealthHistogram';
+export { CashFlowTable } from './CashFlowTable';
+export { IncomeTimelineChart } from './IncomeTimelineChart';
