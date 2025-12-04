@@ -22,18 +22,29 @@ const OverviewSlide: React.FC<OverviewSlideProps> = ({
   simulationResults,
   complianceMode 
 }) => {
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const currentDate = clientInfo?.report_date 
+    ? new Date(clientInfo.report_date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+  
+  const planningYears = simulationResults?.inputs?.years_to_model || 30;
+  const currentAge = simulationResults?.inputs?.current_age || 48;
+  const horizonAge = simulationResults?.inputs?.horizon_age || 78;
+  const successProb = simulationResults?.metrics?.success_probability || 0;
   
   return (
     <div style={styles.container}>
       {/* Top section - Client name */}
       <div style={styles.header}>
         <div style={styles.clientNameLarge}>
-          {clientInfo.client_name}
+          {clientInfo?.client_name || 'Client Portfolio Analysis'}
         </div>
         <div style={styles.subtitle}>
           Portfolio Analysis & Financial Plan Review
@@ -46,13 +57,13 @@ const OverviewSlide: React.FC<OverviewSlideProps> = ({
         <div style={styles.highlightCard}>
           <Calendar size={32} color={presentationTheme.colors.gold} />
           <div style={styles.highlightLabel}>Planning Period</div>
-          <div style={styles.highlightValue}>30 Years</div>
+          <div style={styles.highlightValue}>{planningYears} Years (Age {currentAge}-{horizonAge})</div>
         </div>
         
         <div style={styles.highlightCard}>
           <Target size={32} color={presentationTheme.colors.gold} />
-          <div style={styles.highlightLabel}>Primary Goal</div>
-          <div style={styles.highlightValue}>Retirement Security</div>
+          <div style={styles.highlightLabel}>Success Probability</div>
+          <div style={styles.highlightValue}>{(successProb * 100).toFixed(0)}%</div>
         </div>
         
         <div style={styles.highlightCard}>

@@ -143,6 +143,7 @@ async def run_simulation(request: SimulationRequest):
             metrics=SimulationMetrics(**metrics),
             stats=stats_list,
             goal_probabilities=goal_probs,
+            inputs=request.inputs,
             success=True,
             message="Simulation completed successfully"
         )

@@ -182,6 +182,7 @@ export interface SimulationResponse {
   metrics: SimulationMetrics;
   stats: MonthlyStats[];
   goal_probabilities?: GoalProbability[];
+  inputs?: ModelInputs;
   success: boolean;
   message: string;
 }

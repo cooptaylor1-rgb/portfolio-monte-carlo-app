@@ -162,6 +162,7 @@ class SimulationResponse(BaseModel):
     metrics: SimulationMetrics
     stats: List[dict] = Field(description="Monthly statistics (percentiles)")
     goal_probabilities: Optional[List[dict]] = Field(default=None, description="Goal achievement probabilities")
+    inputs: Optional[ModelInputsModel] = Field(default=None, description="Echo of input parameters for reference")
     success: bool = True
     message: str = "Simulation completed successfully"
 
