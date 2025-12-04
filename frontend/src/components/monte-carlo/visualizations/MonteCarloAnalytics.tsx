@@ -11,9 +11,17 @@ import { salemColors, sectionHeaderStyle } from './chartUtils';
 import EnhancedFanChart from './EnhancedFanChart';
 import ProbabilitySuccessCurve from './ProbabilitySuccessCurve';
 import SafeWithdrawalRateCurve from './SafeWithdrawalRateCurve';
+import StressTestComparison from './StressTestComparison';
+import DrawdownDistribution from './DrawdownDistribution';
+import TailRiskSummary from './TailRiskSummary';
+import AnnualCashFlowChart from './AnnualCashFlowChart';
+import WithdrawalStrategyComparison from './WithdrawalStrategyComparison';
+import GlidepathVisualization from './GlidepathVisualization';
 
 // Import tables
 import OutcomeSummaryTable from '../tables/OutcomeSummaryTable';
+import LongevityStressTable from '../tables/LongevityStressTable';
+import AnnualProbabilityRuinTable from '../tables/AnnualProbabilityRuinTable';
 
 interface MonteCarloAnalyticsProps {
   showAllCharts?: boolean;
@@ -127,17 +135,20 @@ export const MonteCarloAnalytics: React.FC<MonteCarloAnalyticsProps> = () => {
               Evaluate how your portfolio performs under adverse market conditions and identify key risk factors.
             </p>
 
-            {/* Placeholder for stress test charts */}
-            <div style={styles.comingSoon}>
-              <h4>Stress Test Visualizations</h4>
-              <p>Additional risk analysis charts coming soon:</p>
-              <ul style={{ textAlign: 'left', maxWidth: '600px', margin: '16px auto' }}>
-                <li>Stress Case Comparison (Baseline vs High Inflation vs Market Crash)</li>
-                <li>Sequence of Returns Heatmap</li>
-                <li>Drawdown Distribution Analysis</li>
-                <li>Tail-Risk Summary (Worst 1%, 5%, 10% outcomes)</li>
-              </ul>
-            </div>
+            <StressTestComparison
+              baselineMetrics={metrics}
+              startingPortfolio={inputs.starting_portfolio}
+            />
+
+            <DrawdownDistribution
+              stats={stats}
+              startingPortfolio={inputs.starting_portfolio}
+            />
+
+            <TailRiskSummary
+              stats={stats}
+              startingPortfolio={inputs.starting_portfolio}
+            />
           </section>
         )}
 
@@ -151,15 +162,24 @@ export const MonteCarloAnalytics: React.FC<MonteCarloAnalyticsProps> = () => {
               Detailed breakdown of income sources, withdrawals, and portfolio balance over time.
             </p>
 
-            <div style={styles.comingSoon}>
-              <h4>Cash Flow Visualizations</h4>
-              <p>Coming soon:</p>
-              <ul style={{ textAlign: 'left', maxWidth: '600px', margin: '16px auto' }}>
-                <li>Annual Cash Flow vs Portfolio Balance</li>
-                <li>Withdrawal Strategy Comparison</li>
-                <li>Income Layering (SS, Pension, Portfolio)</li>
-              </ul>
-            </div>
+            <AnnualCashFlowChart
+              stats={stats}
+              currentAge={inputs.current_age}
+              monthlySpending={inputs.monthly_spending}
+              monthlyIncome={inputs.social_security_monthly + inputs.pension_monthly + inputs.regular_income_monthly}
+            />
+
+            <WithdrawalStrategyComparison
+              stats={stats}
+              currentAge={inputs.current_age}
+              initialSpending={inputs.monthly_spending}
+            />
+
+            <GlidepathVisualization
+              currentAge={inputs.current_age}
+              planYears={inputs.years_to_model * 12}
+              initialEquity={inputs.equity_pct / 100}
+            />
           </section>
         )}
 
@@ -173,16 +193,15 @@ export const MonteCarloAnalytics: React.FC<MonteCarloAnalyticsProps> = () => {
               Comprehensive tables for advisor review and client discussion.
             </p>
 
-            <div style={styles.comingSoon}>
-              <h4>Additional Tables</h4>
-              <p>Coming soon:</p>
-              <ul style={{ textAlign: 'left', maxWidth: '600px', margin: '16px auto' }}>
-                <li>Longevity Stress Analysis (Age 85/90/95 scenarios)</li>
-                <li>Annual Probability of Ruin by Year</li>
-                <li>Stress Test Comparison Table</li>
-                <li>Asset Allocation Over Time</li>
-              </ul>
-            </div>
+            <LongevityStressTable
+              stats={stats}
+              currentAge={inputs.current_age}
+            />
+
+            <AnnualProbabilityRuinTable
+              stats={stats}
+              currentAge={inputs.current_age}
+            />
           </section>
         )}
 
