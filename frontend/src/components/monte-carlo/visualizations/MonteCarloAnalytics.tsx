@@ -7,6 +7,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { useSimulationStore } from '../../../store/simulationStore';
 import { exportAllChartsAsPNG, exportAnalyticsAsPDF } from '../../../utils/exportUtils';
+import { transformMonthlyStatsToSimulationStats } from '../../../utils/dataTransformers';
 import { SectionHeader, Button, Card, EmptyState } from '../../ui';
 import { FileText, Download, Image, BarChart3 } from 'lucide-react';
 
@@ -57,6 +58,11 @@ export const MonteCarloAnalytics: React.FC<MonteCarloAnalyticsProps> = () => {
 
   const { metrics, stats } = simulationResults;
   const inputs = simulationResults.inputs || modelInputs;
+
+  // Transform MonthlyStats to SimulationStats with calculated SuccessPct
+  const transformedStats = useMemo(() => {
+    return transformMonthlyStatsToSimulationStats(stats);
+  }, [stats]);
 
   const sections = [
     { id: 'all', label: 'All Analytics' },
@@ -303,14 +309,14 @@ export const MonteCarloAnalytics: React.FC<MonteCarloAnalyticsProps> = () => {
 
             <div id="longevity-table" data-chart-export>
               <LongevityStressTable
-                stats={stats}
+                stats={transformedStats}
                 currentAge={inputs.current_age}
               />
             </div>
 
             <div id="ruin-table" data-chart-export>
               <AnnualProbabilityRuinTable
-                stats={stats}
+                stats={transformedStats}
                 currentAge={inputs.current_age}
               />
             </div>

@@ -4,6 +4,7 @@
  */
 
 import React, { useMemo } from 'react';
+import { Card } from '../../ui/Card';
 import {
   salemColors,
   formatCurrency,
@@ -75,129 +76,94 @@ export const TailRiskSummary: React.FC<TailRiskSummaryProps> = ({
   return (
     <div style={chartContainerStyle}>
       <h3 style={sectionHeaderStyle}>Tail-Risk Analysis: Worst-Case Outcomes</h3>
-      <p style={{ marginBottom: '20px', color: '#6B7280', fontSize: '14px' }}>
+      <p className="mb-5 text-text-secondary text-sm">
         Tail risks represent extreme scenarios with low probability but high impact. Understanding these outcomes 
         helps prepare contingency plans and assess true risk exposure.
       </p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div className="flex flex-col gap-4">
         {tailRisks.map((risk, index) => (
-          <div
+          <Card
             key={index}
-            style={{
-              backgroundColor: '#FFFFFF',
-              border: `3px solid ${risk.color}`,
-              borderRadius: '12px',
-              padding: '20px',
-              display: 'grid',
-              gridTemplateColumns: '180px 1fr 150px',
-              gap: '20px',
-              alignItems: 'center',
-            }}
+            padding="lg"
+            className="grid grid-cols-[180px_1fr_150px] gap-5 items-center"
+            style={{ borderColor: risk.color, borderWidth: '3px' }}
           >
             {/* Left: Percentile badge */}
-            <div style={{
-              textAlign: 'center',
-              padding: '16px',
-              backgroundColor: `${risk.color}15`,
-              borderRadius: '8px',
-            }}>
-              <div style={{
-                fontSize: '24px',
-                fontWeight: 700,
-                color: risk.color,
-                marginBottom: '4px',
-              }}>
+            <div
+              className="text-center p-4 rounded-lg"
+              style={{ backgroundColor: `${risk.color}15` }}
+            >
+              <div className="text-2xl font-bold mb-1" style={{ color: risk.color }}>
                 {risk.percentile}
               </div>
-              <div style={{
-                fontSize: '12px',
-                color: '#6B7280',
-                marginBottom: '8px',
-              }}>
+              <div className="text-xs text-text-secondary mb-2">
                 {risk.probability} scenarios
               </div>
-              <div style={{
-                display: 'inline-block',
-                padding: '4px 12px',
-                backgroundColor: risk.color,
-                color: '#FFFFFF',
-                borderRadius: '4px',
-                fontSize: '11px',
-                fontWeight: 600,
-              }}>
+              <div
+                className="inline-block px-3 py-1 text-white rounded text-xs font-semibold"
+                style={{ backgroundColor: risk.color }}
+              >
                 {risk.severity} Risk
               </div>
             </div>
 
             {/* Middle: Description */}
             <div>
-              <div style={{
-                fontSize: '14px',
-                color: '#374151',
-                lineHeight: 1.6,
-                marginBottom: '8px',
-              }}>
+              <div className="text-sm text-text-primary leading-relaxed mb-2">
                 {risk.description}
               </div>
-              <div style={{ fontSize: '12px', color: '#9CA3AF' }}>
+              <div className="text-xs text-text-tertiary">
                 These scenarios represent combinations of adverse events occurring simultaneously.
               </div>
             </div>
 
             {/* Right: Ending value */}
-            <div style={{
-              textAlign: 'right',
-              padding: '12px',
-              backgroundColor: risk.value <= 0 ? '#FEF2F2' : '#F9FAFB',
-              borderRadius: '8px',
-            }}>
-              <div style={{ fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>
+            <div
+              className="text-right p-3 rounded-lg"
+              style={{ backgroundColor: risk.value <= 0 ? '#FEF2F2' : '#F9FAFB' }}
+            >
+              <div className="text-xs text-text-secondary mb-1">
                 Ending Balance
               </div>
-              <div style={{
-                fontSize: '22px',
-                fontWeight: 700,
-                color: risk.value <= 0 ? salemColors.danger : salemColors.navy,
-              }}>
+              <div
+                className="text-2xl font-bold"
+                style={{ color: risk.value <= 0 ? salemColors.danger : salemColors.navy }}
+              >
                 {formatCurrency(risk.value)}
               </div>
               {risk.value <= 0 && (
-                <div style={{ fontSize: '10px', color: salemColors.danger, marginTop: '4px' }}>
+                <div className="text-xs mt-1" style={{ color: salemColors.danger }}>
                   Portfolio Depleted
                 </div>
               )}
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
       {/* Summary statistics */}
-      <div style={{
-        marginTop: '24px',
-        padding: '16px',
-        backgroundColor: allDepleted ? '#FEF2F2' : '#F0FDF4',
-        border: `2px solid ${allDepleted ? salemColors.danger : salemColors.success}`,
-        borderRadius: '8px',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div
+        className="mt-6 p-4 rounded-lg"
+        style={{
+          backgroundColor: allDepleted ? '#FEF2F2' : '#F0FDF4',
+          border: `2px solid ${allDepleted ? salemColors.danger : salemColors.success}`,
+        }}
+      >
+        <div className="flex justify-between items-center">
           <div>
-            <strong style={{ fontSize: '14px', color: salemColors.navy }}>Tail-Risk Assessment:</strong>
-            <span style={{ fontSize: '14px', color: '#6B7280', marginLeft: '8px' }}>
+            <strong className="text-sm" style={{ color: salemColors.navy }}>Tail-Risk Assessment:</strong>
+            <span className="text-sm text-text-secondary ml-2">
               {allDepleted 
                 ? 'High vulnerability in extreme scenarios - consider additional safeguards'
                 : 'Manageable tail risks with appropriate contingency planning'
               }
             </span>
           </div>
-          <div style={{
-            padding: '8px 16px',
-            backgroundColor: allDepleted ? salemColors.danger : salemColors.success,
-            color: '#FFFFFF',
-            borderRadius: '6px',
-            fontWeight: 600,
-            fontSize: '13px',
-          }}>
+          <div
+            className="px-4 py-2 text-white rounded-md font-semibold text-xs"
+            style={{ backgroundColor: allDepleted ? salemColors.danger : salemColors.success }}
+          >
             {allDepleted ? 'Action Required' : 'Within Tolerance'}
           </div>
         </div>

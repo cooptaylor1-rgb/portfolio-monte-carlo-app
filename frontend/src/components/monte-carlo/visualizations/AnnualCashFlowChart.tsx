@@ -45,18 +45,18 @@ export const AnnualCashFlowChart: React.FC<AnnualCashFlowChartProps> = React.mem
     return stats
       .filter((_, idx) => idx % 12 === 0)
       .map((stat) => {
-        const year = Math.floor(stat.Month / 12);
+        const year = Math.floor((stat?.Month ?? 0) / 12);
         const age = currentAge + year;
         
-        // Calculate annual cash flows
-        const annualSpending = Math.abs(monthlySpending * 12);
-        const annualIncome = monthlyIncome * 12;
+        // Calculate annual cash flows with null checks
+        const annualSpending = Math.abs((monthlySpending ?? 0) * 12);
+        const annualIncome = (monthlyIncome ?? 0) * 12;
         const netWithdrawal = annualSpending - annualIncome;
         
         return {
           year,
           age,
-          portfolioBalance: stat.Median,
+          portfolioBalance: stat?.Median ?? 0,
           spending: annualSpending,
           income: annualIncome,
           netWithdrawal,
@@ -64,7 +64,7 @@ export const AnnualCashFlowChart: React.FC<AnnualCashFlowChartProps> = React.mem
       });
   }, [stats, currentAge, monthlySpending, monthlyIncome]);
 
-  const totalWithdrawals = chartData.reduce((sum, d) => sum + d.netWithdrawal, 0);
+  const totalWithdrawals = chartData.reduce((sum, d) => sum + (d?.netWithdrawal ?? 0), 0);
   const finalBalance = chartData[chartData.length - 1]?.portfolioBalance || 0;
 
   const takeawayMessage = useMemo(() => {
@@ -80,7 +80,7 @@ export const AnnualCashFlowChart: React.FC<AnnualCashFlowChartProps> = React.mem
   return (
     <div style={chartContainerStyle}>
       <h3 style={sectionHeaderStyle}>Annual Cash Flow & Portfolio Balance</h3>
-      <p style={{ marginBottom: '20px', color: '#6B7280', fontSize: '14px' }}>
+      <p className="mb-5 text-text-secondary text-sm">
         This chart illustrates the relationship between portfolio withdrawals and balance over time. 
         Bars show annual cash flows while the line tracks median portfolio value.
       </p>
@@ -153,45 +153,40 @@ export const AnnualCashFlowChart: React.FC<AnnualCashFlowChartProps> = React.mem
       </ResponsiveContainer>
 
       {/* Summary metrics */}
-      <div style={{
-        marginTop: '20px',
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: '12px',
-      }}>
-        <div style={{ padding: '12px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
-          <div style={{ fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>
+      <div className="mt-5 grid grid-cols-4 gap-3">
+        <div className="p-3 bg-background-base rounded-lg">
+          <div className="text-[11px] text-text-secondary mb-1">
             Cumulative Withdrawals
           </div>
-          <div style={{ fontSize: '18px', fontWeight: 600, color: salemColors.danger }}>
+          <div className="text-lg font-semibold" style={{ color: salemColors.danger }}>
             {formatCurrency(totalWithdrawals)}
           </div>
         </div>
 
-        <div style={{ padding: '12px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
-          <div style={{ fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>
+        <div className="p-3 bg-background-base rounded-lg">
+          <div className="text-[11px] text-text-secondary mb-1">
             Final Balance
           </div>
-          <div style={{ fontSize: '18px', fontWeight: 600, color: salemColors.gold }}>
+          <div className="text-lg font-semibold" style={{ color: salemColors.gold }}>
             {formatCurrency(finalBalance)}
           </div>
         </div>
 
-        <div style={{ padding: '12px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
-          <div style={{ fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>
+        <div className="p-3 bg-background-base rounded-lg">
+          <div className="text-[11px] text-text-secondary mb-1">
             Average Annual Spending
           </div>
-          <div style={{ fontSize: '18px', fontWeight: 600, color: salemColors.navy }}>
-            {formatCurrency(Math.abs(monthlySpending * 12))}
+          <div className="text-lg font-semibold" style={{ color: salemColors.navy }}>
+            {formatCurrency(Math.abs((monthlySpending ?? 0) * 12))}
           </div>
         </div>
 
-        <div style={{ padding: '12px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
-          <div style={{ fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>
+        <div className="p-3 bg-background-base rounded-lg">
+          <div className="text-[11px] text-text-secondary mb-1">
             Average Annual Income
           </div>
-          <div style={{ fontSize: '18px', fontWeight: 600, color: salemColors.success }}>
-            {formatCurrency(monthlyIncome * 12)}
+          <div className="text-lg font-semibold" style={{ color: salemColors.success }}>
+            {formatCurrency((monthlyIncome ?? 0) * 12)}
           </div>
         </div>
       </div>

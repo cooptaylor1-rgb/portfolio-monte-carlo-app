@@ -1,19 +1,28 @@
 /**
  * Annual Probability of Ruin Table
- * Shows year-by-year probability of portfolio depletion
+ * Pro-grade dark theme with accurate risk calculations and conservative messaging
  */
 
 import React, { useMemo } from 'react';
 import {
   salemColors,
   formatPercent,
-  chartContainerStyle,
-  sectionHeaderStyle,
-  keyTakeawayStyle,
 } from '../visualizations/chartUtils';
+import {
+  EmptyState,
+  SummaryCard,
+  AnalysisSection,
+  AssessmentCallout,
+} from '../shared/AnalysisComponents';
+import {
+  processAnnualRiskData,
+  calculateRiskSummary,
+  generateRuinTakeaway,
+} from '../shared/analysisUtils';
+import type { SimulationStats } from '../shared/types';
 
 interface AnnualProbabilityRuinTableProps {
-  stats: any[];
+  stats: SimulationStats[];
   currentAge: number;
   showTakeaway?: boolean;
 }
@@ -23,104 +32,158 @@ export const AnnualProbabilityRuinTable: React.FC<AnnualProbabilityRuinTableProp
   currentAge,
   showTakeaway = true,
 }) => {
-  const annualData = useMemo(() => {
-    return stats
-      .filter((_, idx) => idx % 12 === 0)
-      .slice(0, 31) // First 30 years
-      .map((stat, yearIndex) => {
-        const age = currentAge + yearIndex;
-        const successProb = stat.SuccessPct / 100;
-        const failureProb = 1 - successProb;
-        
-        // Calculate marginal failure risk (new failures this year)
-        const prevStat = yearIndex > 0 ? stats[(yearIndex - 1) * 12] : stat;
-        const prevFailureProb = 1 - (prevStat.SuccessPct / 100);
-        const marginalRisk = Math.max(0, failureProb - prevFailureProb);
-        
-        return {
-          year: yearIndex + 1,
-          age,
-          successProb,
-          failureProb,
-          marginalRisk,
-        };
-      });
-  }, [stats, currentAge]);
+  // Process annual risk data (up to 30 years)
+  const annualData = useMemo(() => 
+    processAnnualRiskData(stats, currentAge, 30),
+    [stats, currentAge]
+  );
 
-  const peakRiskYear = annualData.reduce((max, curr) => 
-    curr.marginalRisk > max.marginalRisk ? curr : max
-  , annualData[0]);
+  const riskSummary = useMemo(() => 
+    calculateRiskSummary(annualData),
+    [annualData]
+  );
 
-  const cumulativeRisk10 = annualData[9]?.failureProb || 0;
-  const cumulativeRisk20 = annualData[19]?.failureProb || 0;
-  const cumulativeRisk30 = annualData[29]?.failureProb || 0;
+  const takeawayMessage = useMemo(() => 
+    generateRuinTakeaway(annualData, riskSummary),
+    [annualData, riskSummary]
+  );
 
-  const takeawayMessage = useMemo(() => {
-    if (peakRiskYear.marginalRisk < 0.02) {
-      return `Low and stable failure risk throughout planning period. Peak annual risk of ${formatPercent(peakRiskYear.marginalRisk)} occurs in year ${peakRiskYear.year} (age ${peakRiskYear.age}). Gradual risk accumulation indicates well-balanced plan without acute stress periods. Portfolio positioned for sustainable multi-decade withdrawals.`;
-    }
-    if (peakRiskYear.year <= 10) {
-      return `Sequence-of-returns risk detected. Peak failure probability of ${formatPercent(peakRiskYear.marginalRisk)} in year ${peakRiskYear.year} (age ${peakRiskYear.age}) indicates early retirement vulnerability. First decade critical: poor market returns could significantly impact long-term success. Mitigation strategies: maintain 2-3 years cash reserves, flexible spending framework, or delay retirement 1-2 years for additional buffer.`;
-    }
-    return `Elevated risk in mid-to-late retirement years. Peak annual risk of ${formatPercent(peakRiskYear.marginalRisk)} at year ${peakRiskYear.year} (age ${peakRiskYear.age}) suggests longevity or spending pressure. Consider: gradual spending reduction (5-10% after age ${peakRiskYear.age - 5}), increased fixed income allocation, or deferred annuity starting age ${Math.min(peakRiskYear.age, 85)}.`;
-  }, [peakRiskYear]);
+  // Determine overall risk status
+  const overallRisk = useMemo(() => {
+    if (annualData.length === 0) return 'info';
+    if (riskSummary.risk30Year < 0.10) return 'success';
+    if (riskSummary.risk30Year < 0.25) return 'warning';
+    return 'danger';
+  }, [annualData, riskSummary]);
 
-  // Split into 3 columns for better readability
+  // Empty state handling
+  if (!stats || stats.length === 0) {
+    return (
+      <AnalysisSection
+        title="Annual Probability of Ruin"
+        subtitle="Year-by-year failure probability analysis"
+      >
+        <EmptyState
+          title="Simulation Required"
+          message="Run a Monte Carlo projection to unlock probability-of-ruin insights. This analysis identifies critical periods where portfolio is most vulnerable."
+        />
+      </AnalysisSection>
+    );
+  }
+
+  if (annualData.length === 0) {
+    return (
+      <AnalysisSection
+        title="Annual Probability of Ruin"
+        subtitle="Year-by-year failure probability analysis"
+      >
+        <EmptyState
+          title="Insufficient Data"
+          message="We couldn't compute this metric. Please re-run the analysis or adjust inputs."
+        />
+      </AnalysisSection>
+    );
+  }
+
+  // Split data into 3 columns for better readability
   const column1 = annualData.slice(0, 10);
   const column2 = annualData.slice(10, 20);
   const column3 = annualData.slice(20, 30);
 
   return (
-    <div style={chartContainerStyle}>
-      <h3 style={sectionHeaderStyle}>Annual Probability of Ruin</h3>
-      <p style={{ marginBottom: '20px', color: '#6B7280', fontSize: '14px' }}>
-        Year-by-year analysis showing cumulative and marginal failure probabilities. Helps identify 
-        critical periods where portfolio is most vulnerable.
-      </p>
+    <AnalysisSection
+      title="Annual Probability of Ruin"
+      subtitle="Year-by-year analysis showing cumulative and marginal failure probabilities. Helps identify critical periods where portfolio is most vulnerable."
+    >
+      {/* Summary metrics */}
+      <div className="grid grid-cols-4 gap-4 mb-6">
+        <SummaryCard
+          label="Peak Risk Year"
+          value={riskSummary.peakRiskYear ? `Year ${riskSummary.peakRiskYear}` : 'N/A'}
+          sublabel={riskSummary.peakRiskYear ? formatPercent(riskSummary.peakRiskValue) + ' annual risk' : 'No data'}
+          variant="primary"
+        />
+        <SummaryCard
+          label="10-Year Risk"
+          value={formatPercent(riskSummary.risk10Year)}
+          sublabel={`Age ${currentAge + 10}`}
+          variant={riskSummary.risk10Year < 0.10 ? 'success' : 'warning'}
+        />
+        <SummaryCard
+          label="20-Year Risk"
+          value={formatPercent(riskSummary.risk20Year)}
+          sublabel={`Age ${currentAge + 20}`}
+          variant={riskSummary.risk20Year < 0.15 ? 'success' : 'warning'}
+        />
+        <SummaryCard
+          label="30-Year Risk"
+          value={formatPercent(riskSummary.risk30Year)}
+          sublabel={`Age ${currentAge + 30}`}
+          variant={riskSummary.risk30Year < 0.20 ? 'success' : 'danger'}
+        />
+      </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+      {/* Three-column table layout */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
         {[column1, column2, column3].map((columnData, colIndex) => (
-          <div key={colIndex}>
-            <table style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              fontSize: '12px',
-            }}>
+          <div 
+            key={colIndex} 
+            className="rounded-lg overflow-hidden border"
+            style={{ borderColor: 'rgba(71, 85, 105, 0.3)' }}
+          >
+            <table className="w-full">
               <thead>
-                <tr style={{ backgroundColor: salemColors.navy, color: '#FFFFFF' }}>
-                  <th style={{ padding: '8px', textAlign: 'left', fontSize: '11px' }}>Year</th>
-                  <th style={{ padding: '8px', textAlign: 'center', fontSize: '11px' }}>Age</th>
-                  <th style={{ padding: '8px', textAlign: 'right', fontSize: '11px' }}>Cumulative Risk</th>
-                  <th style={{ padding: '8px', textAlign: 'right', fontSize: '11px' }}>Annual Risk</th>
+                <tr 
+                  className="text-white text-xs font-semibold uppercase tracking-wide"
+                  style={{ backgroundColor: salemColors.navy }}
+                >
+                  <th className="px-3 py-2.5 text-left">Year</th>
+                  <th className="px-3 py-2.5 text-center">Age</th>
+                  <th className="px-3 py-2.5 text-right">Cumulative Risk</th>
+                  <th className="px-3 py-2.5 text-right">Annual Risk</th>
                 </tr>
               </thead>
               <tbody>
                 {columnData.map((row, index) => {
-                  const bgColor = index % 2 === 0 ? '#F9FAFB' : '#FFFFFF';
-                  const isHighRisk = row.marginalRisk > 0.03;
-                  
+                  if (!row) return null;
+                  const isEven = index % 2 === 0;
+                  const isHighRisk = row.annualRisk > 0.03;
+
                   return (
-                    <tr key={row.year} style={{ backgroundColor: isHighRisk ? '#FEF2F2' : bgColor }}>
-                      <td style={{ padding: '8px', fontWeight: 600, color: salemColors.navy }}>
+                    <tr
+                      key={row.year}
+                      className="transition-colors hover:bg-opacity-70"
+                      style={{
+                        backgroundColor: isHighRisk 
+                          ? 'rgba(153, 27, 27, 0.15)'
+                          : isEven 
+                            ? 'rgba(30, 41, 59, 0.3)' 
+                            : 'rgba(15, 23, 42, 0.3)',
+                      }}
+                    >
+                      <td className="px-3 py-2.5 font-semibold text-sm" style={{ color: salemColors.gold }}>
                         {row.year}
                       </td>
-                      <td style={{ padding: '8px', textAlign: 'center', color: '#6B7280' }}>
+                      <td className="px-3 py-2.5 text-center text-sm" style={{ color: salemColors.mediumGray }}>
                         {row.age}
                       </td>
-                      <td style={{
-                        padding: '8px',
-                        textAlign: 'right',
-                        color: row.failureProb > 0.2 ? salemColors.danger : '#374151',
-                      }}>
-                        {formatPercent(row.failureProb)}
+                      <td
+                        className="px-3 py-2.5 text-right text-sm"
+                        style={{
+                          color: row.cumulativeRisk > 0.25 ? salemColors.danger : salemColors.white,
+                          fontWeight: row.cumulativeRisk > 0.25 ? 600 : 400,
+                        }}
+                      >
+                        {formatPercent(row.cumulativeRisk)}
                       </td>
-                      <td style={{
-                        padding: '8px',
-                        textAlign: 'right',
-                        fontWeight: isHighRisk ? 600 : 400,
-                        color: isHighRisk ? salemColors.danger : '#6B7280',
-                      }}>
-                        {formatPercent(row.marginalRisk)}
+                      <td
+                        className="px-3 py-2.5 text-right text-sm"
+                        style={{
+                          color: isHighRisk ? salemColors.danger : salemColors.mediumGray,
+                          fontWeight: isHighRisk ? 600 : 400,
+                        }}
+                      >
+                        {formatPercent(row.annualRisk)}
                       </td>
                     </tr>
                   );
@@ -131,68 +194,36 @@ export const AnnualProbabilityRuinTable: React.FC<AnnualProbabilityRuinTableProp
         ))}
       </div>
 
-      {/* Key milestones */}
-      <div style={{
-        marginTop: '20px',
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: '12px',
-      }}>
-        <div style={{ padding: '12px', backgroundColor: '#FEF3C7', borderRadius: '8px' }}>
-          <div style={{ fontSize: '11px', color: '#92400E', marginBottom: '4px' }}>
-            Peak Risk Year
-          </div>
-          <div style={{ fontSize: '16px', fontWeight: 600, color: salemColors.gold }}>
-            Year {peakRiskYear.year}
-          </div>
-          <div style={{ fontSize: '10px', color: '#92400E', marginTop: '2px' }}>
-            {formatPercent(peakRiskYear.marginalRisk)} annual risk
-          </div>
-        </div>
-
-        <div style={{ padding: '12px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
-          <div style={{ fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>
-            10-Year Risk
-          </div>
-          <div style={{ fontSize: '16px', fontWeight: 600, color: salemColors.navy }}>
-            {formatPercent(cumulativeRisk10)}
-          </div>
-          <div style={{ fontSize: '10px', color: '#6B7280', marginTop: '2px' }}>
-            Age {currentAge + 10}
-          </div>
-        </div>
-
-        <div style={{ padding: '12px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
-          <div style={{ fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>
-            20-Year Risk
-          </div>
-          <div style={{ fontSize: '16px', fontWeight: 600, color: salemColors.navy }}>
-            {formatPercent(cumulativeRisk20)}
-          </div>
-          <div style={{ fontSize: '10px', color: '#6B7280', marginTop: '2px' }}>
-            Age {currentAge + 20}
-          </div>
-        </div>
-
-        <div style={{ padding: '12px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
-          <div style={{ fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>
-            30-Year Risk
-          </div>
-          <div style={{ fontSize: '16px', fontWeight: 600, color: salemColors.navy }}>
-            {formatPercent(cumulativeRisk30)}
-          </div>
-          <div style={{ fontSize: '10px', color: '#6B7280', marginTop: '2px' }}>
-            Age {currentAge + 30}
-          </div>
-        </div>
+      {/* Assessment callout */}
+      <div className="mb-6">
+        <AssessmentCallout
+          title="Risk Assessment"
+          message={riskSummary.overallAssessment}
+          variant={overallRisk}
+          icon={
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          }
+        />
       </div>
 
+      {/* Key takeaway */}
       {showTakeaway && (
-        <div style={keyTakeawayStyle}>
-          <strong>Key Takeaway:</strong> {takeawayMessage}
+        <div 
+          className="p-4 rounded-lg border-l-4"
+          style={{
+            backgroundColor: 'rgba(200, 162, 75, 0.05)',
+            borderLeftColor: salemColors.gold,
+          }}
+        >
+          <div className="text-sm leading-relaxed" style={{ color: salemColors.white }}>
+            <strong className="font-semibold" style={{ color: salemColors.gold }}>Key Takeaway:</strong>{' '}
+            {takeawayMessage}
+          </div>
         </div>
       )}
-    </div>
+    </AnalysisSection>
   );
 };
 

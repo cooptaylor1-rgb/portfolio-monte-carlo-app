@@ -76,46 +76,50 @@ export const OutcomeSummaryTable: React.FC<OutcomeSummaryTableProps> = ({
   ];
 
   return (
-    <div style={styles.container}>
-      <h3 style={styles.title}>Outcome Summary</h3>
-      <p style={styles.subtitle}>
+    <div className="bg-white border border-background-border rounded-xl p-6 mb-6">
+      <h3 
+        className="text-xl font-semibold mb-1 pb-2 border-b-[3px]"
+        style={{ color: salemColors.navy, borderBottomColor: salemColors.gold }}
+      >
+        Outcome Summary
+      </h3>
+      <p className="text-sm text-text-secondary mt-2 mb-4">
         Key metrics from {metrics.n_scenarios || 200} Monte Carlo simulations
       </p>
 
-      <table style={styles.table}>
+      <table className="w-full border-collapse">
         <thead>
-          <tr style={styles.headerRow}>
-            <th style={{...styles.th, textAlign: 'left'}}>Metric</th>
-            <th style={{...styles.th, textAlign: 'right'}}>Value</th>
-            <th style={{...styles.th, textAlign: 'left'}}>Context</th>
+          <tr className="border-b-2" style={{ borderBottomColor: salemColors.navy }}>
+            <th className="p-3 text-[13px] font-semibold uppercase tracking-wide text-left" style={{ color: salemColors.navy }}>
+              Metric
+            </th>
+            <th className="p-3 text-[13px] font-semibold uppercase tracking-wide text-right" style={{ color: salemColors.navy }}>
+              Value
+            </th>
+            <th className="p-3 text-[13px] font-semibold uppercase tracking-wide text-left" style={{ color: salemColors.navy }}>
+              Context
+            </th>
           </tr>
         </thead>
         <tbody>
           {data.map((row, index) => (
             <tr
               key={index}
+              className="border-b border-background-border transition-colors"
               style={{
-                ...styles.row,
                 backgroundColor: row.highlight ? `${row.color}10` : index % 2 === 0 ? '#FFFFFF' : '#F9FAFB',
               }}
             >
-              <td style={styles.td}>
+              <td className="p-3.5 text-sm">
                 <strong>{row.label}</strong>
               </td>
-              <td style={{
-                ...styles.td,
-                textAlign: 'right',
-                fontSize: '16px',
-                fontWeight: 600,
-                color: row.color || salemColors.navy,
-              }}>
+              <td
+                className="p-3.5 text-base font-semibold text-right"
+                style={{ color: row.color || salemColors.navy }}
+              >
                 {row.value}
               </td>
-              <td style={{
-                ...styles.td,
-                fontSize: '13px',
-                color: '#6B7280',
-              }}>
+              <td className="p-3.5 text-[13px] text-text-secondary">
                 {row.context}
               </td>
             </tr>
@@ -124,79 +128,25 @@ export const OutcomeSummaryTable: React.FC<OutcomeSummaryTableProps> = ({
       </table>
 
       {/* Risk badge */}
-      <div style={{
-        marginTop: '16px',
-        padding: '12px 16px',
-        backgroundColor: `${riskLevel.color}15`,
-        borderLeft: `4px solid ${riskLevel.color}`,
-        borderRadius: '8px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      }}>
+      <div
+        className="mt-4 px-4 py-3 rounded-lg flex justify-between items-center border-l-4"
+        style={{
+          backgroundColor: `${riskLevel.color}15`,
+          borderLeftColor: riskLevel.color,
+        }}
+      >
         <div>
           <strong>Overall Plan Risk:</strong> {riskLevel.description}
         </div>
-        <div style={{
-          padding: '6px 12px',
-          backgroundColor: riskLevel.color,
-          color: '#FFFFFF',
-          borderRadius: '6px',
-          fontWeight: 600,
-          fontSize: '14px',
-        }}>
+        <div
+          className="px-3 py-1.5 text-white rounded-md font-semibold text-sm"
+          style={{ backgroundColor: riskLevel.color }}
+        >
           {riskLevel.level}
         </div>
       </div>
     </div>
   );
-};
-
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    backgroundColor: '#FFFFFF',
-    border: '1px solid #E5E7EB',
-    borderRadius: '12px',
-    padding: '24px',
-    marginBottom: '24px',
-  },
-  title: {
-    color: salemColors.navy,
-    fontSize: '20px',
-    fontWeight: 600,
-    marginBottom: '4px',
-    borderBottom: `3px solid ${salemColors.gold}`,
-    paddingBottom: '8px',
-  },
-  subtitle: {
-    fontSize: '14px',
-    color: '#6B7280',
-    marginTop: '8px',
-    marginBottom: '16px',
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-  },
-  headerRow: {
-    borderBottom: `2px solid ${salemColors.navy}`,
-  },
-  th: {
-    padding: '12px',
-    fontSize: '13px',
-    fontWeight: 600,
-    color: salemColors.navy,
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-  },
-  row: {
-    borderBottom: '1px solid #E5E7EB',
-    transition: 'background-color 0.2s',
-  },
-  td: {
-    padding: '14px 12px',
-    fontSize: '14px',
-  },
 };
 
 export default OutcomeSummaryTable;

@@ -4,6 +4,7 @@
  */
 
 import React, { useMemo } from 'react';
+import { Card } from '../../ui/Card';
 import {
   LineChart,
   Line,
@@ -93,7 +94,7 @@ export const WithdrawalStrategyComparison: React.FC<WithdrawalStrategyComparison
   return (
     <div style={chartContainerStyle}>
       <h3 style={sectionHeaderStyle}>Withdrawal Strategy Comparison</h3>
-      <p style={{ marginBottom: '20px', color: '#6B7280', fontSize: '14px' }}>
+      <p className="mb-5 text-text-secondary text-sm">
         Different withdrawal strategies balance spending stability against portfolio sustainability. 
         This comparison helps identify the most appropriate approach for your situation.
       </p>
@@ -175,53 +176,38 @@ export const WithdrawalStrategyComparison: React.FC<WithdrawalStrategyComparison
       </ResponsiveContainer>
 
       {/* Strategy comparison cards */}
-      <div style={{
-        marginTop: '20px',
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: '16px',
-      }}>
-        <div style={{
-          padding: '16px',
-          backgroundColor: '#FFFFFF',
-          border: `2px solid ${salemColors.navy}`,
-          borderRadius: '8px',
-        }}>
-          <div style={{ fontSize: '14px', fontWeight: 600, color: salemColors.navy, marginBottom: '8px' }}>
+      <div className="mt-5 grid grid-cols-2 gap-4">
+        <Card padding="md" className="border-2" style={{ borderColor: salemColors.navy }}>
+          <div className="text-sm font-semibold mb-2" style={{ color: salemColors.navy }}>
             Fixed Spending Strategy
           </div>
-          <div style={{ fontSize: '13px', color: '#6B7280', marginBottom: '12px' }}>
+          <div className="text-xs text-text-secondary mb-3">
             Maintains constant spending adjusted only for inflation
           </div>
-          <div style={{ fontSize: '11px', color: '#374151' }}>
+          <div className="text-xs text-text-primary">
             <div><strong>Pros:</strong> Predictable lifestyle, easy planning</div>
-            <div style={{ marginTop: '4px' }}><strong>Cons:</strong> May deplete portfolio faster in poor markets</div>
-            <div style={{ marginTop: '8px', fontWeight: 600 }}>
+            <div className="mt-1"><strong>Cons:</strong> May deplete portfolio faster in poor markets</div>
+            <div className="mt-2 font-semibold">
               Average: {formatCurrency(avgFixed)}/year
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div style={{
-          padding: '16px',
-          backgroundColor: '#FFFFFF',
-          border: `2px solid ${salemColors.gold}`,
-          borderRadius: '8px',
-        }}>
-          <div style={{ fontSize: '14px', fontWeight: 600, color: salemColors.gold, marginBottom: '8px' }}>
+        <Card padding="md" className="border-2" style={{ borderColor: salemColors.gold }}>
+          <div className="text-sm font-semibold mb-2" style={{ color: salemColors.gold }}>
             Dynamic Guardrails Strategy
           </div>
-          <div style={{ fontSize: '13px', color: '#6B7280', marginBottom: '12px' }}>
+          <div className="text-xs text-text-secondary mb-3">
             Adjusts spending within 20% bands based on portfolio performance
           </div>
-          <div style={{ fontSize: '11px', color: '#374151' }}>
+          <div className="text-xs text-text-primary">
             <div><strong>Pros:</strong> Balances stability with sustainability</div>
-            <div style={{ marginTop: '4px' }}><strong>Cons:</strong> Requires spending flexibility</div>
-            <div style={{ marginTop: '8px', fontWeight: 600 }}>
+            <div className="mt-1"><strong>Cons:</strong> Requires spending flexibility</div>
+            <div className="mt-2 font-semibold">
               Average: {formatCurrency(avgDynamic)}/year
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       {showTakeaway && (
