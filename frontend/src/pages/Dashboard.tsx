@@ -8,7 +8,7 @@ import { useSimulationStore } from '../store/simulationStore';
 import type { SimulationMetrics } from '../types';
 import { TrendingUp, AlertCircle, CheckCircle, Activity, FileText, ArrowRight } from 'lucide-react';
 import { FanChart, SuccessGauge, DistributionHistogram } from '../components/charts';
-import { SectionHeader, StatTile, EmptyState, Card, Button } from '../components/ui';
+import { SectionHeader, StatTile, EmptyState, Card, Button, LoadingSkeleton, Tooltip } from '../components/ui';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -138,17 +138,36 @@ const Dashboard: React.FC = () => {
           description="Running Monte Carlo simulation..."
           icon={<Activity size={28} />}
         />
-        <Card padding="none">
-          <div className="flex flex-col items-center justify-center py-24">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-accent-gold mb-6"></div>
-            <h3 className="text-h3 font-display text-text-primary mb-2">
-              Processing Simulation
-            </h3>
-            <p className="text-body text-text-secondary">
-              Analyzing thousands of market scenarios...
-            </p>
-          </div>
+        
+        {/* Key Metrics Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} padding="lg">
+              <LoadingSkeleton variant="text" height="1rem" width="60%" className="mb-4" />
+              <LoadingSkeleton variant="text" height="2.5rem" width="80%" className="mb-2" />
+              <LoadingSkeleton variant="text" height="0.875rem" width="40%" />
+            </Card>
+          ))}
+        </div>
+
+        {/* Chart Skeleton */}
+        <Card padding="lg">
+          <LoadingSkeleton variant="text" height="1.5rem" width="40%" className="mb-2" />
+          <LoadingSkeleton variant="text" height="1rem" width="60%" className="mb-6" />
+          <LoadingSkeleton variant="rectangle" height="400px" />
         </Card>
+
+        {/* Two Column Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card padding="lg">
+            <LoadingSkeleton variant="text" height="1.5rem" width="50%" className="mb-6" />
+            <LoadingSkeleton variant="circle" width="250px" height="250px" className="mx-auto" />
+          </Card>
+          <Card padding="lg">
+            <LoadingSkeleton variant="text" height="1.5rem" width="50%" className="mb-6" />
+            <LoadingSkeleton variant="rectangle" height="350px" />
+          </Card>
+        </div>
       </div>
     );
   }
@@ -186,34 +205,50 @@ const Dashboard: React.FC = () => {
       {/* Key Metrics - Hero Stats */}
       {metrics && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatTile
-            label="Success Probability"
-            value={formatPercent(metrics.success_probability)}
-            icon={<CheckCircle size={24} />}
-            variant={getSuccessVariant(metrics.success_probability)}
-            trend={{
-              value: metrics.success_probability >= 0.85 ? 'Strong' : metrics.success_probability >= 0.70 ? 'Moderate' : 'Low',
-              direction: metrics.success_probability >= 0.85 ? 'up' : metrics.success_probability >= 0.70 ? 'neutral' : 'down',
-            }}
-          />
-          <StatTile
-            label="Median Ending Balance"
-            value={formatCurrency(metrics.ending_median)}
-            icon={<TrendingUp size={24} />}
-            variant="default"
-          />
-          <StatTile
-            label="Shortfall Risk"
-            value={formatPercent(metrics.shortfall_risk)}
-            icon={<AlertCircle size={24} />}
-            variant={metrics.shortfall_risk < 0.15 ? 'success' : metrics.shortfall_risk < 0.30 ? 'warning' : 'error'}
-          />
-          <StatTile
-            label="Depletion Risk"
-            value={formatPercent(metrics.depletion_probability)}
-            icon={<AlertCircle size={24} />}
-            variant={metrics.depletion_probability < 0.15 ? 'success' : metrics.depletion_probability < 0.30 ? 'warning' : 'error'}
-          />
+          <Tooltip content="Probability of maintaining portfolio above target minimum throughout retirement">
+            <div>
+              <StatTile
+                label="Success Probability"
+                value={formatPercent(metrics.success_probability)}
+                icon={<CheckCircle size={24} />}
+                variant={getSuccessVariant(metrics.success_probability)}
+                trend={{
+                  value: metrics.success_probability >= 0.85 ? 'Strong' : metrics.success_probability >= 0.70 ? 'Moderate' : 'Low',
+                  direction: metrics.success_probability >= 0.85 ? 'up' : metrics.success_probability >= 0.70 ? 'neutral' : 'down',
+                }}
+              />
+            </div>
+          </Tooltip>
+          <Tooltip content="Expected portfolio value at end of planning horizon (50th percentile)">
+            <div>
+              <StatTile
+                label="Median Ending Balance"
+                value={formatCurrency(metrics.ending_median)}
+                icon={<TrendingUp size={24} />}
+                variant="default"
+              />
+            </div>
+          </Tooltip>
+          <Tooltip content="Probability of portfolio falling below target minimum at any point">
+            <div>
+              <StatTile
+                label="Shortfall Risk"
+                value={formatPercent(metrics.shortfall_risk)}
+                icon={<AlertCircle size={24} />}
+                variant={metrics.shortfall_risk < 0.15 ? 'success' : metrics.shortfall_risk < 0.30 ? 'warning' : 'error'}
+              />
+            </div>
+          </Tooltip>
+          <Tooltip content="Probability of portfolio reaching zero before end of planning period">
+            <div>
+              <StatTile
+                label="Depletion Risk"
+                value={formatPercent(metrics.depletion_probability)}
+                icon={<AlertCircle size={24} />}
+                variant={metrics.depletion_probability < 0.15 ? 'success' : metrics.depletion_probability < 0.30 ? 'warning' : 'error'}
+              />
+            </div>
+          </Tooltip>
         </div>
       )}
 

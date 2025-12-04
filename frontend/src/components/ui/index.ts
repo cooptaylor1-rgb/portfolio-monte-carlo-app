@@ -21,3 +21,16 @@ export type { BadgeProps, BadgeVariant, BadgeSize } from './Badge';
 
 export { FormSection } from './FormSection';
 export type { FormSectionProps } from './FormSection';
+
+// Phase 2: New Components
+export { AnalysisTable } from './AnalysisTable';
+export type { AnalysisTableProps, Column } from './AnalysisTable';
+
+export { Tooltip } from './Tooltip';
+export type { TooltipProps } from './Tooltip';
+
+export { Modal } from './Modal';
+export type { ModalProps } from './Modal';
+
+export { LoadingSkeleton } from './LoadingSkeleton';
+export type { LoadingSkeletonProps } from './LoadingSkeleton';

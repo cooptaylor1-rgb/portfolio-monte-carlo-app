@@ -8,3 +8,6 @@ export * from './Radio';
 export * from './DateInput';
 export * from './SelectBox';
 export * from './Expander';
+
+// Phase 2: New Components
+export * from './FormField';
