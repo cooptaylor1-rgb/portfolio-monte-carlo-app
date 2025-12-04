@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileEdit, GitCompare, FileText, CheckCircle } from 'lucide-react';
+import { LayoutDashboard, FileEdit, GitCompare, FileText, CheckCircle, BarChart3 } from 'lucide-react';
 import { useSimulationStore } from '../../store/simulationStore';
 
 interface NavItem {
@@ -37,11 +37,18 @@ const navItems: NavItem[] = [
     step: 2,
   },
   {
+    path: '/analytics',
+    label: 'Analytics',
+    icon: <BarChart3 size={20} />,
+    description: 'Deep Insights',
+    step: 3,
+  },
+  {
     path: '/reports',
     label: 'Reports',
     icon: <FileText size={20} />,
     description: 'Export & Share',
-    step: 3,
+    step: 4,
   },
 ];
 

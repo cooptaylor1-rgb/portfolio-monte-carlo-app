@@ -5,6 +5,7 @@ import InputsPage from './pages/InputsPage';
 import ScenariosPage from './pages/ScenariosPage';
 import ReportsPage from './pages/ReportsPage';
 import SalemReportPage from './pages/SalemReportPage';
+import MonteCarloAnalyticsPage from './pages/MonteCarloAnalyticsPage';
 import PresentationMode from './presentation/PresentationMode';
 import './index.css';
 
@@ -27,6 +28,7 @@ function App() {
               <Route path="/inputs" element={<InputsPage />} />
               <Route path="/scenarios" element={<ScenariosPage />} />
               <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/analytics" element={<MonteCarloAnalyticsPage />} />
             </Routes>
           </AppLayout>
         } />
