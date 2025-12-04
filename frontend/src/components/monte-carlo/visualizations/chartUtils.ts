@@ -1,56 +1,59 @@
 /**
  * Shared utilities for Monte Carlo visualizations
  * Provides consistent formatting, colors, and helper functions
+ * Now uses centralized theme tokens for consistency
  */
 
-// Salem Investment Counselors Brand Colors
+import { colors, chartTheme as themeChartConfig, typography, spacing } from '../../../theme';
+
+// Salem Investment Counselors Brand Colors (re-exported from theme for backwards compatibility)
 export const salemColors = {
-  navy: '#0F3B63',
-  gold: '#B49759',
-  white: '#FFFFFF',
-  lightGray: '#F5F5F5',
-  mediumGray: '#E0E0E0',
-  darkGray: '#424242',
+  navy: colors.brand.navy,
+  gold: colors.brand.gold,
+  white: colors.text.primary,
+  lightGray: colors.background.hover,
+  mediumGray: colors.background.border,
+  darkGray: colors.text.tertiary,
   
   // Chart-specific colors
-  success: '#10B981', // Green
-  warning: '#F59E0B', // Amber
-  danger: '#EF4444',  // Red
-  info: '#3B82F6',    // Blue
+  success: colors.status.success.base,
+  warning: colors.status.warning.base,
+  danger: colors.status.error.base,
+  info: colors.status.info.base,
   
-  // Percentile colors (conservative blue-to-gold gradient)
-  p10: '#DC2626',     // Deep red for worst case
-  p25: '#F59E0B',     // Amber
-  p50: '#B49759',     // Salem Gold for median
-  p75: '#10B981',     // Green
-  p90: '#059669',     // Deep green for best case
+  // Percentile colors
+  p10: colors.chart.p10,
+  p25: colors.chart.p25,
+  p50: colors.chart.p50,
+  p75: colors.chart.p75,
+  p90: colors.chart.p90,
   
-  // Chart lines
-  line1: '#3B82F6',   // Blue
-  line2: '#8B5CF6',   // Purple
-  line3: '#EC4899',   // Pink
-  line4: '#F59E0B',   // Amber
-  line5: '#10B981',   // Green
+  // Chart lines (using status colors for variety)
+  line1: colors.status.info.base,
+  line2: '#8B5CF6',   // Purple (custom)
+  line3: '#EC4899',   // Pink (custom)
+  line4: colors.status.warning.base,
+  line5: colors.status.success.base,
 };
 
-// Chart theme configuration matching Salem branding
+// Chart theme configuration from centralized theme
 export const chartTheme = {
-  backgroundColor: '#1E293B',
-  textColor: '#E2E8F0',
-  gridColor: '#334155',
-  tooltipBackground: '#0F172A',
-  tooltipBorder: '#475569',
+  backgroundColor: colors.background.elevated,
+  textColor: colors.text.secondary,
+  gridColor: colors.background.border,
+  tooltipBackground: colors.background.base,
+  tooltipBorder: colors.background.border,
   
   fonts: {
-    title: { fontSize: 20, fontWeight: 600, fontFamily: 'Inter, sans-serif' },
-    subtitle: { fontSize: 16, fontWeight: 500, fontFamily: 'Inter, sans-serif' },
-    label: { fontSize: 14, fontWeight: 400, fontFamily: 'Inter, sans-serif' },
-    small: { fontSize: 12, fontWeight: 400, fontFamily: 'Inter, sans-serif' },
+    title: { fontSize: 20, fontWeight: typography.fontWeight.semibold, fontFamily: typography.fontFamily.display },
+    subtitle: { fontSize: 16, fontWeight: typography.fontWeight.medium, fontFamily: typography.fontFamily.sans },
+    label: { fontSize: 14, fontWeight: typography.fontWeight.normal, fontFamily: typography.fontFamily.sans },
+    small: { fontSize: 12, fontWeight: typography.fontWeight.normal, fontFamily: typography.fontFamily.sans },
   },
   
   spacing: {
-    chartMargin: { top: 20, right: 30, left: 60, bottom: 40 },
-    padding: 16,
+    chartMargin: themeChartConfig.margin,
+    padding: parseInt(spacing.md),
   },
 };
 
@@ -211,36 +214,36 @@ export const exportDimensions = {
   shortHeight: 300,
 };
 
-// Key takeaway box styling
+// Key takeaway box styling (using theme tokens)
 export const keyTakeawayStyle: React.CSSProperties = {
-  backgroundColor: '#1E293B',
-  border: `2px solid ${salemColors.gold}`,
+  backgroundColor: colors.background.elevated,
+  border: `2px solid ${colors.brand.gold}`,
   borderRadius: '8px',
-  padding: '16px 20px',
-  marginTop: '16px',
-  fontFamily: 'Inter, sans-serif',
-  fontSize: '14px',
-  lineHeight: '1.6',
-  color: '#FCD34D',
+  padding: spacing.md,
+  marginTop: spacing.md,
+  fontFamily: typography.fontFamily.sans,
+  fontSize: typography.fontSize.body.size,
+  lineHeight: typography.fontSize.body.lineHeight,
+  color: colors.status.warning.light,
 };
 
-// Chart container styling
+// Chart container styling (using theme tokens)
 export const chartContainerStyle: React.CSSProperties = {
-  backgroundColor: '#1E293B',
-  border: '1px solid #334155',
+  backgroundColor: colors.background.elevated,
+  border: `1px solid ${colors.background.border}`,
   borderRadius: '12px',
-  padding: '24px',
-  marginBottom: '24px',
+  padding: spacing.lg,
+  marginBottom: spacing.lg,
   boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
 };
 
-// Section header styling
+// Section header styling (using theme tokens)
 export const sectionHeaderStyle: React.CSSProperties = {
-  color: salemColors.gold,
-  fontSize: '24px',
-  fontWeight: 600,
-  fontFamily: 'Inter, sans-serif',
-  marginBottom: '16px',
-  paddingBottom: '12px',
-  borderBottom: `3px solid ${salemColors.gold}`,
+  color: colors.brand.gold,
+  fontSize: typography.fontSize.h2.size,
+  fontWeight: typography.fontWeight.semibold,
+  fontFamily: typography.fontFamily.display,
+  marginBottom: spacing.md,
+  paddingBottom: spacing.sm,
+  borderBottom: `3px solid ${colors.brand.gold}`,
 };
