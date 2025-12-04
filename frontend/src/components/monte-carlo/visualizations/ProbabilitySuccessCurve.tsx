@@ -35,9 +35,10 @@ interface ProbabilitySuccessCurveProps {
   showTakeaway?: boolean;
 }
 
-export const ProbabilitySuccessCurve: React.FC<ProbabilitySuccessCurveProps> = ({
+const ProbabilitySuccessCurveComponent: React.FC<ProbabilitySuccessCurveProps> = ({
   stats,
   currentAge,
+  monthlySpending,
   showTakeaway = true,
 }) => {
   const chartData = useMemo(() => {
@@ -223,6 +224,9 @@ export const ProbabilitySuccessCurve: React.FC<ProbabilitySuccessCurveProps> = (
       )}
     </div>
   );
-});
+};
+
+export const ProbabilitySuccessCurve = React.memo(ProbabilitySuccessCurveComponent);
+ProbabilitySuccessCurve.displayName = 'ProbabilitySuccessCurve';
 
 export default ProbabilitySuccessCurve;

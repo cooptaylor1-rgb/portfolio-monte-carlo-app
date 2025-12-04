@@ -35,11 +35,11 @@ export const salemColors = {
 
 // Chart theme configuration matching Salem branding
 export const chartTheme = {
-  backgroundColor: '#FFFFFF',
-  textColor: '#1F2937',
-  gridColor: '#E5E7EB',
-  tooltipBackground: '#FFFFFF',
-  tooltipBorder: '#D1D5DB',
+  backgroundColor: '#1E293B',
+  textColor: '#E2E8F0',
+  gridColor: '#334155',
+  tooltipBackground: '#0F172A',
+  tooltipBorder: '#475569',
   
   fonts: {
     title: { fontSize: 20, fontWeight: 600, fontFamily: 'Inter, sans-serif' },
@@ -213,7 +213,7 @@ export const exportDimensions = {
 
 // Key takeaway box styling
 export const keyTakeawayStyle: React.CSSProperties = {
-  backgroundColor: '#FEF3C7',
+  backgroundColor: '#1E293B',
   border: `2px solid ${salemColors.gold}`,
   borderRadius: '8px',
   padding: '16px 20px',
@@ -221,22 +221,22 @@ export const keyTakeawayStyle: React.CSSProperties = {
   fontFamily: 'Inter, sans-serif',
   fontSize: '14px',
   lineHeight: '1.6',
-  color: '#78350F',
+  color: '#FCD34D',
 };
 
 // Chart container styling
 export const chartContainerStyle: React.CSSProperties = {
-  backgroundColor: '#FFFFFF',
-  border: '1px solid #E5E7EB',
+  backgroundColor: '#1E293B',
+  border: '1px solid #334155',
   borderRadius: '12px',
   padding: '24px',
   marginBottom: '24px',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
 };
 
 // Section header styling
 export const sectionHeaderStyle: React.CSSProperties = {
-  color: salemColors.navy,
+  color: salemColors.gold,
   fontSize: '24px',
   fontWeight: 600,
   fontFamily: 'Inter, sans-serif',
