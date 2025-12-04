@@ -14,64 +14,64 @@ export const colors = {
     navy: '#0F3B63',
     navyLight: '#1F4F7C',
     navyDark: '#082539',
-    gold: '#B49759',
-    goldLight: '#C4A76A',
-    goldDark: '#9A834D',
+    gold: '#C4A76A',        // Updated for better contrast (WCAG AA)
+    goldLight: '#D4B77A',
+    goldDark: '#A4875A',
   },
 
-  // Background Palette (Dark Mode)
+  // Background Palette (Dark Mode) - Updated for better contrast
   background: {
-    base: '#0A0C10',
-    elevated: '#12141A',
-    hover: '#1A1D24',
-    border: '#262A33',
+    base: '#0F1419',        // Slightly lighter for better contrast
+    elevated: '#1A1F26',    // Clearer elevation
+    hover: '#252B33',       // Better hover indication
+    border: '#34393F',      // More visible borders
   },
 
-  // Text Colors
+  // Text Colors - WCAG AA Compliant
   text: {
     primary: '#FFFFFF',
-    secondary: '#B4B9C2',
-    tertiary: '#6F767D',
-    disabled: '#4A5057',
+    secondary: '#C9D1D9',   // Updated for better contrast
+    tertiary: '#8B949E',    // Updated to meet WCAG AA standard
+    disabled: '#6A737D',    // Clearer disabled state
   },
 
-  // Semantic Status Colors
+  // Semantic Status Colors - Professional and accessible
   status: {
     success: {
-      base: '#10B981',
-      light: '#34D399',
-      dark: '#059669',
+      base: '#3FB950',      // Better for financial context
+      light: '#56D364',
+      dark: '#2EA043',
     },
     warning: {
-      base: '#F59E0B',
-      light: '#FBBF24',
-      dark: '#D97706',
+      base: '#D29922',      // Warmer amber
+      light: '#E3B341',
+      dark: '#BB8009',
     },
     error: {
-      base: '#EF4444',
-      light: '#F87171',
-      dark: '#DC2626',
+      base: '#F85149',      // Softer red, less alarming
+      light: '#FF7B72',
+      dark: '#DA3633',
     },
     info: {
-      base: '#3B82F6',
-      light: '#60A5FA',
-      dark: '#2563EB',
+      base: '#58A6FF',      // Softer blue
+      light: '#79C0FF',
+      dark: '#388BFD',
     },
   },
 
-  // Chart-specific Colors
+  // Chart-specific Colors - Color blind friendly
   chart: {
-    equity: '#4CA6E8',
-    fixed: '#7AC18D',
-    cash: '#D7B46A',
+    equity: '#58A6FF',     // Blue - distinguishable
+    fixed: '#56D364',      // Green
+    cash: '#D29922',       // Amber/gold
     projection: '#7AA6C4',
     
-    // Percentile colors
-    p90: '#059669', // Best case - deep green
-    p75: '#10B981', // Green
-    p50: '#B49759', // Salem Gold - median
-    p25: '#F59E0B', // Amber
-    p10: '#DC2626', // Worst case - deep red
+    // Percentile colors - sequential, distinguishable
+    p90: '#56D364',        // Best case - green
+    p75: '#7EE787',        // Light green
+    p50: '#D29922',        // Median - amber/gold
+    p25: '#FF9A56',        // Orange
+    p10: '#F85149',        // Worst case - red
   },
 } as const;
 
@@ -123,43 +123,45 @@ export const spacing = {
 } as const;
 
 // ============================================================================
-// BORDER RADIUS
+// BORDER RADIUS - Refined for professional financial software
 // ============================================================================
 
 export const borderRadius = {
-  sm: '6px',
-  md: '8px',
-  lg: '12px',
-  xl: '16px',
+  sm: '4px',    // Inputs, small buttons, tags
+  md: '8px',    // Cards, modals, large buttons
+  lg: '12px',   // Hero cards, feature panels
+  xl: '16px',   // Special emphasis, overlays
+  full: '9999px', // Pills, badges
 } as const;
 
 // ============================================================================
-// SHADOWS
+// SHADOWS - Stronger for dark theme
 // ============================================================================
 
 export const shadows = {
-  sm: '0 1px 2px 0 rgb(0 0 0 / 0.3)',
-  md: '0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.2)',
-  lg: '0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3)',
-  xl: '0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.3)',
-  glow: '0 0 20px rgb(180 151 89 / 0.3)',
-  glowStrong: '0 0 30px rgb(180 151 89 / 0.5)',
+  sm: '0 1px 3px 0 rgba(0, 0, 0, 0.5)',
+  md: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
+  lg: '0 10px 15px -3px rgba(0, 0, 0, 0.6)',
+  xl: '0 20px 25px -5px rgba(0, 0, 0, 0.7)',
+  glow: '0 0 20px rgba(196, 167, 106, 0.25)',        // Updated gold value
+  glowStrong: '0 0 30px rgba(196, 167, 106, 0.4)',   // Updated gold value
 } as const;
 
 // ============================================================================
-// TRANSITIONS
+// TRANSITIONS - Fast and purposeful
 // ============================================================================
 
 export const transitions = {
   duration: {
-    fast: '150ms',
-    default: '200ms',
-    slow: '300ms',
+    fast: '100ms',      // Micro interactions
+    default: '200ms',   // Standard transitions
+    slow: '350ms',      // Complex animations
   },
   timing: {
-    easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
+    default: 'cubic-bezier(0.4, 0, 0.2, 1)',            // Ease-in-out
     easeOut: 'cubic-bezier(0.0, 0, 0.2, 1)',
     easeIn: 'cubic-bezier(0.4, 0, 1, 1)',
+    spring: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',   // Bouncy
   },
 } as const;
 

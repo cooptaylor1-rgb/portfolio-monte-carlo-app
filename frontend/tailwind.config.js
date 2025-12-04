@@ -7,77 +7,65 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Brand Colors
+        // Brand Colors - Updated for WCAG AA compliance
         primary: {
           navy: '#0F3B63',
           'navy-light': '#1F4F7C',
           'navy-dark': '#082539',
         },
         accent: {
-          gold: '#B49759',
-          'gold-light': '#C4A76A',
-          'gold-dark': '#9A834D',
+          gold: '#C4A76A',        // Updated
+          'gold-light': '#D4B77A', // Updated
+          'gold-dark': '#A4875A',  // Updated
         },
-        // Background Palette (Dark Mode)
+        // Background Palette (Dark Mode) - Updated for better contrast
         background: {
-          base: '#0A0C10',
-          elevated: '#12141A',
-          hover: '#1A1D24',
-          border: '#262A33',
+          base: '#0F1419',        // Updated
+          elevated: '#1A1F26',    // Updated
+          hover: '#252B33',       // Updated
+          border: '#34393F',      // Updated
         },
-        // Text Colors
+        // Text Colors - WCAG AA Compliant
         text: {
           primary: '#FFFFFF',
-          secondary: '#B4B9C2',
-          tertiary: '#6F767D',
-          disabled: '#4A5057',
+          secondary: '#C9D1D9',   // Updated
+          tertiary: '#8B949E',    // Updated
+          disabled: '#6A737D',    // Updated
         },
-        // Semantic Colors
+        // Semantic Colors - Professional and accessible
         status: {
           success: {
-            base: '#10B981',
-            light: '#34D399',
-            dark: '#059669',
+            base: '#3FB950',      // Updated
+            light: '#56D364',     // Updated
+            dark: '#2EA043',      // Updated
           },
           warning: {
-            base: '#F59E0B',
-            light: '#FBBF24',
-            dark: '#D97706',
+            base: '#D29922',      // Updated
+            light: '#E3B341',     // Updated
+            dark: '#BB8009',      // Updated
           },
           error: {
-            base: '#EF4444',
-            light: '#F87171',
-            dark: '#DC2626',
+            base: '#F85149',      // Updated
+            light: '#FF7B72',     // Updated
+            dark: '#DA3633',      // Updated
           },
           info: {
-            base: '#3B82F6',
-            light: '#60A5FA',
-            dark: '#2563EB',
+            base: '#58A6FF',      // Updated
+            light: '#79C0FF',     // Updated
+            dark: '#388BFD',      // Updated
           },
         },
-        // Chart Colors
+        // Chart Colors - Color blind friendly
         chart: {
-          equity: '#4CA6E8',
-          fixed: '#7AC18D',
-          cash: '#D7B46A',
+          equity: '#58A6FF',     // Updated
+          fixed: '#56D364',      // Updated
+          cash: '#D29922',       // Updated
           projection: '#7AA6C4',
-          p90: '#059669',
-          p75: '#10B981',
-          p50: '#B49759',
-          p25: '#F59E0B',
-          p10: '#DC2626',
-        },
-        // Legacy aliases for backwards compatibility
-        success: '#10B981',
-        warning: '#F59E0B',
-        danger: '#EF4444',
-        'brand-gold': '#B49759',
-        'brand-gold-dark': '#9A834D',
-        surface: {
-          900: '#0A0C10',
-          800: '#12141A',
-          700: '#1A1D24',
-          600: '#262A33',
+          p90: '#56D364',        // Updated
+          p75: '#7EE787',        // Updated
+          p50: '#D29922',        // Updated
+          p25: '#FF9A56',        // Updated
+          p10: '#F85149',        // Updated
         },
       },
       fontFamily: {
@@ -105,26 +93,29 @@ export default {
         '3xl': '64px',
       },
       borderRadius: {
-        'sm': '6px',
+        'sm': '4px',          // Updated
         'md': '8px',
         'lg': '12px',
         'xl': '16px',
+        'full': '9999px',     // Added
       },
       boxShadow: {
-        'sm': '0 1px 2px 0 rgb(0 0 0 / 0.3)',
-        'md': '0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.2)',
-        'lg': '0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3)',
-        'xl': '0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.3)',
-        'glow': '0 0 20px rgb(180 151 89 / 0.3)',
-        'glow-strong': '0 0 30px rgb(180 151 89 / 0.5)',
+        'sm': '0 1px 3px 0 rgba(0, 0, 0, 0.5)',
+        'md': '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
+        'lg': '0 10px 15px -3px rgba(0, 0, 0, 0.6)',
+        'xl': '0 20px 25px -5px rgba(0, 0, 0, 0.7)',
+        'glow': '0 0 20px rgba(196, 167, 106, 0.25)',           // Updated
+        'glow-strong': '0 0 30px rgba(196, 167, 106, 0.4)',     // Updated
       },
       transitionDuration: {
-        'fast': '150ms',
+        'fast': '100ms',      // Updated
         'default': '200ms',
-        'slow': '300ms',
+        'slow': '350ms',      // Updated
       },
       maxWidth: {
         'container': '1440px',
+        'content': '1200px',
+        'narrow': '800px',
       },
     },
   },
