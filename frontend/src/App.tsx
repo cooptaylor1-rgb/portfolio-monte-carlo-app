@@ -5,6 +5,7 @@ import InputsPage from './pages/InputsPage';
 import ScenariosPage from './pages/ScenariosPage';
 import ReportsPage from './pages/ReportsPage';
 import SalemReportPage from './pages/SalemReportPage';
+import PresentationMode from './presentation/PresentationMode';
 import './index.css';
 
 function App() {
@@ -14,6 +15,9 @@ function App() {
         {/* Salem Report - Full page without layout */}
         <Route path="/salem-report" element={<SalemReportPage />} />
         <Route path="/salem-report/:planId" element={<SalemReportPage />} />
+        
+        {/* Presentation Mode - Full screen without layout */}
+        <Route path="/presentation" element={<PresentationMode />} />
         
         {/* Regular app routes with layout */}
         <Route path="/*" element={

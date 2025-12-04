@@ -6,7 +6,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSimulationStore } from '../../store/simulationStore';
 import { Button } from '../ui';
-import { Play, FileDown, Save } from 'lucide-react';
+import { Play, FileDown, Save, Presentation } from 'lucide-react';
 import apiClient from '../../lib/api';
 
 const AppHeader: React.FC = () => {
@@ -64,6 +64,17 @@ const AppHeader: React.FC = () => {
 
         {/* Quick Actions */}
         <div className="flex items-center gap-3">
+          {hasRunSimulation && (
+            <button
+              onClick={() => navigate('/presentation')}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-accent-gold text-text-primary font-semibold rounded-sm transition-all hover:bg-accent-gold-light shadow-md hover:shadow-lg"
+              title="Enter Presentation Mode"
+            >
+              <Presentation size={20} />
+              Presentation Mode
+            </button>
+          )}
+          
           <Button
             variant="primary"
             size="md"
