@@ -496,6 +496,12 @@ const InputsPage: React.FC = () => {
           <div className="md:col-span-2 h-px bg-background-border my-2"></div>
 
           <DollarInput
+            label="Monthly Income"
+            value={modelInputs.monthly_income || 0}
+            onChange={(value) => setModelInputs({ monthly_income: value })}
+            help="Regular monthly income (salary, pension, etc.)"
+          />
+          <DollarInput
             label="Monthly Spending"
             value={modelInputs.monthly_spending}
             onChange={(value) => setModelInputs({ monthly_spending: value })}

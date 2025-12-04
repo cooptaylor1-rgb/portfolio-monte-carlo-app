@@ -31,6 +31,7 @@ def convert_model_to_dataclass(model: ModelInputsModel) -> PortfolioInputs:
         starting_portfolio=model.starting_portfolio,
         years_to_model=model.years_to_model,
         current_age=model.current_age,
+        monthly_income=model.monthly_income,
         monthly_spending=model.monthly_spending,
         inflation_annual=model.inflation_annual,
         equity_pct=model.equity_pct,

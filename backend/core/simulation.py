@@ -14,6 +14,7 @@ class PortfolioInputs:
     starting_portfolio: float
     years_to_model: int
     current_age: int
+    monthly_income: float
     monthly_spending: float
     inflation_annual: float
     

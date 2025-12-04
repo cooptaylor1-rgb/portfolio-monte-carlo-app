@@ -32,6 +32,7 @@ class ModelInputsModel(BaseModel):
     horizon_age: int = Field(default=78, ge=19, le=120, description="End age for planning")
     
     # Spending parameters
+    monthly_income: float = Field(default=0.0, description="Monthly income (positive)")
     monthly_spending: float = Field(default=-20_000.0, description="Monthly withdrawal (negative)")
     inflation_annual: float = Field(default=0.03, ge=-0.05, le=0.15, description="Annual inflation rate")
     spending_rule: SpendingRule = Field(default=SpendingRule.FIXED_DOLLAR, description="Withdrawal strategy")

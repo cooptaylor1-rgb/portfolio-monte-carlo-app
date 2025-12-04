@@ -53,6 +53,7 @@ const defaultModelInputs: ModelInputs = {
   years_to_model: 30,
   current_age: 48,
   horizon_age: 78,
+  monthly_income: 0,
   monthly_spending: -20000,
   inflation_annual: 0.03,
   equity_pct: 0.70,
