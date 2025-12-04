@@ -34,7 +34,7 @@ interface AnnualCashFlowChartProps {
   showTakeaway?: boolean;
 }
 
-export const AnnualCashFlowChart: React.FC<AnnualCashFlowChartProps> = ({
+export const AnnualCashFlowChart: React.FC<AnnualCashFlowChartProps> = React.memo(({
   stats,
   currentAge,
   monthlySpending,
@@ -203,6 +203,6 @@ export const AnnualCashFlowChart: React.FC<AnnualCashFlowChartProps> = ({
       )}
     </div>
   );
-};
+});
 
 export default AnnualCashFlowChart;

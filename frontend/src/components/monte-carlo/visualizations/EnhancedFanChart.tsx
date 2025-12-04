@@ -34,7 +34,7 @@ interface EnhancedFanChartProps {
   showTakeaway?: boolean;
 }
 
-export const EnhancedFanChart: React.FC<EnhancedFanChartProps> = ({
+export const EnhancedFanChart: React.FC<EnhancedFanChartProps> = React.memo(({
   stats,
   currentAge,
   startingPortfolio,
@@ -250,6 +250,6 @@ export const EnhancedFanChart: React.FC<EnhancedFanChartProps> = ({
       )}
     </div>
   );
-};
+});
 
 export default EnhancedFanChart;

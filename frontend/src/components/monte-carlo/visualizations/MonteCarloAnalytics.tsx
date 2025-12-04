@@ -3,9 +3,10 @@
  * Displays full suite of charts, graphs, and tables for retirement portfolio analysis
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useSimulationStore } from '../../../store/simulationStore';
 import { salemColors, sectionHeaderStyle } from './chartUtils';
+import { exportAllChartsAsPNG, exportAnalyticsAsPDF } from '../../../utils/exportUtils';
 
 // Import visualizations
 import EnhancedFanChart from './EnhancedFanChart';
@@ -30,6 +31,8 @@ interface MonteCarloAnalyticsProps {
 export const MonteCarloAnalytics: React.FC<MonteCarloAnalyticsProps> = () => {
   const { simulationResults, modelInputs, clientInfo } = useSimulationStore();
   const [activeSection, setActiveSection] = useState<string>('all');
+  const [isExporting, setIsExporting] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   if (!simulationResults) {
     return (
@@ -51,8 +54,55 @@ export const MonteCarloAnalytics: React.FC<MonteCarloAnalyticsProps> = () => {
     { id: 'tables', label: 'Summary Tables', icon: '📋' },
   ];
 
+  // Memoize chart IDs for export
+  const chartIds = useMemo(() => [
+    'outcome-summary',
+    'fan-chart',
+    'success-curve',
+    'withdrawal-rate',
+    'stress-test',
+    'drawdown-dist',
+    'tail-risk',
+    'cash-flow',
+    'withdrawal-strategy',
+    'glidepath',
+    'longevity-table',
+    'ruin-table',
+  ], []);
+
+  // Export handlers
+  const handleExportPDF = async () => {
+    setIsExporting(true);
+    try {
+      const filename = `${clientInfo.client_name?.replace(/\s+/g, '_') || 'Client'}_Analytics.pdf`;
+      await exportAnalyticsAsPDF('analytics-content', { filename });
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to export PDF. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportPNG = async () => {
+    setIsExporting(true);
+    try {
+      await exportAllChartsAsPNG(chartIds, 'analytics-charts');
+      alert('Charts exported successfully! Check your downloads folder.');
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to export images. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportPPT = () => {
+    alert('PowerPoint export: Copy individual charts to clipboard and paste into PowerPoint.\n\nTip: Right-click any chart and select "Copy Image" for best quality.');
+  };
+
   return (
-    <div style={styles.container}>
+    <div ref={containerRef} style={styles.container}>
       {/* Page Header */}
       <div style={styles.header}>
         <h1 style={styles.pageTitle}>
@@ -81,20 +131,8 @@ export const MonteCarloAnalytics: React.FC<MonteCarloAnalyticsProps> = () => {
       </div>
 
       {/* Main Content */}
-      <div style={styles.content}>
+      <div id="analytics-content" style={styles.content}>
         
-        {/* Summary Table */}
-        {(activeSection === 'all' || activeSection === 'tables') && (
-          <section style={styles.section}>
-            <OutcomeSummaryTable
-              metrics={metrics}
-              stats={stats}
-              startingPortfolio={inputs.starting_portfolio}
-              years={inputs.years_to_model}
-            />
-          </section>
-        )}
-
         {/* Core Probability Charts Section */}
         {(activeSection === 'all' || activeSection === 'probability') && (
           <section style={styles.section}>
@@ -105,23 +143,29 @@ export const MonteCarloAnalytics: React.FC<MonteCarloAnalyticsProps> = () => {
               These visualizations show the range of potential outcomes and likelihood of meeting your financial goals.
             </p>
 
+            <div id="fan-chart" data-chart-export>
             <EnhancedFanChart
               stats={stats}
               currentAge={inputs.current_age}
               startingPortfolio={inputs.starting_portfolio}
             />
+            </div>
 
+            <div id="success-curve" data-chart-export>
             <ProbabilitySuccessCurve
               stats={stats}
               currentAge={inputs.current_age}
               monthlySpending={inputs.monthly_spending}
             />
+            </div>
 
+            <div id="withdrawal-rate" data-chart-export>
             <SafeWithdrawalRateCurve
               startingPortfolio={inputs.starting_portfolio}
               currentSpending={inputs.monthly_spending}
               successProbability={metrics.success_probability}
             />
+            </div>
           </section>
         )}
 
@@ -135,20 +179,26 @@ export const MonteCarloAnalytics: React.FC<MonteCarloAnalyticsProps> = () => {
               Evaluate how your portfolio performs under adverse market conditions and identify key risk factors.
             </p>
 
+            <div id="stress-test" data-chart-export>
             <StressTestComparison
               baselineMetrics={metrics}
               startingPortfolio={inputs.starting_portfolio}
             />
+            </div>
 
+            <div id="drawdown-dist" data-chart-export>
             <DrawdownDistribution
               stats={stats}
               startingPortfolio={inputs.starting_portfolio}
             />
+            </div>
 
+            <div id="tail-risk" data-chart-export>
             <TailRiskSummary
               stats={stats}
               startingPortfolio={inputs.starting_portfolio}
             />
+            </div>
           </section>
         )}
 
@@ -162,24 +212,30 @@ export const MonteCarloAnalytics: React.FC<MonteCarloAnalyticsProps> = () => {
               Detailed breakdown of income sources, withdrawals, and portfolio balance over time.
             </p>
 
+            <div id="cash-flow" data-chart-export>
             <AnnualCashFlowChart
               stats={stats}
               currentAge={inputs.current_age}
               monthlySpending={inputs.monthly_spending}
               monthlyIncome={inputs.social_security_monthly + inputs.pension_monthly + inputs.regular_income_monthly}
             />
+            </div>
 
+            <div id="withdrawal-strategy" data-chart-export>
             <WithdrawalStrategyComparison
               stats={stats}
               currentAge={inputs.current_age}
               initialSpending={inputs.monthly_spending}
             />
+            </div>
 
+            <div id="glidepath" data-chart-export>
             <GlidepathVisualization
               currentAge={inputs.current_age}
               planYears={inputs.years_to_model * 12}
               initialEquity={inputs.equity_pct / 100}
             />
+            </div>
           </section>
         )}
 
@@ -193,15 +249,28 @@ export const MonteCarloAnalytics: React.FC<MonteCarloAnalyticsProps> = () => {
               Comprehensive tables for advisor review and client discussion.
             </p>
 
+            <div id="outcome-summary" data-chart-export>
+            <OutcomeSummaryTable
+              metrics={metrics}
+              stats={stats}
+              startingPortfolio={inputs.starting_portfolio}
+              years={inputs.years_to_model}
+            />
+            </div>
+
+            <div id="longevity-table" data-chart-export>
             <LongevityStressTable
               stats={stats}
               currentAge={inputs.current_age}
             />
+            </div>
 
+            <div id="ruin-table" data-chart-export>
             <AnnualProbabilityRuinTable
               stats={stats}
               currentAge={inputs.current_age}
             />
+            </div>
           </section>
         )}
 
@@ -209,14 +278,25 @@ export const MonteCarloAnalytics: React.FC<MonteCarloAnalyticsProps> = () => {
 
       {/* Footer with Export Options */}
       <div style={styles.footer}>
-        <button style={styles.exportButton}>
-          📄 Export to PDF
+        <button 
+          style={styles.exportButton}
+          onClick={handleExportPDF}
+          disabled={isExporting}
+        >
+          {isExporting ? '⏳ Exporting...' : '📄 Export to PDF'}
         </button>
-        <button style={styles.exportButton}>
-          📊 Export to PowerPoint
+        <button 
+          style={styles.exportButton}
+          onClick={handleExportPNG}
+          disabled={isExporting}
+        >
+          🖼️ Export Charts as PNG
         </button>
-        <button style={styles.exportButton}>
-          🖼️ Export Charts as Images
+        <button 
+          style={styles.exportButton}
+          onClick={handleExportPPT}
+        >
+          📊 Copy for PowerPoint
         </button>
       </div>
     </div>

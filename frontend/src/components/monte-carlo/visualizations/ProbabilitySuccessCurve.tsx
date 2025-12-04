@@ -223,6 +223,6 @@ export const ProbabilitySuccessCurve: React.FC<ProbabilitySuccessCurveProps> = (
       )}
     </div>
   );
-};
+});
 
 export default ProbabilitySuccessCurve;
