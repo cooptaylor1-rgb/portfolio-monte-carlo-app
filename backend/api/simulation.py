@@ -3,7 +3,7 @@ Monte Carlo simulation endpoints.
 Core API for running portfolio projections and analysis.
 """
 from fastapi import APIRouter, HTTPException
-from models.schemas import (
+from backend.models.schemas import (
     SimulationRequest,
     SimulationResponse,
     SimulationMetrics,
@@ -12,7 +12,7 @@ from models.schemas import (
     SensitivityResponse,
     SensitivityResult
 )
-from core.simulation import (
+from backend.core.simulation import (
     PortfolioInputs,
     run_monte_carlo,
     calculate_metrics,
@@ -91,7 +91,9 @@ async def run_simulation(request: SimulationRequest):
     - goal_probabilities: Achievement probabilities for each goal
     """
     try:
-        logger.info(f"Running simulation for client: {request.client_info.client_name}")
+        logger.info(f"=== SIMULATION REQUEST RECEIVED ===")
+        logger.info(f"Client: {request.client_info.client_name}")
+        logger.info(f"Request data: {request.model_dump()}")
         
         # Validate allocation sums to 1.0
         total_allocation = (

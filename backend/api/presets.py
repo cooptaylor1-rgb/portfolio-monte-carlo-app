@@ -3,7 +3,7 @@ Assumption preset endpoints.
 Provides industry-standard return and volatility assumptions.
 """
 from fastapi import APIRouter, HTTPException
-from models.schemas import AssumptionPresetModel
+from backend.models.schemas import AssumptionPresetModel
 from typing import List
 
 router = APIRouter()

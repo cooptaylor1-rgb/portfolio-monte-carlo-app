@@ -10,8 +10,8 @@ import time
 from datetime import datetime
 import logging
 
-from api import simulation, presets, health, reports
-from models.schemas import HealthCheckResponse
+from backend.api import simulation, presets, health
+from backend.models.schemas import HealthCheckResponse
 
 # Configure logging
 logging.basicConfig(
@@ -123,7 +123,6 @@ async def root():
 app.include_router(health.router, prefix="/api", tags=["health"])
 app.include_router(simulation.router, prefix="/api/simulation", tags=["simulation"])
 app.include_router(presets.router, prefix="/api/presets", tags=["presets"])
-app.include_router(reports.router, prefix="/api", tags=["reports"])
 
 
 # Application entry point

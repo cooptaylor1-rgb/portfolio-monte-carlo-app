@@ -11,11 +11,13 @@ import {
   NumberInput,
   DollarInput,
   PercentInput,
+  Slider,
   Checkbox,
   Radio,
   DateInput,
+  SelectBox,
 } from '../components/forms';
-import { SectionHeader, FormSection, Card } from '../components/ui';
+import { SectionHeader, Button, FormSection, Card, Badge } from '../components/ui';
 import { 
   User, 
   Wallet, 
@@ -395,7 +397,7 @@ const InputsPage: React.FC = () => {
               />
               <PercentInput
                 label="Distribution Rate"
-                value={modelInputs.equity_dist_rate ?? 0}
+                value={modelInputs.equity_dist_rate}
                 onChange={(value) => setModelInputs({ equity_dist_rate: value })}
               />
             </div>
@@ -422,7 +424,7 @@ const InputsPage: React.FC = () => {
               />
               <PercentInput
                 label="Distribution Rate"
-                value={modelInputs.fi_dist_rate ?? 0}
+                value={modelInputs.fi_dist_rate}
                 onChange={(value) => setModelInputs({ fi_dist_rate: value })}
               />
             </div>
@@ -452,7 +454,7 @@ const InputsPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <NumberInput
                 label="Equity / Fixed Income Correlation"
-                value={modelInputs.corr_equity_fi ?? 0}
+                value={modelInputs.corr_equity_fi}
                 onChange={(value) => setModelInputs({ corr_equity_fi: value })}
                 help="Value between -1 and 1"
               />
@@ -485,7 +487,7 @@ const InputsPage: React.FC = () => {
           />
           <NumberInput
             label="Number of Simulations"
-            value={modelInputs.num_sims ?? 1000}
+            value={modelInputs.num_sims}
             onChange={(value) => setModelInputs({ num_sims: value })}
             required
             help="More simulations = more accurate results (1000-10000)"
@@ -502,7 +504,7 @@ const InputsPage: React.FC = () => {
           />
           <Checkbox
             label="Adjust Spending for Inflation"
-            checked={modelInputs.spending_inflation_adjusted ?? true}
+            checked={modelInputs.spending_inflation_adjusted}
             onChange={(checked) => setModelInputs({ spending_inflation_adjusted: checked })}
             help="Increase spending annually by inflation rate"
           />
@@ -595,8 +597,8 @@ const InputsPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Radio
             label="Rebalancing Strategy"
-            value={modelInputs.rebalance_strategy ?? 'annual'}
-            onChange={(value) => setModelInputs({ rebalance_strategy: value as string })}
+            value={modelInputs.rebalance_strategy}
+            onChange={(value) => setModelInputs({ rebalance_strategy: value })}
             options={[
               { value: 'none', label: 'No Rebalancing' },
               { value: 'annual', label: 'Annual Rebalancing' },

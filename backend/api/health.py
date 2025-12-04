@@ -2,7 +2,7 @@
 Health check and system status endpoints.
 """
 from fastapi import APIRouter
-from models.schemas import HealthCheckResponse
+from backend.models.schemas import HealthCheckResponse
 from datetime import datetime
 import platform
 import sys
