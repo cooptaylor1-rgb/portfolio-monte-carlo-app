@@ -7,6 +7,7 @@ import ScenariosPage from './pages/ScenariosPage';
 import ReportsPage from './pages/ReportsPage';
 import SalemReportPage from './pages/SalemReportPage';
 import MonteCarloAnalyticsPage from './pages/MonteCarloAnalyticsPage';
+import SocialSecurityOptimization from './pages/SocialSecurityOptimization';
 import PresentationMode from './presentation/PresentationMode';
 import './index.css';
 
@@ -31,6 +32,7 @@ function App() {
                 <Route path="/scenarios" element={<ScenariosPage />} />
                 <Route path="/reports" element={<ReportsPage />} />
                 <Route path="/analytics" element={<MonteCarloAnalyticsPage />} />
+                <Route path="/social-security" element={<SocialSecurityOptimization />} />
               </Routes>
             </AppLayout>
           } />

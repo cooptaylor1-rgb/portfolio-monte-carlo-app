@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileEdit, GitCompare, FileText, CheckCircle, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, FileEdit, GitCompare, FileText, CheckCircle, BarChart3, DollarSign } from 'lucide-react';
 import { useSimulationStore } from '../../store/simulationStore';
 
 interface NavItem {
@@ -49,6 +49,12 @@ const navItems: NavItem[] = [
     icon: <FileText size={20} />,
     description: 'Export & Share',
     step: 4,
+  },
+  {
+    path: '/social-security',
+    label: 'Social Security',
+    icon: <DollarSign size={20} />,
+    description: 'Claiming Strategy',
   },
 ];
 
