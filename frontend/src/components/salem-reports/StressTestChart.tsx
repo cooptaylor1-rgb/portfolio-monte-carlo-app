@@ -15,6 +15,7 @@ import {
   Cell,
 } from 'recharts';
 import type { StressScenarioResult } from '../../types/reports';
+import { AnalysisTable } from '../ui/AnalysisTable';
 
 interface StressTestChartProps {
   scenarios: StressScenarioResult[];
@@ -87,42 +88,65 @@ export const StressTestChart: React.FC<StressTestChartProps> = ({ scenarios }) =
 
       {/* Impact Summary Table */}
       <div style={{ marginTop: 'var(--salem-spacing-lg)' }}>
-        <table className="salem-table">
-          <thead>
-            <tr>
-              <th>Scenario</th>
-              <th style={{ textAlign: 'right' }}>Impact</th>
-              <th style={{ textAlign: 'right' }}>Severity</th>
-            </tr>
-          </thead>
-          <tbody>
-            {scenarios.map((scenario) => {
-              const impact = scenario.base_success_probability - scenario.stressed_success_probability;
-              return (
-                <tr key={scenario.id}>
-                  <td>{scenario.name}</td>
-                  <td style={{ textAlign: 'right', color: 'var(--salem-danger)', fontWeight: 600 }}>
-                    {formatPercent(impact)}
-                  </td>
-                  <td style={{ textAlign: 'right', textTransform: 'capitalize' }}>
-                    <span style={{
-                      padding: '2px 8px',
-                      borderRadius: '4px',
-                      fontSize: 'var(--salem-text-xs)',
-                      fontWeight: 600,
-                      backgroundColor: scenario.impact_severity === 'High' || scenario.impact_severity === 'Severe' ? '#fee2e2' :
-                                    scenario.impact_severity === 'Moderate' ? '#fef3c7' : '#dbeafe',
-                      color: scenario.impact_severity === 'High' || scenario.impact_severity === 'Severe' ? '#991b1b' :
-                            scenario.impact_severity === 'Moderate' ? '#92400e' : '#1e40af',
-                    }}>
-                      {scenario.impact_severity}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <AnalysisTable<{
+          scenario: string;
+          impact: number;
+          severity: string;
+        }>
+          columns={[
+            {
+              key: 'scenario',
+              label: 'Scenario',
+              align: 'left',
+            },
+            {
+              key: 'impact',
+              label: 'Impact',
+              align: 'right',
+              format: (value: number) => (
+                <span style={{ color: 'var(--salem-danger)', fontWeight: 600 }}>
+                  {formatPercent(value)}
+                </span>
+              ),
+            },
+            {
+              key: 'severity',
+              label: 'Severity',
+              align: 'right',
+              format: (value: string) => (
+                <span
+                  style={{
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    fontSize: 'var(--salem-text-xs)',
+                    fontWeight: 600,
+                    textTransform: 'capitalize',
+                    backgroundColor:
+                      value === 'High' || value === 'Severe'
+                        ? '#fee2e2'
+                        : value === 'Moderate'
+                        ? '#fef3c7'
+                        : '#dbeafe',
+                    color:
+                      value === 'High' || value === 'Severe'
+                        ? '#991b1b'
+                        : value === 'Moderate'
+                        ? '#92400e'
+                        : '#1e40af',
+                  }}
+                >
+                  {value}
+                </span>
+              ),
+            },
+          ]}
+          data={scenarios.map((scenario) => ({
+            scenario: scenario.name,
+            impact: scenario.base_success_probability - scenario.stressed_success_probability,
+            severity: scenario.impact_severity || 'Low',
+          }))}
+          variant="striped"
+        />
       </div>
     </div>
   );

@@ -4,22 +4,57 @@
  */
 import React from 'react';
 import type { AssumptionsBlock } from '../../types/reports';
+import { AnalysisTable, type Column } from '../ui/AnalysisTable';
 
 interface AssumptionsSectionProps {
   assumptions: AssumptionsBlock;
 }
 
 export const AssumptionsSection: React.FC<AssumptionsSectionProps> = ({ assumptions }) => {
-  const assumptionRows = [
-    { label: 'Current Age', value: assumptions.current_age },
-    { label: 'Retirement Age', value: assumptions.retirement_age },
-    { label: 'Life Expectancy', value: assumptions.life_expectancy },
+  type AssumptionRow = {
+    label: string;
+    value: string;
+  };
+
+  const assumptionRows: AssumptionRow[] = [
+    { label: 'Current Age', value: String(assumptions.current_age) },
+    { label: 'Retirement Age', value: String(assumptions.retirement_age) },
+    { label: 'Life Expectancy', value: String(assumptions.life_expectancy) },
     { label: 'Initial Portfolio Value', value: assumptions.initial_portfolio },
     { label: 'Annual Contribution (Pre-Retirement)', value: assumptions.annual_contribution },
     { label: 'Annual Spending (Post-Retirement)', value: assumptions.annual_spending },
     { label: 'Expected Annual Return', value: assumptions.expected_return },
     { label: 'Expected Inflation Rate', value: assumptions.inflation_rate },
     { label: 'Asset Allocation', value: assumptions.allocation },
+  ];
+
+  const columns: Column<AssumptionRow>[] = [
+    {
+      key: 'label',
+      label: 'Assumption',
+      align: 'left',
+      width: '60%',
+      cellClassName: 'font-medium',
+      format: (value: string) => (
+        <span style={{ color: 'var(--salem-gray-700)' }}>{value}</span>
+      ),
+    },
+    {
+      key: 'value',
+      label: 'Value',
+      align: 'right',
+      format: (value: string) => (
+        <span
+          style={{
+            fontFamily: 'var(--salem-font-mono)',
+            fontSize: 'var(--salem-text-lg)',
+            color: 'var(--salem-navy-primary)',
+          }}
+        >
+          {value}
+        </span>
+      ),
+    },
   ];
 
   return (
@@ -32,28 +67,11 @@ export const AssumptionsSection: React.FC<AssumptionsSectionProps> = ({ assumpti
           affect the projected outcomes.
         </p>
 
-        <table className="salem-table">
-          <tbody>
-            {assumptionRows.map((row, index) => (
-              <tr key={index}>
-                <td style={{ 
-                  fontWeight: 500, 
-                  width: '60%',
-                  color: 'var(--salem-gray-700)'
-                }}>
-                  {row.label}
-                </td>
-                <td style={{ 
-                  fontFamily: 'var(--salem-font-mono)',
-                  fontSize: 'var(--salem-text-lg)',
-                  color: 'var(--salem-navy-primary)'
-                }}>
-                  {row.value}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <AnalysisTable<AssumptionRow>
+          columns={columns}
+          data={assumptionRows}
+          variant="striped"
+        />
       </div>
     </section>
   );

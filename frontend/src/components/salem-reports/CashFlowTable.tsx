@@ -4,6 +4,8 @@
  */
 import React, { useState } from 'react';
 import type { CashFlowProjection } from '../../types/reports';
+import { AnalysisTable, type Column } from '../ui/AnalysisTable';
+import { Button } from '../ui';
 
 interface CashFlowTableProps {
   data: CashFlowProjection[];
@@ -24,6 +26,86 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ data }) => {
   const [showAll, setShowAll] = useState(false);
   const displayData = showAll ? data : data.slice(0, 10);
 
+  const columns: Column<CashFlowProjection>[] = [
+    {
+      key: 'year',
+      label: 'Year',
+      align: 'left',
+      cellClassName: 'font-semibold',
+    },
+    {
+      key: 'age',
+      label: 'Age',
+      align: 'right',
+    },
+    {
+      key: 'beginning_balance',
+      label: 'Beginning Balance',
+      align: 'right',
+      format: (value: number) => (
+        <span style={{ fontFamily: 'var(--salem-font-mono)' }}>
+          {formatCurrency(value)}
+        </span>
+      ),
+    },
+    {
+      key: 'income_sources_total',
+      label: 'Income',
+      align: 'right',
+      format: (value: number) => (
+        <span style={{ color: 'var(--salem-success)', fontFamily: 'var(--salem-font-mono)' }}>
+          {formatCurrency(value)}
+        </span>
+      ),
+    },
+    {
+      key: 'withdrawals',
+      label: 'Withdrawals',
+      align: 'right',
+      format: (value: number) => (
+        <span style={{ color: 'var(--salem-danger)', fontFamily: 'var(--salem-font-mono)' }}>
+          {formatCurrency(value)}
+        </span>
+      ),
+    },
+    {
+      key: 'taxes',
+      label: 'Taxes',
+      align: 'right',
+      format: (value: number) => (
+        <span style={{ color: 'var(--salem-danger)', fontFamily: 'var(--salem-font-mono)' }}>
+          {formatCurrency(value)}
+        </span>
+      ),
+    },
+    {
+      key: 'investment_return',
+      label: 'Investment Return',
+      align: 'right',
+      format: (value: number) => (
+        <span
+          style={{
+            color: value >= 0 ? 'var(--salem-success)' : 'var(--salem-danger)',
+            fontFamily: 'var(--salem-font-mono)',
+          }}
+        >
+          {formatCurrency(value)}
+        </span>
+      ),
+    },
+    {
+      key: 'ending_balance',
+      label: 'Ending Balance',
+      align: 'right',
+      cellClassName: 'font-semibold',
+      format: (value: number) => (
+        <span style={{ fontFamily: 'var(--salem-font-mono)' }}>
+          {formatCurrency(value)}
+        </span>
+      ),
+    },
+  ];
+
   return (
     <div className="salem-card">
       <h3 style={{ fontSize: 'var(--salem-text-xl)', marginBottom: 'var(--salem-spacing-md)' }}>
@@ -33,72 +115,24 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ data }) => {
         Year-by-year breakdown of portfolio cash flows (median scenario)
       </p>
 
-      <div style={{ overflowX: 'auto', maxHeight: showAll ? '600px' : 'auto', overflowY: showAll ? 'auto' : 'visible' }}>
-        <table className="salem-table">
-          <thead style={{ position: 'sticky', top: 0, backgroundColor: 'var(--salem-navy-primary)', zIndex: 1 }}>
-            <tr>
-              <th>Year</th>
-              <th style={{ textAlign: 'right' }}>Age</th>
-              <th style={{ textAlign: 'right' }}>Beginning Balance</th>
-              <th style={{ textAlign: 'right' }}>Income</th>
-              <th style={{ textAlign: 'right' }}>Withdrawals</th>
-              <th style={{ textAlign: 'right' }}>Taxes</th>
-              <th style={{ textAlign: 'right' }}>Investment Return</th>
-              <th style={{ textAlign: 'right' }}>Ending Balance</th>
-            </tr>
-          </thead>
-          <tbody>
-            {displayData.map((row) => (
-              <tr key={row.year}>
-                <td style={{ fontWeight: 600 }}>{row.year}</td>
-                <td style={{ textAlign: 'right' }}>{row.age}</td>
-                <td style={{ textAlign: 'right', fontFamily: 'var(--salem-font-mono)' }}>
-                  {formatCurrency(row.beginning_balance)}
-                </td>
-                <td style={{ textAlign: 'right', color: 'var(--salem-success)', fontFamily: 'var(--salem-font-mono)' }}>
-                  {formatCurrency(row.income_sources_total)}
-                </td>
-                <td style={{ textAlign: 'right', color: 'var(--salem-danger)', fontFamily: 'var(--salem-font-mono)' }}>
-                  {formatCurrency(row.withdrawals)}
-                </td>
-                <td style={{ textAlign: 'right', color: 'var(--salem-danger)', fontFamily: 'var(--salem-font-mono)' }}>
-                  {formatCurrency(row.taxes)}
-                </td>
-                <td style={{ textAlign: 'right', color: row.investment_return >= 0 ? 'var(--salem-success)' : 'var(--salem-danger)', fontFamily: 'var(--salem-font-mono)' }}>
-                  {formatCurrency(row.investment_return)}
-                </td>
-                <td style={{ textAlign: 'right', fontWeight: 600, fontFamily: 'var(--salem-font-mono)' }}>
-                  {formatCurrency(row.ending_balance)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div style={{ maxHeight: showAll ? '600px' : 'auto', overflowY: showAll ? 'auto' : 'visible' }}>
+        <AnalysisTable<CashFlowProjection>
+          columns={columns}
+          data={displayData}
+          variant="striped"
+          stickyHeader={showAll}
+        />
       </div>
 
       {data.length > 10 && (
         <div style={{ textAlign: 'center', marginTop: 'var(--salem-spacing-md)' }}>
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => setShowAll(!showAll)}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: 'var(--salem-navy-primary)',
-              color: 'white',
-              border: 'none',
-              borderRadius: 'var(--salem-border-radius)',
-              cursor: 'pointer',
-              fontSize: 'var(--salem-text-sm)',
-              fontWeight: 500,
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--salem-navy-dark)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--salem-navy-primary)';
-            }}
           >
             {showAll ? 'Show Less' : `Show All ${data.length} Years`}
-          </button>
+          </Button>
         </div>
       )}
     </div>
