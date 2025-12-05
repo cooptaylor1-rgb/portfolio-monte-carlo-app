@@ -73,7 +73,7 @@ const Dashboard: React.FC = () => {
   // Empty state
   if (!hasRunSimulation && !isLoading) {
     return (
-      <div className="space-y-xl">
+      <div className="space-y-6 lg:space-y-xl">
         <SectionHeader
           title="Portfolio Analysis Overview"
           description="Run your first simulation to see comprehensive portfolio projections and risk metrics"
@@ -94,7 +94,7 @@ const Dashboard: React.FC = () => {
         </Card>
 
         {/* Getting Started Guide */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
           <Card padding="lg" variant="default" className="text-center">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-accent-gold bg-opacity-10 text-accent-gold mb-4">
               <span className="text-h3 font-display font-bold">1</span>
@@ -115,7 +115,7 @@ const Dashboard: React.FC = () => {
             </p>
           </Card>
 
-          <Card padding="lg" variant="default" className="text-center">
+          <Card padding="lg" variant="default" className="text-center sm:col-span-2 lg:col-span-1">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-accent-gold bg-opacity-10 text-accent-gold mb-4">
               <span className="text-h3 font-display font-bold">3</span>
             </div>
@@ -132,7 +132,7 @@ const Dashboard: React.FC = () => {
   // Loading state
   if (isLoading) {
     return (
-      <div className="space-y-xl">
+      <div className="space-y-6 lg:space-y-xl" role="status" aria-live="polite" aria-label="Loading simulation results">
         <SectionHeader
           title="Portfolio Analysis Overview"
           description="Running Monte Carlo simulation..."
@@ -140,7 +140,7 @@ const Dashboard: React.FC = () => {
         />
         
         {/* Key Metrics Skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           {[...Array(4)].map((_, i) => (
             <Card key={i} padding="lg">
               <LoadingSkeleton variant="text" height="1rem" width="60%" className="mb-4" />
@@ -158,7 +158,7 @@ const Dashboard: React.FC = () => {
         </Card>
 
         {/* Two Column Skeleton */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
           <Card padding="lg">
             <LoadingSkeleton variant="text" height="1.5rem" width="50%" className="mb-6" />
             <LoadingSkeleton variant="circle" width="250px" height="250px" className="mx-auto" />
@@ -174,21 +174,22 @@ const Dashboard: React.FC = () => {
 
   // Results view
   return (
-    <div className="space-y-xl">
+    <div className="space-y-6 lg:space-y-xl">
       {/* Header with Quick Actions */}
       <SectionHeader
         title="Portfolio Analysis Overview"
         description="Comprehensive results from your Monte Carlo simulation"
         icon={<Activity size={28} />}
         actions={
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2 lg:gap-3">
             <Button
               variant="secondary"
               size="sm"
               onClick={() => navigate('/scenarios')}
               icon={<ArrowRight size={16} />}
             >
-              Compare Scenarios
+              <span className="hidden sm:inline">Compare Scenarios</span>
+              <span className="sm:hidden">Scenarios</span>
             </Button>
             <Button
               variant="tertiary"
@@ -196,7 +197,8 @@ const Dashboard: React.FC = () => {
               onClick={() => navigate('/reports')}
               icon={<FileText size={16} />}
             >
-              View Reports
+              <span className="hidden sm:inline">View Reports</span>
+              <span className="sm:hidden">Reports</span>
             </Button>
           </div>
         }
@@ -204,7 +206,9 @@ const Dashboard: React.FC = () => {
 
       {/* Key Metrics - Hero Stats */}
       {metrics && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6"
+             role="region"
+             aria-label="Key performance metrics">
           <Tooltip content="Probability of maintaining portfolio above target minimum throughout retirement">
             <div>
               <StatTile

@@ -254,14 +254,14 @@ const ScenariosPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-xl pb-24">
+    <div className="space-y-6 lg:space-y-xl pb-16 lg:pb-24">
       {/* Header */}
       <SectionHeader
         title="Scenario Analysis"
         description="Compare different market conditions and planning assumptions"
         icon={<GitCompare size={28} />}
         actions={
-          <div className="flex gap-3">
+          <div className="flex gap-2 lg:gap-3">
             <Button
               variant="secondary"
               size="sm"
@@ -270,7 +270,8 @@ const ScenariosPage: React.FC = () => {
               disabled={isRunning || scenarios.length === 0}
               icon={<Zap size={16} />}
             >
-              Run All Scenarios
+              <span className="hidden sm:inline">Run All Scenarios</span>
+              <span className="sm:hidden">Run All</span>
             </Button>
           </div>
         }
@@ -286,7 +287,7 @@ const ScenariosPage: React.FC = () => {
             Add common scenario variations with pre-configured adjustments
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
           {ScenarioTemplates.map((template, idx) => (
             <button
               key={idx}

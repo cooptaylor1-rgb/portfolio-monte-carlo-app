@@ -34,3 +34,4 @@ export type { ModalProps } from './Modal';
 
 export { LoadingSkeleton } from './LoadingSkeleton';
 export type { LoadingSkeletonProps } from './LoadingSkeleton';
+export { ErrorBoundary } from './ErrorBoundary';

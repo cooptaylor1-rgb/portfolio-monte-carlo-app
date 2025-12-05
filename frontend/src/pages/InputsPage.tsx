@@ -182,7 +182,7 @@ const InputsPage: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-xl pb-24">
+    <div className="space-y-6 lg:space-y-xl pb-16 lg:pb-24">
       {/* Header with Preset Selection */}
       <SectionHeader
         title="Model Configuration"
@@ -200,14 +200,14 @@ const InputsPage: React.FC = () => {
             Choose a preset to get started quickly, or configure custom parameters below
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
           {presets.map((preset) => (
             <button
               key={preset.value}
               onClick={() => handleLoadPreset(preset.value)}
               disabled={isSaving}
               className={`
-                p-5 rounded-md border-2 transition-all text-left
+                p-4 lg:p-5 rounded-md border-2 transition-all text-left
                 ${selectedPreset === preset.value
                   ? 'border-accent-gold bg-accent-gold bg-opacity-10'
                   : 'border-background-border hover:border-accent-gold hover:bg-background-hover'
