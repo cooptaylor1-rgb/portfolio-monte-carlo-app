@@ -12,6 +12,7 @@ import {
   Area,
   ComposedChart,
 } from 'recharts';
+import { colors } from '../../theme';
 
 // ==========================================
 // TYPES & INTERFACES
@@ -30,26 +31,26 @@ interface SensitivityHeatMapProps {
 }
 
 // ==========================================
-// SALEM BRANDING CONSTANTS
+// CHART COLORS FROM DESIGN SYSTEM
 // ==========================================
 
-const SALEM_COLORS = {
-  equityReturn: '#00335D',      // Salem Navy
-  fixedIncomeReturn: '#4B8F29', // Muted Green
-  inflationRate: '#C9A227',     // Gold/Amber
-  monthlySpending: '#9E2A2B',   // Salem Red
-  baseline: '#6B7280',          // Neutral Gray
-  gridLines: '#262A33',         // Dark Grid
-  textPrimary: '#F3F4F6',       // Light Text
-  textSecondary: '#9CA3AF',     // Muted Text
-  successStrong: '#10B981',     // Emerald (>80%)
-  successAdequate: '#F59E0B',   // Amber (60-80%)
-  successAtRisk: '#EF4444',     // Red (<60%)
+const CHART_COLORS = {
+  equityReturn: colors.chart.equity,
+  fixedIncomeReturn: colors.chart.fixed,
+  inflationRate: colors.brand.gold,
+  monthlySpending: colors.status.error.base,
+  baseline: colors.text.tertiary,
+  gridLines: colors.background.border,
+  textPrimary: colors.text.primary,
+  textSecondary: colors.text.secondary,
+  successStrong: colors.status.success.base,
+  successAdequate: colors.status.warning.base,
+  successAtRisk: colors.status.error.base,
 } as const;
 
 const THRESHOLD_BANDS = {
-  strong: { value: 0.80, label: 'Strong', color: SALEM_COLORS.successStrong },
-  adequate: { value: 0.60, label: 'At Risk', color: SALEM_COLORS.successAtRisk },
+  strong: { value: 0.80, label: 'Strong', color: CHART_COLORS.successStrong },
+  adequate: { value: 0.60, label: 'At Risk', color: CHART_COLORS.successAtRisk },
 } as const;
 
 // ==========================================
@@ -150,22 +151,22 @@ export const SensitivityHeatMap: React.FC<SensitivityHeatMapProps> = ({
   // Parameter styling configuration
   const parameterConfig: Record<string, { color: string; label: string; zIndex: number }> = {
     'monthly_spending': { 
-      color: SALEM_COLORS.monthlySpending, 
+      color: CHART_COLORS.monthlySpending, 
       label: 'Monthly Spending',
       zIndex: 4, // Top priority
     },
     'inflation_annual': { 
-      color: SALEM_COLORS.inflationRate, 
+      color: CHART_COLORS.inflationRate, 
       label: 'Inflation Rate',
       zIndex: 3,
     },
     'equity_return_annual': { 
-      color: SALEM_COLORS.equityReturn, 
+      color: CHART_COLORS.equityReturn, 
       label: 'Equity Return',
       zIndex: 2,
     },
     'fi_return_annual': { 
-      color: SALEM_COLORS.fixedIncomeReturn, 
+      color: CHART_COLORS.fixedIncomeReturn, 
       label: 'Fixed Income Return',
       zIndex: 1,
     },
@@ -262,15 +263,15 @@ export const SensitivityHeatMap: React.FC<SensitivityHeatMapProps> = ({
           <defs>
             {/* Success band gradients */}
             <linearGradient id="strongGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={SALEM_COLORS.successStrong} stopOpacity={0.05} />
-              <stop offset="100%" stopColor={SALEM_COLORS.successStrong} stopOpacity={0} />
+              <stop offset="0%" stopColor={CHART_COLORS.successStrong} stopOpacity={0.05} />
+              <stop offset="100%" stopColor={CHART_COLORS.successStrong} stopOpacity={0} />
             </linearGradient>
           </defs>
           
           {/* Grid */}
           <CartesianGrid 
             strokeDasharray="3 3" 
-            stroke={SALEM_COLORS.gridLines}
+            stroke={CHART_COLORS.gridLines}
             opacity={0.5}
           />
           
@@ -278,37 +279,37 @@ export const SensitivityHeatMap: React.FC<SensitivityHeatMapProps> = ({
           <XAxis
             dataKey="variation"
             tickFormatter={formatters.variation}
-            stroke={SALEM_COLORS.textSecondary}
+            stroke={CHART_COLORS.textSecondary}
             style={{ fontSize: '13px', fontWeight: 500 }}
-            tick={{ fill: SALEM_COLORS.textSecondary }}
+            tick={{ fill: CHART_COLORS.textSecondary }}
             label={{
               value: 'Parameter Change from Baseline',
               position: 'insideBottom',
               offset: -50,
-              fill: SALEM_COLORS.textPrimary,
+              fill: CHART_COLORS.textPrimary,
               style: { fontSize: '14px', fontWeight: 600 },
             }}
-            axisLine={{ stroke: SALEM_COLORS.textSecondary, strokeWidth: 1 }}
-            tickLine={{ stroke: SALEM_COLORS.textSecondary }}
+            axisLine={{ stroke: CHART_COLORS.textSecondary, strokeWidth: 1 }}
+            tickLine={{ stroke: CHART_COLORS.textSecondary }}
           />
           
           {/* Y-Axis */}
           <YAxis
             tickFormatter={(value) => formatters.percent(value, 0)}
-            stroke={SALEM_COLORS.textSecondary}
+            stroke={CHART_COLORS.textSecondary}
             style={{ fontSize: '13px', fontWeight: 500 }}
-            tick={{ fill: SALEM_COLORS.textSecondary }}
+            tick={{ fill: CHART_COLORS.textSecondary }}
             domain={[0, 1]}
             ticks={[0, 0.2, 0.4, 0.6, 0.8, 1.0]}
             label={{
               value: 'Success Probability',
               angle: -90,
               position: 'insideLeft',
-              fill: SALEM_COLORS.textPrimary,
+              fill: CHART_COLORS.textPrimary,
               style: { fontSize: '14px', fontWeight: 600 },
             }}
-            axisLine={{ stroke: SALEM_COLORS.textSecondary, strokeWidth: 1 }}
-            tickLine={{ stroke: SALEM_COLORS.textSecondary }}
+            axisLine={{ stroke: CHART_COLORS.textSecondary, strokeWidth: 1 }}
+            tickLine={{ stroke: CHART_COLORS.textSecondary }}
           />
           
           {/* Tooltip */}
@@ -323,7 +324,7 @@ export const SensitivityHeatMap: React.FC<SensitivityHeatMapProps> = ({
           {/* Baseline Reference Line */}
           <ReferenceLine
             x={0}
-            stroke={SALEM_COLORS.baseline}
+            stroke={CHART_COLORS.baseline}
             strokeWidth={1.5}
             strokeDasharray="4 4"
             strokeOpacity={0.6}
@@ -332,7 +333,7 @@ export const SensitivityHeatMap: React.FC<SensitivityHeatMapProps> = ({
               x={0}
               y={15}
               textAnchor="middle"
-              fill={SALEM_COLORS.textPrimary}
+              fill={CHART_COLORS.textPrimary}
               fontSize={12}
               fontWeight={600}
               style={{ 
@@ -411,7 +412,7 @@ export const SensitivityHeatMap: React.FC<SensitivityHeatMapProps> = ({
                   activeDot={{ 
                     r: 7, 
                     strokeWidth: 3, 
-                    stroke: SALEM_COLORS.textPrimary,
+                    stroke: CHART_COLORS.textPrimary,
                     fill: config.color,
                   }}
                   name={param}
@@ -452,11 +453,11 @@ export const SensitivityHeatMap: React.FC<SensitivityHeatMapProps> = ({
               const paramMatch = insight.match(/^([^:]+):/);
               const paramName = paramMatch ? paramMatch[1].toLowerCase() : '';
               
-              let indicatorColor = SALEM_COLORS.textSecondary;
-              if (paramName.includes('equity')) indicatorColor = SALEM_COLORS.equityReturn;
-              else if (paramName.includes('fixed') || paramName.includes('income')) indicatorColor = SALEM_COLORS.fixedIncomeReturn;
-              else if (paramName.includes('inflation')) indicatorColor = SALEM_COLORS.inflationRate;
-              else if (paramName.includes('spending')) indicatorColor = SALEM_COLORS.monthlySpending;
+              let indicatorColor = CHART_COLORS.textSecondary;
+              if (paramName.includes('equity')) indicatorColor = CHART_COLORS.equityReturn;
+              else if (paramName.includes('fixed') || paramName.includes('income')) indicatorColor = CHART_COLORS.fixedIncomeReturn;
+              else if (paramName.includes('inflation')) indicatorColor = CHART_COLORS.inflationRate;
+              else if (paramName.includes('spending')) indicatorColor = CHART_COLORS.monthlySpending;
               
               return (
                 <div key={index} className="flex items-start gap-3 group">

@@ -9,6 +9,8 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts';
+import { colors } from '../../theme';
+import { formatChartCurrency } from '../../theme/chartUtils';
 
 interface GoalConfidenceChartProps {
   goals: Array<{
@@ -28,19 +30,10 @@ export const GoalConfidenceChart: React.FC<GoalConfidenceChartProps> = ({
     return `${(value * 100).toFixed(1)}%`;
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      notation: 'compact',
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
-
   const getColor = (probability: number) => {
-    if (probability >= 0.85) return '#10b981'; // green
-    if (probability >= 0.70) return '#fbbf24'; // yellow
-    return '#ef4444'; // red
+    if (probability >= 0.85) return colors.status.success.base;
+    if (probability >= 0.70) return colors.status.warning.base;
+    return colors.status.error.base;
   };
 
   return (
@@ -50,10 +43,10 @@ export const GoalConfidenceChart: React.FC<GoalConfidenceChartProps> = ({
         margin={{ top: 5, right: 30, left: 20, bottom: 80 }}
         layout="horizontal"
       >
-        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+        <CartesianGrid strokeDasharray="3 3" stroke={colors.background.border} />
         <XAxis
           dataKey="name"
-          stroke="#94a3b8"
+          stroke={colors.text.secondary}
           style={{ fontSize: '12px' }}
           angle={-45}
           textAnchor="end"
@@ -61,14 +54,14 @@ export const GoalConfidenceChart: React.FC<GoalConfidenceChartProps> = ({
         />
         <YAxis
           tickFormatter={formatPercent}
-          stroke="#94a3b8"
+          stroke={colors.text.secondary}
           style={{ fontSize: '12px' }}
           domain={[0, 1]}
           label={{
             value: 'Confidence Level',
             angle: -90,
             position: 'insideLeft',
-            fill: '#94a3b8',
+            fill: colors.text.secondary,
           }}
         />
         <Tooltip
@@ -79,14 +72,14 @@ export const GoalConfidenceChart: React.FC<GoalConfidenceChartProps> = ({
           labelFormatter={(label: string) => {
             const goal = goals.find((g) => g.name === label);
             return goal
-              ? `${label} (${formatCurrency(goal.targetAmount)} by age ${goal.targetAge})`
+              ? `${label} (${formatChartCurrency(goal.targetAmount)} by age ${goal.targetAge})`
               : label;
           }}
           contentStyle={{
-            backgroundColor: '#1e293b',
-            border: '1px solid #334155',
+            backgroundColor: colors.background.elevated,
+            border: `1px solid ${colors.background.border}`,
             borderRadius: '8px',
-            color: '#e2e8f0',
+            color: colors.text.primary,
           }}
         />
         

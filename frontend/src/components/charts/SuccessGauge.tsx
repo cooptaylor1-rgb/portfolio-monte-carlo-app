@@ -1,5 +1,6 @@
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { colors } from '../../theme';
 
 interface SuccessGaugeProps {
   probability: number; // 0-1
@@ -14,9 +15,9 @@ export const SuccessGauge: React.FC<SuccessGaugeProps> = ({
   
   // Determine color based on success probability
   const getColor = () => {
-    if (percentage >= 85) return '#10b981'; // green
-    if (percentage >= 70) return '#fbbf24'; // yellow
-    return '#ef4444'; // red
+    if (percentage >= 85) return colors.status.success.base;
+    if (percentage >= 70) return colors.status.warning.base;
+    return colors.status.error.base;
   };
 
   const data = [
@@ -24,7 +25,7 @@ export const SuccessGauge: React.FC<SuccessGaugeProps> = ({
     { name: 'Remaining', value: 100 - percentage },
   ];
 
-  const COLORS = [getColor(), '#334155'];
+  const COLORS = [getColor(), colors.background.border];
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
@@ -48,10 +49,10 @@ export const SuccessGauge: React.FC<SuccessGaugeProps> = ({
         </PieChart>
       </ResponsiveContainer>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <div className="text-4xl font-bold" style={{ color: getColor() }}>
+        <div className="text-display font-display" style={{ color: getColor() }}>
           {percentage.toFixed(1)}%
         </div>
-        <div className="text-sm text-text-secondary mt-1">Success Rate</div>
+        <div className="text-small text-text-secondary mt-1">Success Rate</div>
       </div>
     </div>
   );

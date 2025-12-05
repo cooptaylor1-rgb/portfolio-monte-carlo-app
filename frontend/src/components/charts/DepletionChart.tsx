@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
+import { colors } from '../../theme';
 
 interface DepletionChartProps {
   data: Array<{
@@ -32,40 +33,40 @@ export const DepletionChart: React.FC<DepletionChartProps> = ({
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+        <CartesianGrid strokeDasharray="3 3" stroke={colors.background.border} />
         <XAxis
           dataKey="year"
-          stroke="#94a3b8"
+          stroke={colors.text.secondary}
           style={{ fontSize: '12px' }}
-          label={{ value: 'Years', position: 'insideBottom', offset: -5, fill: '#94a3b8' }}
+          label={{ value: 'Years', position: 'insideBottom', offset: -5, fill: colors.text.secondary }}
         />
         <YAxis
           tickFormatter={formatPercent}
-          stroke="#94a3b8"
+          stroke={colors.text.secondary}
           style={{ fontSize: '12px' }}
           label={{
             value: 'Cumulative Probability of Depletion',
             angle: -90,
             position: 'insideLeft',
-            fill: '#94a3b8',
+            fill: colors.text.secondary,
           }}
         />
         <Tooltip
           formatter={(value: number) => formatPercent(value)}
           labelFormatter={(label: number) => `Year ${label}`}
           contentStyle={{
-            backgroundColor: '#1e293b',
-            border: '1px solid #334155',
+            backgroundColor: colors.background.elevated,
+            border: `1px solid ${colors.background.border}`,
             borderRadius: '8px',
-            color: '#e2e8f0',
+            color: colors.text.primary,
           }}
         />
-        <Legend wrapperStyle={{ color: '#e2e8f0' }} />
+        <Legend wrapperStyle={{ color: colors.text.primary }} />
         
         <Line
           type="monotone"
           dataKey="cumulativeProbability"
-          stroke="#ef4444"
+          stroke={colors.status.error.base}
           strokeWidth={3}
           dot={false}
           name="Depletion Probability"
@@ -74,13 +75,13 @@ export const DepletionChart: React.FC<DepletionChartProps> = ({
         {medianYears && (
           <ReferenceLine
             x={medianYears}
-            stroke="#B49759"
+            stroke={colors.brand.gold}
             strokeWidth={2}
             strokeDasharray="5 5"
             label={{
               value: `Median: ${medianYears} years`,
               position: 'top',
-              fill: '#B49759',
+              fill: colors.brand.gold,
             }}
           />
         )}

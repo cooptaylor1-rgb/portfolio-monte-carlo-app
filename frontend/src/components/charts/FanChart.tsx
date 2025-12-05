@@ -9,6 +9,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { colors } from '../../theme';
+import { formatChartCurrency } from '../../theme/chartUtils';
 
 interface FanChartProps {
   data: Array<{
@@ -23,15 +25,6 @@ interface FanChartProps {
 }
 
 export const FanChart: React.FC<FanChartProps> = ({ data, height = 400 }) => {
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      notation: 'compact',
-      maximumFractionDigits: 1,
-    }).format(value);
-  };
-
   const formatYear = (month: number) => {
     return `Y${Math.floor(month / 12)}`;
   };
@@ -39,30 +32,30 @@ export const FanChart: React.FC<FanChartProps> = ({ data, height = 400 }) => {
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+        <CartesianGrid strokeDasharray="3 3" stroke={colors.background.border} />
         <XAxis
           dataKey="month"
           tickFormatter={formatYear}
-          stroke="#94a3b8"
+          stroke={colors.text.secondary}
           style={{ fontSize: '12px' }}
         />
         <YAxis
-          tickFormatter={formatCurrency}
-          stroke="#94a3b8"
+          tickFormatter={formatChartCurrency}
+          stroke={colors.text.secondary}
           style={{ fontSize: '12px' }}
         />
         <Tooltip
-          formatter={(value: number) => formatCurrency(value)}
+          formatter={(value: number) => formatChartCurrency(value)}
           labelFormatter={(label: number) => `Month ${label}`}
           contentStyle={{
-            backgroundColor: '#1e293b',
-            border: '1px solid #334155',
+            backgroundColor: colors.background.elevated,
+            border: `1px solid ${colors.background.border}`,
             borderRadius: '8px',
-            color: '#e2e8f0',
+            color: colors.text.primary,
           }}
         />
         <Legend
-          wrapperStyle={{ color: '#e2e8f0' }}
+          wrapperStyle={{ color: colors.text.primary }}
           iconType="line"
         />
         
@@ -70,7 +63,7 @@ export const FanChart: React.FC<FanChartProps> = ({ data, height = 400 }) => {
         <Line
           type="monotone"
           dataKey="p90"
-          stroke="#10b981"
+          stroke={colors.status.success.base}
           strokeWidth={2}
           dot={false}
           name="90th Percentile"
@@ -80,7 +73,7 @@ export const FanChart: React.FC<FanChartProps> = ({ data, height = 400 }) => {
         <Line
           type="monotone"
           dataKey="p75"
-          stroke="#6ee7b7"
+          stroke={colors.status.success.light}
           strokeWidth={1.5}
           dot={false}
           name="75th Percentile"
@@ -91,7 +84,7 @@ export const FanChart: React.FC<FanChartProps> = ({ data, height = 400 }) => {
         <Line
           type="monotone"
           dataKey="median"
-          stroke="#B49759"
+          stroke={colors.brand.gold}
           strokeWidth={3}
           dot={false}
           name="Median"
@@ -101,7 +94,7 @@ export const FanChart: React.FC<FanChartProps> = ({ data, height = 400 }) => {
         <Line
           type="monotone"
           dataKey="p25"
-          stroke="#fbbf24"
+          stroke={colors.status.warning.base}
           strokeWidth={1.5}
           dot={false}
           name="25th Percentile"
@@ -112,7 +105,7 @@ export const FanChart: React.FC<FanChartProps> = ({ data, height = 400 }) => {
         <Line
           type="monotone"
           dataKey="p10"
-          stroke="#ef4444"
+          stroke={colors.status.error.base}
           strokeWidth={2}
           dot={false}
           name="10th Percentile"
