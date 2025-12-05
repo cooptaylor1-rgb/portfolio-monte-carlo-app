@@ -1,6 +1,6 @@
 /**
  * Monte Carlo Chart Component
- * Display percentile paths using Recharts with Salem branding
+ * Phase 7: Updated with design system styling
  */
 import React from 'react';
 import {
@@ -15,19 +15,11 @@ import {
   Line,
 } from 'recharts';
 import type { MonteCarloBlock } from '../../types/reports';
+import { colors, formatChartCurrency } from '../../theme';
 
 interface MonteCarloChartProps {
   data: MonteCarloBlock;
 }
-
-const formatCurrency = (value: number): string => {
-  if (value >= 1e6) {
-    return `$${(value / 1e6).toFixed(1)}M`;
-  } else if (value >= 1e3) {
-    return `$${(value / 1e3).toFixed(0)}K`;
-  }
-  return `$${value.toFixed(0)}`;
-};
 
 export const MonteCarloChart: React.FC<MonteCarloChartProps> = ({ data }) => {
   // Transform data for Recharts
@@ -38,23 +30,30 @@ export const MonteCarloChart: React.FC<MonteCarloChartProps> = ({ data }) => {
     p90: point.p90,
   }));
 
+  const getSuccessColor = (probability: number) => {
+    if (probability >= 80) return colors.status.success.base;
+    if (probability >= 60) return colors.status.warning.base;
+    return colors.status.error.base;
+  };
+
   return (
     <section className="salem-section">
-      <h2>Monte Carlo Simulation Results</h2>
+      <h2 className="text-h2 font-display text-text-primary mb-6">Monte Carlo Simulation Results</h2>
       
-      <div className="salem-card">
-        <div style={{ marginBottom: 'var(--salem-spacing-lg)' }}>
-          <p style={{ fontSize: 'var(--salem-text-lg)', color: 'var(--salem-gray-700)' }}>
-            Success Probability: <strong style={{ 
-              color: data.success_probability >= 80 ? 'var(--salem-success)' : 
-                     data.success_probability >= 60 ? 'var(--salem-warning)' : 
-                     'var(--salem-danger)',
-              fontSize: 'var(--salem-text-2xl)'
-            }}>
+      <div className="salem-card" style={{ 
+        backgroundColor: colors.background.elevated,
+        borderColor: colors.background.border 
+      }}>
+        <div className="mb-6">
+          <p className="text-h3 text-text-secondary">
+            Success Probability: <strong 
+              className="text-display font-display"
+              style={{ color: getSuccessColor(data.success_probability) }}
+            >
               {data.success_probability.toFixed(1)}%
             </strong>
           </p>
-          <p style={{ fontSize: 'var(--salem-text-sm)', color: 'var(--salem-gray-600)' }}>
+          <p className="text-body text-text-tertiary mt-2">
             Based on {data.num_runs.toLocaleString()} simulations over {data.horizon_years} years
           </p>
         </div>
@@ -67,27 +66,27 @@ export const MonteCarloChart: React.FC<MonteCarloChartProps> = ({ data }) => {
             >
               <defs>
                 <linearGradient id="salemGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#00335d" stopOpacity={0.1} />
-                  <stop offset="95%" stopColor="#00335d" stopOpacity={0.05} />
+                  <stop offset="5%" stopColor={colors.brand.navy} stopOpacity={0.1} />
+                  <stop offset="95%" stopColor={colors.brand.navy} stopOpacity={0.05} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e9ecef" />
+              <CartesianGrid strokeDasharray="3 3" stroke={colors.background.border} />
               <XAxis
                 dataKey="year"
                 label={{ value: 'Year', position: 'insideBottom', offset: -10 }}
-                stroke="#6c757d"
+                stroke={colors.text.tertiary}
               />
               <YAxis
-                tickFormatter={formatCurrency}
+                tickFormatter={(value: number) => formatChartCurrency(value)}
                 label={{ value: 'Portfolio Value', angle: -90, position: 'insideLeft' }}
-                stroke="#6c757d"
+                stroke={colors.text.tertiary}
               />
               <Tooltip
-                formatter={(value: number) => formatCurrency(value)}
+                formatter={(value: number) => formatChartCurrency(value)}
                 contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #ced4da',
-                  borderRadius: '4px',
+                  backgroundColor: colors.background.elevated,
+                  border: `1px solid ${colors.background.border}`,
+                  borderRadius: '8px',
                 }}
               />
               <Legend
@@ -107,14 +106,14 @@ export const MonteCarloChart: React.FC<MonteCarloChartProps> = ({ data }) => {
                 type="monotone"
                 dataKey="p10"
                 stroke="none"
-                fill="white"
+                fill={colors.background.elevated}
                 name="10th Percentile Band"
               />
               {/* Percentile lines */}
               <Line
                 type="monotone"
                 dataKey="p90"
-                stroke="#4b8f29"
+                stroke={colors.status.success.base}
                 strokeWidth={2}
                 dot={false}
                 name="90th Percentile (Optimistic)"
@@ -122,7 +121,7 @@ export const MonteCarloChart: React.FC<MonteCarloChartProps> = ({ data }) => {
               <Line
                 type="monotone"
                 dataKey="p50"
-                stroke="#00335d"
+                stroke={colors.brand.navy}
                 strokeWidth={3}
                 dot={false}
                 name="50th Percentile (Median)"
@@ -130,7 +129,7 @@ export const MonteCarloChart: React.FC<MonteCarloChartProps> = ({ data }) => {
               <Line
                 type="monotone"
                 dataKey="p10"
-                stroke="#d97706"
+                stroke={colors.status.warning.base}
                 strokeWidth={2}
                 dot={false}
                 name="10th Percentile (Conservative)"
@@ -139,9 +138,9 @@ export const MonteCarloChart: React.FC<MonteCarloChartProps> = ({ data }) => {
           </ResponsiveContainer>
         </div>
 
-        <div style={{ marginTop: 'var(--salem-spacing-lg)', fontSize: 'var(--salem-text-sm)', color: 'var(--salem-gray-600)' }}>
+        <div className="mt-6 text-body text-text-secondary">
           <p>
-            <strong>Interpretation:</strong> The chart shows the projected range of portfolio values over time. 
+            <strong className="text-text-primary">Interpretation:</strong> The chart shows the projected range of portfolio values over time. 
             The median line (50th percentile) represents the most likely outcome, while the shaded area shows 
             the range between the 10th and 90th percentiles, covering 80% of simulated scenarios.
           </p>

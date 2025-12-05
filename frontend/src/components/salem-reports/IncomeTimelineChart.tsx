@@ -1,6 +1,6 @@
 /**
  * Income Sources Timeline Chart
- * Stacked area chart showing breakdown of income sources over time
+ * Phase 7: Updated with design system styling
  */
 import React from 'react';
 import {
@@ -14,27 +14,25 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import type { IncomeSourcesTimeline } from '../../types/reports';
+import { colors, formatChartCurrency } from '../../theme';
 
 interface IncomeTimelineChartProps {
   data: IncomeSourcesTimeline[];
 }
 
-const formatCurrency = (value: number): string => {
-  if (value >= 1e6) {
-    return `$${(value / 1e6).toFixed(1)}M`;
-  } else if (value >= 1e3) {
-    return `$${(value / 1e3).toFixed(0)}K`;
-  }
-  return `$${value.toFixed(0)}`;
-};
-
 export const IncomeTimelineChart: React.FC<IncomeTimelineChartProps> = ({ data }) => {
   return (
-    <div className="salem-card">
-      <h3 style={{ fontSize: 'var(--salem-text-xl)', marginBottom: 'var(--salem-spacing-md)' }}>
+    <div 
+      className="salem-card"
+      style={{ 
+        backgroundColor: colors.background.elevated,
+        borderColor: colors.background.border 
+      }}
+    >
+      <h3 className="text-h3 font-display text-text-primary mb-3">
         Income Sources Over Time
       </h3>
-      <p style={{ fontSize: 'var(--salem-text-sm)', color: 'var(--salem-gray-600)', marginBottom: 'var(--salem-spacing-md)' }}>
+      <p className="text-body text-text-secondary mb-4">
         Breakdown of income sources throughout the planning horizon
       </p>
 
@@ -46,51 +44,52 @@ export const IncomeTimelineChart: React.FC<IncomeTimelineChartProps> = ({ data }
           >
             <defs>
               <linearGradient id="socialSecurity" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.3} />
+                <stop offset="5%" stopColor={colors.chart.equity} stopOpacity={0.8} />
+                <stop offset="95%" stopColor={colors.chart.equity} stopOpacity={0.3} />
               </linearGradient>
               <linearGradient id="pension" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                <stop offset="5%" stopColor={colors.chart.fixed} stopOpacity={0.8} />
+                <stop offset="95%" stopColor={colors.chart.fixed} stopOpacity={0.3} />
               </linearGradient>
               <linearGradient id="annuity" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#ec4899" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#ec4899" stopOpacity={0.3} />
+                <stop offset="5%" stopColor={colors.status.info.base} stopOpacity={0.8} />
+                <stop offset="95%" stopColor={colors.status.info.base} stopOpacity={0.3} />
               </linearGradient>
               <linearGradient id="withdrawals" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.3} />
+                <stop offset="5%" stopColor={colors.brand.gold} stopOpacity={0.8} />
+                <stop offset="95%" stopColor={colors.brand.gold} stopOpacity={0.3} />
               </linearGradient>
               <linearGradient id="other" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0.3} />
+                <stop offset="5%" stopColor={colors.status.success.base} stopOpacity={0.8} />
+                <stop offset="95%" stopColor={colors.status.success.base} stopOpacity={0.3} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e9ecef" />
+            <CartesianGrid strokeDasharray="3 3" stroke={colors.background.border} />
             <XAxis
               dataKey="year"
               label={{ value: 'Year', position: 'insideBottom', offset: -10 }}
-              stroke="#6c757d"
+              stroke={colors.text.tertiary}
             />
             <YAxis
-              tickFormatter={formatCurrency}
+              tickFormatter={(value: number) => formatChartCurrency(value)}
               label={{ value: 'Annual Income', angle: -90, position: 'insideLeft' }}
-              stroke="#6c757d"
+              stroke={colors.text.tertiary}
             />
             <Tooltip
-              formatter={(value: number) => formatCurrency(value)}
+              formatter={(value: number) => formatChartCurrency(value)}
               contentStyle={{
-                backgroundColor: 'white',
-                border: '1px solid #ced4da',
-                borderRadius: '4px',
+                backgroundColor: colors.background.elevated,
+                border: `1px solid ${colors.background.border}`,
+                borderRadius: '8px',
               }}
             />
+            <Legend />
             <Legend />
             <Area
               type="monotone"
               dataKey="social_security"
               stackId="1"
-              stroke="#3b82f6"
+              stroke={colors.chart.equity}
               fill="url(#socialSecurity)"
               name="Social Security"
             />
@@ -98,7 +97,7 @@ export const IncomeTimelineChart: React.FC<IncomeTimelineChartProps> = ({ data }
               type="monotone"
               dataKey="pension"
               stackId="1"
-              stroke="#8b5cf6"
+              stroke={colors.chart.fixed}
               fill="url(#pension)"
               name="Pension"
             />
@@ -106,7 +105,7 @@ export const IncomeTimelineChart: React.FC<IncomeTimelineChartProps> = ({ data }
               type="monotone"
               dataKey="annuity"
               stackId="1"
-              stroke="#ec4899"
+              stroke={colors.status.info.base}
               fill="url(#annuity)"
               name="Annuity"
             />
@@ -114,7 +113,7 @@ export const IncomeTimelineChart: React.FC<IncomeTimelineChartProps> = ({ data }
               type="monotone"
               dataKey="portfolio_withdrawals"
               stackId="1"
-              stroke="#f59e0b"
+              stroke={colors.brand.gold}
               fill="url(#withdrawals)"
               name="Portfolio Withdrawals"
             />
@@ -122,7 +121,7 @@ export const IncomeTimelineChart: React.FC<IncomeTimelineChartProps> = ({ data }
               type="monotone"
               dataKey="other_income"
               stackId="1"
-              stroke="#10b981"
+              stroke={colors.status.success.base}
               fill="url(#other)"
               name="Other Income"
             />
@@ -130,9 +129,9 @@ export const IncomeTimelineChart: React.FC<IncomeTimelineChartProps> = ({ data }
         </ResponsiveContainer>
       </div>
 
-      <div style={{ marginTop: 'var(--salem-spacing-md)', fontSize: 'var(--salem-text-sm)', color: 'var(--salem-gray-600)' }}>
+      <div className="text-body text-text-secondary mt-4">
         <p>
-          <strong>Note:</strong> Amounts shown are nominal (not inflation-adjusted) to reflect actual dollar values received in each year.
+          <strong className="text-text-primary">Note:</strong> Amounts shown are nominal (not inflation-adjusted) to reflect actual dollar values received in each year.
         </p>
       </div>
     </div>

@@ -1,6 +1,6 @@
 /**
  * Stress Test Comparison Bar Chart
- * Side-by-side comparison of base vs stressed success probabilities
+ * Phase 7: Updated with design system styling
  */
 import React from 'react';
 import {
@@ -16,6 +16,7 @@ import {
 } from 'recharts';
 import type { StressScenarioResult } from '../../types/reports';
 import { AnalysisTable } from '../ui/AnalysisTable';
+import { colors } from '../../theme';
 
 interface StressTestChartProps {
   scenarios: StressScenarioResult[];
@@ -33,17 +34,42 @@ export const StressTestChart: React.FC<StressTestChartProps> = ({ scenarios }) =
   }));
 
   const getColor = (probability: number) => {
-    if (probability >= 0.85) return '#4CAF50'; // green
-    if (probability >= 0.70) return '#FFC107'; // amber
-    return '#D9534F'; // red
+    if (probability >= 0.85) return colors.status.success.base;
+    if (probability >= 0.70) return colors.status.warning.base;
+    return colors.status.error.base;
+  };
+
+  const getSeverityStyle = (value: string) => {
+    if (value === 'High' || value === 'Severe') {
+      return {
+        backgroundColor: `${colors.status.error.base}15`,
+        color: colors.status.error.dark,
+      };
+    }
+    if (value === 'Moderate') {
+      return {
+        backgroundColor: `${colors.status.warning.base}15`,
+        color: colors.status.warning.dark,
+      };
+    }
+    return {
+      backgroundColor: `${colors.status.info.base}15`,
+      color: colors.status.info.dark,
+    };
   };
 
   return (
-    <div className="salem-card">
-      <h3 style={{ fontSize: 'var(--salem-text-xl)', marginBottom: 'var(--salem-spacing-md)' }}>
+    <div 
+      className="salem-card"
+      style={{ 
+        backgroundColor: colors.background.elevated,
+        borderColor: colors.background.border 
+      }}
+    >
+      <h3 className="text-h3 font-display text-text-primary mb-3">
         Impact of Stress Scenarios on Plan Success
       </h3>
-      <p style={{ fontSize: 'var(--salem-text-sm)', color: 'var(--salem-gray-600)', marginBottom: 'var(--salem-spacing-md)' }}>
+      <p className="text-body text-text-secondary mb-4">
         Comparison of success probability under adverse conditions
       </p>
 
@@ -53,30 +79,30 @@ export const StressTestChart: React.FC<StressTestChartProps> = ({ scenarios }) =
             data={chartData}
             margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e9ecef" />
+            <CartesianGrid strokeDasharray="3 3" stroke={colors.background.border} />
             <XAxis
               dataKey="name"
               angle={-15}
               textAnchor="end"
               height={80}
-              stroke="#6c757d"
+              stroke={colors.text.tertiary}
             />
             <YAxis
               domain={[0, 1]}
               tickFormatter={formatPercent}
               label={{ value: 'Success Probability', angle: -90, position: 'insideLeft' }}
-              stroke="#6c757d"
+              stroke={colors.text.tertiary}
             />
             <Tooltip
               formatter={(value: number) => formatPercent(value)}
               contentStyle={{
-                backgroundColor: 'white',
-                border: '1px solid #ced4da',
-                borderRadius: '4px',
+                backgroundColor: colors.background.elevated,
+                border: `1px solid ${colors.background.border}`,
+                borderRadius: '8px',
               }}
             />
             <Legend />
-            <Bar dataKey="base" name="Base Case" fill="#00335d" />
+            <Bar dataKey="base" name="Base Case" fill={colors.brand.navy} />
             <Bar dataKey="stressed" name="Stressed Case">
               {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={getColor(entry.stressed)} />
@@ -87,7 +113,7 @@ export const StressTestChart: React.FC<StressTestChartProps> = ({ scenarios }) =
       </div>
 
       {/* Impact Summary Table */}
-      <div style={{ marginTop: 'var(--salem-spacing-lg)' }}>
+      <div className="mt-6">
         <AnalysisTable<{
           scenario: string;
           impact: number;
@@ -104,7 +130,7 @@ export const StressTestChart: React.FC<StressTestChartProps> = ({ scenarios }) =
               label: 'Impact',
               align: 'right',
               format: (value: number) => (
-                <span style={{ color: 'var(--salem-danger)', fontWeight: 600 }}>
+                <span style={{ color: colors.status.error.base, fontWeight: 600 }}>
                   {formatPercent(value)}
                 </span>
               ),
@@ -113,31 +139,17 @@ export const StressTestChart: React.FC<StressTestChartProps> = ({ scenarios }) =
               key: 'severity',
               label: 'Severity',
               align: 'right',
-              format: (value: string) => (
-                <span
-                  style={{
-                    padding: '2px 8px',
-                    borderRadius: '4px',
-                    fontSize: 'var(--salem-text-xs)',
-                    fontWeight: 600,
-                    textTransform: 'capitalize',
-                    backgroundColor:
-                      value === 'High' || value === 'Severe'
-                        ? '#fee2e2'
-                        : value === 'Moderate'
-                        ? '#fef3c7'
-                        : '#dbeafe',
-                    color:
-                      value === 'High' || value === 'Severe'
-                        ? '#991b1b'
-                        : value === 'Moderate'
-                        ? '#92400e'
-                        : '#1e40af',
-                  }}
-                >
-                  {value}
-                </span>
-              ),
+              format: (value: string) => {
+                const severityStyle = getSeverityStyle(value);
+                return (
+                  <span
+                    className="text-small font-semibold uppercase px-2 py-1 rounded"
+                    style={severityStyle}
+                  >
+                    {value}
+                  </span>
+                );
+              },
             },
           ]}
           data={scenarios.map((scenario) => ({

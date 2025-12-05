@@ -1,10 +1,11 @@
 /**
  * Assumptions Section Component
- * Display all planning assumptions in a clear format
+ * Phase 7: Updated with design system styling
  */
 import React from 'react';
 import type { AssumptionsBlock } from '../../types/reports';
 import { AnalysisTable, type Column } from '../ui/AnalysisTable';
+import { colors } from '../../theme';
 
 interface AssumptionsSectionProps {
   assumptions: AssumptionsBlock;
@@ -36,7 +37,7 @@ export const AssumptionsSection: React.FC<AssumptionsSectionProps> = ({ assumpti
       width: '60%',
       cellClassName: 'font-medium',
       format: (value: string) => (
-        <span style={{ color: 'var(--salem-gray-700)' }}>{value}</span>
+        <span style={{ color: colors.text.secondary }}>{value}</span>
       ),
     },
     {
@@ -45,10 +46,9 @@ export const AssumptionsSection: React.FC<AssumptionsSectionProps> = ({ assumpti
       align: 'right',
       format: (value: string) => (
         <span
+          className="font-mono text-h4"
           style={{
-            fontFamily: 'var(--salem-font-mono)',
-            fontSize: 'var(--salem-text-lg)',
-            color: 'var(--salem-navy-primary)',
+            color: colors.brand.navy,
           }}
         >
           {value}
@@ -59,10 +59,16 @@ export const AssumptionsSection: React.FC<AssumptionsSectionProps> = ({ assumpti
 
   return (
     <section className="salem-section">
-      <h2>Planning Assumptions</h2>
+      <h2 className="text-h2 font-display text-text-primary mb-6">Planning Assumptions</h2>
       
-      <div className="salem-card">
-        <p style={{ marginBottom: 'var(--salem-spacing-lg)', color: 'var(--salem-gray-700)' }}>
+      <div 
+        className="salem-card"
+        style={{ 
+          backgroundColor: colors.background.elevated,
+          borderColor: colors.background.border 
+        }}
+      >
+        <p className="text-body text-text-secondary mb-6">
           This analysis is based on the following assumptions. Changes to these inputs may materially 
           affect the projected outcomes.
         </p>

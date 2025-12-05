@@ -1,26 +1,16 @@
 /**
  * Cash Flow Projection Table
- * Detailed year-by-year cash flow breakdown
+ * Phase 7: Updated with design system styling
  */
 import React, { useState } from 'react';
 import type { CashFlowProjection } from '../../types/reports';
 import { AnalysisTable, type Column } from '../ui/AnalysisTable';
 import { Button } from '../ui';
+import { colors, formatChartCurrency } from '../../theme';
 
 interface CashFlowTableProps {
   data: CashFlowProjection[];
 }
-
-const formatCurrency = (value: number): string => {
-  const absValue = Math.abs(value);
-  const sign = value < 0 ? '-' : '';
-  if (absValue >= 1e6) {
-    return `${sign}$${(absValue / 1e6).toFixed(2)}M`;
-  } else if (absValue >= 1e3) {
-    return `${sign}$${(absValue / 1e3).toFixed(0)}K`;
-  }
-  return `${sign}$${absValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
-};
 
 export const CashFlowTable: React.FC<CashFlowTableProps> = ({ data }) => {
   const [showAll, setShowAll] = useState(false);
@@ -43,8 +33,8 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ data }) => {
       label: 'Beginning Balance',
       align: 'right',
       format: (value: number) => (
-        <span style={{ fontFamily: 'var(--salem-font-mono)' }}>
-          {formatCurrency(value)}
+        <span className="font-mono">
+          {formatChartCurrency(value)}
         </span>
       ),
     },
@@ -53,8 +43,8 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ data }) => {
       label: 'Income',
       align: 'right',
       format: (value: number) => (
-        <span style={{ color: 'var(--salem-success)', fontFamily: 'var(--salem-font-mono)' }}>
-          {formatCurrency(value)}
+        <span className="font-mono" style={{ color: colors.status.success.base }}>
+          {formatChartCurrency(value)}
         </span>
       ),
     },
@@ -63,8 +53,8 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ data }) => {
       label: 'Withdrawals',
       align: 'right',
       format: (value: number) => (
-        <span style={{ color: 'var(--salem-danger)', fontFamily: 'var(--salem-font-mono)' }}>
-          {formatCurrency(value)}
+        <span className="font-mono" style={{ color: colors.status.error.base }}>
+          {formatChartCurrency(value)}
         </span>
       ),
     },
@@ -73,8 +63,8 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ data }) => {
       label: 'Taxes',
       align: 'right',
       format: (value: number) => (
-        <span style={{ color: 'var(--salem-danger)', fontFamily: 'var(--salem-font-mono)' }}>
-          {formatCurrency(value)}
+        <span className="font-mono" style={{ color: colors.status.error.base }}>
+          {formatChartCurrency(value)}
         </span>
       ),
     },
@@ -84,12 +74,12 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ data }) => {
       align: 'right',
       format: (value: number) => (
         <span
+          className="font-mono"
           style={{
-            color: value >= 0 ? 'var(--salem-success)' : 'var(--salem-danger)',
-            fontFamily: 'var(--salem-font-mono)',
+            color: value >= 0 ? colors.status.success.base : colors.status.error.base,
           }}
         >
-          {formatCurrency(value)}
+          {formatChartCurrency(value)}
         </span>
       ),
     },
@@ -99,19 +89,25 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ data }) => {
       align: 'right',
       cellClassName: 'font-semibold',
       format: (value: number) => (
-        <span style={{ fontFamily: 'var(--salem-font-mono)' }}>
-          {formatCurrency(value)}
+        <span className="font-mono">
+          {formatChartCurrency(value)}
         </span>
       ),
     },
   ];
 
   return (
-    <div className="salem-card">
-      <h3 style={{ fontSize: 'var(--salem-text-xl)', marginBottom: 'var(--salem-spacing-md)' }}>
+    <div 
+      className="salem-card"
+      style={{ 
+        backgroundColor: colors.background.elevated,
+        borderColor: colors.background.border 
+      }}
+    >
+      <h3 className="text-h3 font-display text-text-primary mb-3">
         Cash Flow Projection Details
       </h3>
-      <p style={{ fontSize: 'var(--salem-text-sm)', color: 'var(--salem-gray-600)', marginBottom: 'var(--salem-spacing-md)' }}>
+      <p className="text-body text-text-secondary mb-4">
         Year-by-year breakdown of portfolio cash flows (median scenario)
       </p>
 
@@ -125,7 +121,7 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ data }) => {
       </div>
 
       {data.length > 10 && (
-        <div style={{ textAlign: 'center', marginTop: 'var(--salem-spacing-md)' }}>
+        <div className="text-center mt-4">
           <Button
             variant="secondary"
             size="sm"

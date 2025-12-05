@@ -1,10 +1,11 @@
 /**
  * Stress Tests Section Component
- * Display stress test scenarios with base vs stressed comparisons
+ * Phase 7: Updated with design system styling
  */
 import React from 'react';
 import type { StressScenarioResult } from '../../types/reports';
 import { AnalysisTable, type Column } from '../ui/AnalysisTable';
+import { colors } from '../../theme';
 
 interface StressTestsSectionProps {
   stressTests: StressScenarioResult[];
@@ -46,7 +47,7 @@ export const StressTestsSection: React.FC<StressTestsSectionProps> = ({ stressTe
           <span
             className="font-semibold"
             style={{
-              color: isNegative ? 'var(--salem-danger)' : 'var(--salem-success)',
+              color: isNegative ? colors.status.error.base : colors.status.success.base,
             }}
           >
             {value}
@@ -58,8 +59,8 @@ export const StressTestsSection: React.FC<StressTestsSectionProps> = ({ stressTe
 
   return (
     <section className="salem-section">
-      <h2>Stress Test Analysis</h2>
-      <p style={{ marginBottom: 'var(--salem-spacing-lg)', color: 'var(--salem-gray-700)' }}>
+      <h2 className="text-h2 font-display text-text-primary mb-6">Stress Test Analysis</h2>
+      <p className="text-body text-text-secondary mb-6">
         The following scenarios test the resilience of your retirement plan under adverse market conditions.
       </p>
 
@@ -72,9 +73,16 @@ export const StressTestsSection: React.FC<StressTestsSectionProps> = ({ stressTe
         }));
 
         return (
-          <div key={scenario.id} className="salem-card">
-            <h3>{scenario.name}</h3>
-            <p style={{ color: 'var(--salem-gray-600)', marginBottom: 'var(--salem-spacing-md)' }}>
+          <div 
+            key={scenario.id} 
+            className="salem-card"
+            style={{ 
+              backgroundColor: colors.background.elevated,
+              borderColor: colors.background.border 
+            }}
+          >
+            <h3 className="text-h3 font-display text-text-primary mb-3">{scenario.name}</h3>
+            <p className="text-body text-text-secondary mb-4">
               {scenario.description}
             </p>
 
