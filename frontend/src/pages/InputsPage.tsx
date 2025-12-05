@@ -16,6 +16,7 @@ import {
   Radio,
   DateInput,
   SelectBox,
+  FormField,
 } from '../components/forms';
 import { SectionHeader, Button, FormSection, Card, Badge } from '../components/ui';
 import { 
@@ -272,39 +273,42 @@ const InputsPage: React.FC = () => {
         required
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <TextInput
-            label="Client Name"
-            value={clientInfo.client_name}
-            onChange={(value) => setClientInfo({ client_name: value })}
-            placeholder="John Doe"
-            required
-          />
-          <DateInput
-            label="Report Date"
-            value={clientInfo.report_date}
-            onChange={(value) => setClientInfo({ report_date: value })}
-            required
-          />
-          <TextInput
-            label="Advisor Name"
-            value={clientInfo.advisor_name || ''}
-            onChange={(value) => setClientInfo({ advisor_name: value })}
-            placeholder="Jane Smith"
-          />
-          <TextInput
-            label="Client ID"
-            value={clientInfo.client_id || ''}
-            onChange={(value) => setClientInfo({ client_id: value })}
-            placeholder="C-12345"
-          />
+          <FormField label="Client Name" required>
+            <TextInput
+              value={clientInfo.client_name}
+              onChange={(value) => setClientInfo({ client_name: value })}
+              placeholder="John Doe"
+            />
+          </FormField>
+          <FormField label="Report Date" required>
+            <DateInput
+              value={clientInfo.report_date}
+              onChange={(value) => setClientInfo({ report_date: value })}
+            />
+          </FormField>
+          <FormField label="Advisor Name">
+            <TextInput
+              value={clientInfo.advisor_name || ''}
+              onChange={(value) => setClientInfo({ advisor_name: value })}
+              placeholder="Jane Smith"
+            />
+          </FormField>
+          <FormField label="Client ID">
+            <TextInput
+              value={clientInfo.client_id || ''}
+              onChange={(value) => setClientInfo({ client_id: value })}
+              placeholder="C-12345"
+            />
+          </FormField>
         </div>
         <div className="mt-6">
-          <TextInput
-            label="Client Notes"
-            value={clientInfo.client_notes || ''}
-            onChange={(value) => setClientInfo({ client_notes: value })}
-            placeholder="Additional notes or context..."
-          />
+          <FormField label="Client Notes" help="Additional notes or context">
+            <TextInput
+              value={clientInfo.client_notes || ''}
+              onChange={(value) => setClientInfo({ client_notes: value })}
+              placeholder="Additional notes or context..."
+            />
+          </FormField>
         </div>
       </FormSection>
 
@@ -318,36 +322,32 @@ const InputsPage: React.FC = () => {
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
-            <DollarInput
-              label="Starting Portfolio Value"
-              value={modelInputs.starting_portfolio}
-              onChange={(value) => setModelInputs({ starting_portfolio: value })}
-              required
-              help="Total portfolio value at the beginning of simulation"
-            />
+            <FormField label="Starting Portfolio Value" required help="Total portfolio value at the beginning of simulation">
+              <DollarInput
+                value={modelInputs.starting_portfolio}
+                onChange={(value) => setModelInputs({ starting_portfolio: value })}
+              />
+            </FormField>
           </div>
 
-          <PercentInput
-            label="Equity Allocation"
-            value={modelInputs.equity_pct}
-            onChange={(value) => setModelInputs({ equity_pct: value })}
-            required
-            help="Percentage allocated to stocks"
-          />
-          <PercentInput
-            label="Fixed Income Allocation"
-            value={modelInputs.fi_pct}
-            onChange={(value) => setModelInputs({ fi_pct: value })}
-            required
-            help="Percentage allocated to bonds"
-          />
-          <PercentInput
-            label="Cash Allocation"
-            value={modelInputs.cash_pct}
-            onChange={(value) => setModelInputs({ cash_pct: value })}
-            required
-            help="Percentage held in cash"
-          />
+          <FormField label="Equity Allocation" required help="Percentage allocated to stocks">
+            <PercentInput
+              value={modelInputs.equity_pct}
+              onChange={(value) => setModelInputs({ equity_pct: value })}
+            />
+          </FormField>
+          <FormField label="Fixed Income Allocation" required help="Percentage allocated to bonds">
+            <PercentInput
+              value={modelInputs.fi_pct}
+              onChange={(value) => setModelInputs({ fi_pct: value })}
+            />
+          </FormField>
+          <FormField label="Cash Allocation" required help="Percentage held in cash">
+            <PercentInput
+              value={modelInputs.cash_pct}
+              onChange={(value) => setModelInputs({ cash_pct: value })}
+            />
+          </FormField>
           
           <div className="flex items-center justify-center p-6 bg-background-hover rounded-sm border border-background-border">
             <div className="text-center">
@@ -383,23 +383,24 @@ const InputsPage: React.FC = () => {
               Equity Assumptions
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <PercentInput
-                label="Annual Return"
-                value={modelInputs.equity_return_annual}
-                onChange={(value) => setModelInputs({ equity_return_annual: value })}
-                required
-              />
-              <PercentInput
-                label="Annual Volatility"
-                value={modelInputs.equity_vol_annual}
-                onChange={(value) => setModelInputs({ equity_vol_annual: value })}
-                required
-              />
-              <PercentInput
-                label="Distribution Rate"
-                value={modelInputs.equity_dist_rate}
-                onChange={(value) => setModelInputs({ equity_dist_rate: value })}
-              />
+              <FormField label="Annual Return" required>
+                <PercentInput
+                  value={modelInputs.equity_return_annual}
+                  onChange={(value) => setModelInputs({ equity_return_annual: value })}
+                />
+              </FormField>
+              <FormField label="Annual Volatility" required>
+                <PercentInput
+                  value={modelInputs.equity_vol_annual}
+                  onChange={(value) => setModelInputs({ equity_vol_annual: value })}
+                />
+              </FormField>
+              <FormField label="Distribution Rate">
+                <PercentInput
+                  value={modelInputs.equity_dist_rate}
+                  onChange={(value) => setModelInputs({ equity_dist_rate: value })}
+                />
+              </FormField>
             </div>
           </div>
 
@@ -410,23 +411,24 @@ const InputsPage: React.FC = () => {
               Fixed Income Assumptions
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <PercentInput
-                label="Annual Return"
-                value={modelInputs.fi_return_annual}
-                onChange={(value) => setModelInputs({ fi_return_annual: value })}
-                required
-              />
-              <PercentInput
-                label="Annual Volatility"
-                value={modelInputs.fi_vol_annual}
-                onChange={(value) => setModelInputs({ fi_vol_annual: value })}
-                required
-              />
-              <PercentInput
-                label="Distribution Rate"
-                value={modelInputs.fi_dist_rate}
-                onChange={(value) => setModelInputs({ fi_dist_rate: value })}
-              />
+              <FormField label="Annual Return" required>
+                <PercentInput
+                  value={modelInputs.fi_return_annual}
+                  onChange={(value) => setModelInputs({ fi_return_annual: value })}
+                />
+              </FormField>
+              <FormField label="Annual Volatility" required>
+                <PercentInput
+                  value={modelInputs.fi_vol_annual}
+                  onChange={(value) => setModelInputs({ fi_vol_annual: value })}
+                />
+              </FormField>
+              <FormField label="Distribution Rate">
+                <PercentInput
+                  value={modelInputs.fi_dist_rate}
+                  onChange={(value) => setModelInputs({ fi_dist_rate: value })}
+                />
+              </FormField>
             </div>
           </div>
 
@@ -437,12 +439,12 @@ const InputsPage: React.FC = () => {
               Cash Assumptions
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <PercentInput
-                label="Annual Return"
-                value={modelInputs.cash_return_annual}
-                onChange={(value) => setModelInputs({ cash_return_annual: value })}
-                required
-              />
+              <FormField label="Annual Return" required>
+                <PercentInput
+                  value={modelInputs.cash_return_annual}
+                  onChange={(value) => setModelInputs({ cash_return_annual: value })}
+                />
+              </FormField>
             </div>
           </div>
 

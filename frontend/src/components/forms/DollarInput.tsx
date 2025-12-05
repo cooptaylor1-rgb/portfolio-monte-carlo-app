@@ -1,23 +1,17 @@
 import React, { useState, useEffect } from 'react';
 
 export interface DollarInputProps {
-  label: string;
   value: number;
   onChange: (value: number) => void;
-  help?: string;
-  error?: string;
   disabled?: boolean;
-  required?: boolean;
+  className?: string;
 }
 
 export const DollarInput: React.FC<DollarInputProps> = ({
-  label,
   value,
   onChange,
-  help,
-  error,
   disabled = false,
-  required = false,
+  className = '',
 }) => {
   const [displayValue, setDisplayValue] = useState('');
 
@@ -44,28 +38,16 @@ export const DollarInput: React.FC<DollarInputProps> = ({
   };
 
   return (
-    <div className="mb-4">
-      <label className="label">
-        {label}
-        {required && <span className="text-danger ml-1">*</span>}
-      </label>
-      <div className="relative">
-        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary">$</span>
-        <input
-          type="text"
-          value={displayValue}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          disabled={disabled}
-          className={`input w-full pl-8 ${error ? 'border-danger' : ''}`}
-        />
-      </div>
-      {help && !error && (
-        <p className="text-text-muted text-sm mt-1">{help}</p>
-      )}
-      {error && (
-        <p className="text-danger text-sm mt-1">{error}</p>
-      )}
+    <div className="relative">
+      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary z-10">$</span>
+      <input
+        type="text"
+        value={displayValue}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        disabled={disabled}
+        className={`input w-full pl-8 ${className}`}
+      />
     </div>
   );
 };

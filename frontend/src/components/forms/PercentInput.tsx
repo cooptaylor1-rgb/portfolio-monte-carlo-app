@@ -1,23 +1,17 @@
 import React, { useState, useEffect } from 'react';
 
 export interface PercentInputProps {
-  label: string;
   value: number; // Stored as decimal (0.05 = 5%)
   onChange: (value: number) => void;
-  help?: string;
-  error?: string;
   disabled?: boolean;
-  required?: boolean;
+  className?: string;
 }
 
 export const PercentInput: React.FC<PercentInputProps> = ({
-  label,
   value,
   onChange,
-  help,
-  error,
   disabled = false,
-  required = false,
+  className = '',
 }) => {
   const [displayValue, setDisplayValue] = useState('');
 
@@ -45,28 +39,16 @@ export const PercentInput: React.FC<PercentInputProps> = ({
   };
 
   return (
-    <div className="mb-4">
-      <label className="label">
-        {label}
-        {required && <span className="text-danger ml-1">*</span>}
-      </label>
-      <div className="relative">
-        <input
-          type="text"
-          value={displayValue}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          disabled={disabled}
-          className={`input w-full pr-8 ${error ? 'border-danger' : ''}`}
-        />
-        <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-secondary">%</span>
-      </div>
-      {help && !error && (
-        <p className="text-text-muted text-sm mt-1">{help}</p>
-      )}
-      {error && (
-        <p className="text-danger text-sm mt-1">{error}</p>
-      )}
+    <div className="relative">
+      <input
+        type="text"
+        value={displayValue}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        disabled={disabled}
+        className={`input w-full pr-8 ${className}`}
+      />
+      <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-secondary z-10">%</span>
     </div>
   );
 };
