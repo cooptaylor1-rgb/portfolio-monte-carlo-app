@@ -13,11 +13,14 @@ from models.schemas import (
     SensitivityResult
 )
 from core.simulation import (
-    PortfolioInputs,
-    run_monte_carlo,
+    PortfolioInputs
+)
+from core.simulation_adapter import (
+    run_monte_carlo_adapted as run_monte_carlo,
     calculate_metrics,
     calculate_goal_probabilities,
-    sensitivity_analysis
+    sensitivity_analysis,
+    get_new_engine_metrics
 )
 import logging
 
@@ -116,6 +119,14 @@ async def run_simulation(request: SimulationRequest):
         
         # Calculate metrics
         metrics = calculate_metrics(paths_df, stats_df)
+        
+        # Get new engine metrics if available
+        new_results = get_new_engine_metrics(paths_df)
+        if new_results:
+            metrics['annual_ruin_probability'] = new_results.annual_ruin_probability
+            metrics['cumulative_ruin_probability'] = new_results.cumulative_ruin_probability
+            metrics['longevity_metrics'] = new_results.longevity_metrics
+            logger.info(f"New engine metrics included: {len(new_results.annual_ruin_probability)} years")
         
         # Calculate goal probabilities if provided
         goal_probs = None

@@ -3,7 +3,7 @@ Pydantic models for API request/response validation.
 These models define the data contracts between frontend and backend.
 """
 from pydantic import BaseModel, Field, field_validator
-from typing import List, Optional
+from typing import List, Optional, Dict
 from datetime import date
 from enum import Enum
 
@@ -155,6 +155,20 @@ class SimulationMetrics(BaseModel):
     years_depleted: float = Field(description="Average years until depletion")
     depletion_probability: float = Field(description="Probability of depletion")
     shortfall_risk: float = Field(description="Shortfall risk percentage")
+    
+    # NEW METRICS from refactored engine
+    annual_ruin_probability: Optional[List[float]] = Field(
+        default=None, 
+        description="Annual first-passage ruin probability by year"
+    )
+    cumulative_ruin_probability: Optional[List[float]] = Field(
+        default=None,
+        description="Cumulative ruin probability by year"
+    )
+    longevity_metrics: Optional[Dict[int, Dict[str, float]]] = Field(
+        default=None,
+        description="Metrics at longevity milestone ages (70, 75, 80, 85, 90, 95, 100)"
+    )
 
 
 class SimulationResponse(BaseModel):
