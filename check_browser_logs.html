@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head><title>Check Console</title></head>
+<body>
+<h1>Open DevTools Console (F12) to see logs</h1>
+<script>
+// Check localStorage
+console.log('=== LOCALSTORAGE CHECK ===');
+const stored = localStorage.getItem('simulation-storage');
+if (stored) {
+  const parsed = JSON.parse(stored);
+  console.log('Stored data:', parsed);
+  console.log('Has simulationResults:', !!parsed.state?.simulationResults);
+  console.log('simulationResults.stats length:', parsed.state?.simulationResults?.stats?.length);
+} else {
+  console.log('No data in localStorage');
+}
+</script>
+</body>
+</html>

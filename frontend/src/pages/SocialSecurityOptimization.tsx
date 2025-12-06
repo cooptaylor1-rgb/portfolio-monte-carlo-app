@@ -15,7 +15,6 @@ import {
   SectionHeader,
   Tooltip,
   LoadingSkeleton,
-  Alert,
 } from '../components/ui';
 
 // Types
@@ -89,7 +88,9 @@ const SocialSecurityOptimization: React.FC = () => {
   const [birthYear, setBirthYear] = useState<number>(1960);
   const [birthMonth, setBirthMonth] = useState<number>(6);
   const [gender, setGender] = useState<'male' | 'female' | 'other'>('male');
+  const [benefitAtAge62, setBenefitAtAge62] = useState<number>(1750);
   const [benefitAtFra, setBenefitAtFra] = useState<number>(2500);
+  const [benefitAtAge70, setBenefitAtAge70] = useState<number>(3100);
   const [claimingAge, setClaimingAge] = useState<number>(67);
   const [compareAges, setCompareAges] = useState<boolean>(true);
 
@@ -218,7 +219,7 @@ const SocialSecurityOptimization: React.FC = () => {
                       max={currentYear - 18}
                       value={birthYear}
                       onChange={(e) => setBirthYear(parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-neutral-soft rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-gold"
+                      className="w-full px-3 py-2 bg-background-elevated border border-background-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-gold focus:border-accent-gold"
                     />
                   </div>
                   <div>
@@ -228,7 +229,7 @@ const SocialSecurityOptimization: React.FC = () => {
                     <select
                       value={birthMonth}
                       onChange={(e) => setBirthMonth(parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-neutral-soft rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-gold"
+                      className="w-full px-3 py-2 bg-background-elevated border border-background-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-gold focus:border-accent-gold"
                     >
                       {Array.from({ length: 12 }, (_, i) => (
                         <option key={i + 1} value={i + 1}>
@@ -255,28 +256,83 @@ const SocialSecurityOptimization: React.FC = () => {
                   </select>
                 </div>
 
-                {/* Benefit at FRA */}
-                <div>
-                  <label className="flex items-center gap-1 text-sm font-medium text-text-secondary mb-1">
-                    Monthly Benefit at Full Retirement Age
-                    <Tooltip content="Your estimated monthly benefit at FRA from SSA.gov">
-                      <HelpCircle size={14} className="text-text-muted" />
+                {/* Benefit Amounts at Different Ages */}
+                <div className="space-y-3 p-4 bg-background-base rounded-lg border border-background-border">
+                  <h4 className="text-sm font-semibold text-text-primary">
+                    Monthly Benefit Amounts
+                    <Tooltip content="Enter the monthly benefit amounts shown on your SSA.gov statement at different claiming ages">
+                      <HelpCircle size={14} className="inline-block ml-1 text-text-muted" />
                     </Tooltip>
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-2.5 text-text-muted">$</span>
-                    <input
-                      type="number"
-                      min={500}
-                      max={5000}
-                      step={50}
-                      value={benefitAtFra}
-                      onChange={(e) => setBenefitAtFra(parseFloat(e.target.value))}
-                      className="w-full pl-8 pr-3 py-2 border border-neutral-soft rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-gold"
-                    />
+                  </h4>
+                  
+                  {/* Age 62 */}
+                  <div>
+                    <label className="block text-xs text-text-secondary mb-1">
+                      At Age 62 (Early)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2.5 text-text-tertiary">$</span>
+                      <input
+                        type="number"
+                        min={500}
+                        max={5000}
+                        step={50}
+                        value={benefitAtAge62}
+                        onChange={(e) => setBenefitAtAge62(parseFloat(e.target.value))}
+                        className="w-full pl-8 pr-3 py-2 bg-background-elevated border border-background-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-gold focus:border-accent-gold"
+                      />
+                    </div>
+                    <p className="text-xs text-text-tertiary mt-0.5">
+                      Annual: {formatCurrency(benefitAtAge62 * 12)}
+                    </p>
                   </div>
-                  <p className="text-xs text-text-muted mt-1">
-                    Annual: {formatCurrency(benefitAtFra * 12)}
+
+                  {/* FRA (typically 67) */}
+                  <div>
+                    <label className="block text-xs text-text-secondary mb-1">
+                      At Full Retirement Age (typically 67)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2.5 text-text-tertiary">$</span>
+                      <input
+                        type="number"
+                        min={500}
+                        max={5000}
+                        step={50}
+                        value={benefitAtFra}
+                        onChange={(e) => setBenefitAtFra(parseFloat(e.target.value))}
+                        className="w-full pl-8 pr-3 py-2 bg-background-elevated border border-background-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-gold focus:border-accent-gold"
+                      />
+                    </div>
+                    <p className="text-xs text-text-tertiary mt-0.5">
+                      Annual: {formatCurrency(benefitAtFra * 12)}
+                    </p>
+                  </div>
+
+                  {/* Age 70 */}
+                  <div>
+                    <label className="block text-xs text-text-secondary mb-1">
+                      At Age 70 (Maximum)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2.5 text-text-tertiary">$</span>
+                      <input
+                        type="number"
+                        min={500}
+                        max={8000}
+                        step={50}
+                        value={benefitAtAge70}
+                        onChange={(e) => setBenefitAtAge70(parseFloat(e.target.value))}
+                        className="w-full pl-8 pr-3 py-2 bg-background-elevated border border-background-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-gold focus:border-accent-gold"
+                      />
+                    </div>
+                    <p className="text-xs text-text-tertiary mt-0.5">
+                      Annual: {formatCurrency(benefitAtAge70 * 12)}
+                    </p>
+                  </div>
+
+                  <p className="text-xs text-text-tertiary mt-2">
+                    💡 Tip: Find these amounts on your SSA.gov statement under "Estimated Benefits"
                   </p>
                 </div>
 
@@ -318,7 +374,7 @@ const SocialSecurityOptimization: React.FC = () => {
                     value={lifeExpectancy || ''}
                     onChange={(e) => setLifeExpectancy(e.target.value ? parseInt(e.target.value) : null)}
                     placeholder="Auto (actuarial table)"
-                    className="w-full px-3 py-2 border border-neutral-soft rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-gold"
+                    className="w-full px-3 py-2 bg-background-elevated border border-background-border rounded-lg text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent-gold focus:border-accent-gold"
                   />
                 </div>
               </div>
@@ -346,7 +402,7 @@ const SocialSecurityOptimization: React.FC = () => {
                     step={0.5}
                     value={investmentReturn}
                     onChange={(e) => setInvestmentReturn(parseFloat(e.target.value))}
-                    className="w-full px-3 py-2 border border-neutral-soft rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-gold"
+                    className="w-full px-3 py-2 bg-background-elevated border border-background-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-gold focus:border-accent-gold"
                   />
                 </div>
 
@@ -365,7 +421,7 @@ const SocialSecurityOptimization: React.FC = () => {
                     step={0.1}
                     value={cola}
                     onChange={(e) => setCola(parseFloat(e.target.value))}
-                    className="w-full px-3 py-2 border border-neutral-soft rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-gold"
+                    className="w-full px-3 py-2 bg-background-elevated border border-background-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-gold focus:border-accent-gold"
                   />
                 </div>
 
@@ -384,7 +440,7 @@ const SocialSecurityOptimization: React.FC = () => {
                     step={1}
                     value={taxRate}
                     onChange={(e) => setTaxRate(parseFloat(e.target.value))}
-                    className="w-full px-3 py-2 border border-neutral-soft rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-gold"
+                    className="w-full px-3 py-2 bg-background-elevated border border-background-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-gold focus:border-accent-gold"
                   />
                 </div>
 
@@ -435,9 +491,10 @@ const SocialSecurityOptimization: React.FC = () => {
             )}
 
             {error && (
-              <Alert variant="error" title="Analysis Error">
-                {error}
-              </Alert>
+              <div className="border border-status-error-base bg-status-error-base bg-opacity-10 rounded-lg p-4">
+                <h4 className="text-h4 text-status-error-base mb-2">Analysis Error</h4>
+                <p className="text-body text-text-secondary">{error}</p>
+              </div>
             )}
 
             {results && !loading && (
@@ -594,9 +651,10 @@ const SocialSecurityOptimization: React.FC = () => {
 
       {mode === 'couple' && (
         <Card padding="lg" variant="default">
-          <Alert variant="info" title="Coming Soon">
-            Couple analysis is currently under development. Use individual analysis for now.
-          </Alert>
+          <div className="border border-status-info-dark bg-status-info-dark bg-opacity-10 rounded-lg p-4">
+            <h4 className="text-h4 text-status-info-light mb-2">Coming Soon</h4>
+            <p className="text-body text-text-secondary">Couple analysis is currently under development. Use individual analysis for now.</p>
+          </div>
         </Card>
       )}
     </div>

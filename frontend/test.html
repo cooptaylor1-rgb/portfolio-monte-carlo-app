@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test</title>
+    <script>
+        console.log('Test HTML loaded');
+        window.onerror = function(msg, url, line, col, error) {
+            document.body.innerHTML = '<h1>Error: ' + msg + '</h1><pre>' + error.stack + '</pre>';
+            return false;
+        };
+    </script>
+</head>
+<body>
+    <h1>If you see this, HTML is loading</h1>
+    <script type="module">
+        console.log('Module script running');
+        import('/src/main.tsx').catch(err => {
+            document.body.innerHTML += '<h2>Module Error:</h2><pre>' + err.stack + '</pre>';
+        });
+    </script>
+</body>
+</html>

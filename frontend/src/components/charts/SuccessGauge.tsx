@@ -11,6 +11,18 @@ export const SuccessGauge: React.FC<SuccessGaugeProps> = ({
   probability,
   size = 200,
 }) => {
+  // Guard against invalid probability
+  if (probability === null || probability === undefined || isNaN(probability)) {
+    return (
+      <div 
+        style={{ width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        className="text-text-secondary"
+      >
+        No data
+      </div>
+    );
+  }
+
   const percentage = probability * 100;
   
   // Determine color based on success probability

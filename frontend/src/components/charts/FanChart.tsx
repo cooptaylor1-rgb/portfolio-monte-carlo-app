@@ -29,6 +29,18 @@ export const FanChart: React.FC<FanChartProps> = ({ data, height = 400 }) => {
     return `Y${Math.floor(month / 12)}`;
   };
 
+  // Guard against empty or invalid data
+  if (!data || data.length === 0) {
+    return (
+      <div 
+        style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        className="text-text-secondary"
+      >
+        No trajectory data available
+      </div>
+    );
+  }
+
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>

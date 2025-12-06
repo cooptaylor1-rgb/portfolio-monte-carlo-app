@@ -116,10 +116,8 @@ const InputsPage: React.FC = () => {
       
       const response = await apiClient.axiosClient.post('/simulation/run', payload);
       
-      console.log('Response received:', response.data);
       setSimulationResults(response.data);
       setHasRunSimulation(true);
-      console.log('Navigating to dashboard...');
       navigate('/');
     } catch (err: any) {
       console.error('=== ERROR OCCURRED ===');

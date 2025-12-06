@@ -18,13 +18,13 @@ const Dashboard: React.FC = () => {
   // Prepare fan chart data
   const fanChartData = useMemo(() => {
     if (!simulationResults?.stats) return [];
-    return simulationResults.stats.map((stat) => ({
-      month: stat.Month,
-      p10: stat.P10,
-      p25: stat.P25,
-      median: stat.Median,
-      p75: stat.P75,
-      p90: stat.P90,
+    return simulationResults.stats.map((stat: any) => ({
+      month: stat.month ?? stat.Month,
+      p10: stat.p10 ?? stat.P10,
+      p25: stat.p25 ?? stat.P25,
+      median: stat.median ?? stat.Median,
+      p75: stat.p75 ?? stat.P75,
+      p90: stat.p90 ?? stat.P90,
     }));
   }, [simulationResults]);
 

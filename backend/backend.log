@@ -1,0 +1,10 @@
+nohup: ignoring input
+INFO:     Will watch for changes in these directories: ['/workspaces/portfolio-monte-carlo-app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [12936] using StatReload
+INFO:     Started server process [12938]
+INFO:     Waiting for application startup.
+2025-12-05 23:42:22,134 - main - INFO - Starting Salem Investment Counselors - Portfolio Analysis API v2.0.0
+INFO:     Application startup complete.
+2025-12-05 23:42:27,175 - main - INFO - GET / - Status: 200 - Duration: 0.000s
+INFO:     136.47.233.31:0 - "GET / HTTP/1.1" 200 OK

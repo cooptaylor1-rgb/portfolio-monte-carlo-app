@@ -31,6 +31,18 @@ export const DistributionHistogram: React.FC<DistributionHistogramProps> = ({
   p90,
   height = 300,
 }) => {
+  // Guard against empty or invalid data
+  if (!data || data.length === 0) {
+    return (
+      <div 
+        style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        className="text-text-secondary"
+      >
+        No distribution data available
+      </div>
+    );
+  }
+
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>

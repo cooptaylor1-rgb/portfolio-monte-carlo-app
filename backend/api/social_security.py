@@ -10,7 +10,7 @@ from typing import List
 import logging
 from datetime import datetime
 
-from backend.models.social_security_schemas import (
+from models.social_security_schemas import (
     IndividualAnalysisRequest,
     IndividualAnalysisResponse,
     CoupleAnalysisRequest,
@@ -20,7 +20,7 @@ from backend.models.social_security_schemas import (
     BenefitStreamResponse,
     SSSummaryStats,
 )
-from backend.core.social_security_engine import (
+from core.social_security_engine import (
     PersonProfile,
     AnalysisAssumptions,
     get_full_retirement_age,
@@ -61,9 +61,9 @@ def _convert_claiming_scenario(scenario) -> ClaimingScenarioResponse:
     return ClaimingScenarioResponse(
         claiming_age=scenario.claiming_age,
         claiming_age_display=_format_age_display(claiming_years, claiming_months),
-        monthly_benefit_initial=scenario.benefits.annual_benefits_gross[0] / 12,
-        annual_benefit_initial=scenario.benefits.annual_benefits_gross[0],
-        benefit_stream=_convert_benefit_stream(scenario.benefits),
+        monthly_benefit_initial=scenario.monthly_benefit_initial,
+        annual_benefit_initial=scenario.annual_benefit_initial,
+        benefit_stream=_convert_benefit_stream(scenario.benefit_stream),
         npv_gross=scenario.npv_gross,
         npv_net=scenario.npv_net,
         break_even_age=scenario.break_even_age,

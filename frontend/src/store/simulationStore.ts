@@ -162,6 +162,8 @@ export const useSimulationStore = create<SimulationStore>()(
       partialize: (state) => ({
         clientInfo: state.clientInfo,
         modelInputs: state.modelInputs,
+        simulationResults: state.simulationResults,
+        hasRunSimulation: state.hasRunSimulation,
       }),
     }
   )
