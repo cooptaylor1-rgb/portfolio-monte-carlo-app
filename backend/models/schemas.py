@@ -417,3 +417,132 @@ class ReportData(BaseModel):
         default=None,
         description="Income sources breakdown over time"
     )
+
+
+# ============================================================================
+# GOAL-BASED PLANNING MODELS
+# ============================================================================
+
+class GoalPriorityEnum(str, Enum):
+    """Goal priority levels"""
+    CRITICAL = "critical"  # Must-have (retirement, healthcare)
+    HIGH = "high"          # Very important (education, home)
+    MEDIUM = "medium"      # Nice-to-have (vacation home)
+    LOW = "low"            # Aspirational (legacy)
+
+
+class GoalStatusEnum(str, Enum):
+    """Goal achievement status"""
+    ON_TRACK = "on_track"          # >85% probability
+    AT_RISK = "at_risk"            # 70-85% probability
+    UNDERFUNDED = "underfunded"    # 50-70% probability
+    CRITICAL = "critical"          # <50% probability
+    ACHIEVED = "achieved"          # Already funded
+    ABANDONED = "abandoned"        # Deprioritized
+
+
+class GoalInputModel(BaseModel):
+    """Input model for financial goal"""
+    name: str = Field(description="Goal name/description")
+    target_amount: float = Field(gt=0, description="Target amount in today's dollars")
+    target_year: int = Field(ge=2024, le=2100, description="Year when goal is needed")
+    priority: GoalPriorityEnum = Field(default=GoalPriorityEnum.MEDIUM, description="Goal priority")
+    
+    # Funding
+    current_funding: float = Field(default=0.0, ge=0, description="Current amount allocated")
+    annual_contribution: float = Field(default=0.0, ge=0, description="Annual contribution")
+    contribution_start_year: int = Field(default=2024, description="First year of contributions")
+    contribution_end_year: Optional[int] = Field(default=None, description="Last year of contributions")
+    
+    # Asset allocation
+    equity_pct: float = Field(default=0.60, ge=0, le=1, description="Equity allocation for this goal")
+    fi_pct: float = Field(default=0.35, ge=0, le=1, description="Fixed income allocation")
+    cash_pct: float = Field(default=0.05, ge=0, le=1, description="Cash allocation")
+    
+    # Glide path
+    use_glide_path: bool = Field(default=True, description="Reduce equity as goal approaches")
+    years_before_goal_to_derisk: int = Field(default=5, ge=0, le=20, description="Years to start derisking")
+    target_equity_at_goal: float = Field(default=0.20, ge=0, le=1, description="Target equity at goal date")
+    
+    # Success criteria
+    success_threshold: float = Field(default=0.85, ge=0.5, le=0.99, description="Required probability")
+    acceptable_shortfall_pct: float = Field(default=0.10, ge=0, le=0.50, description="Acceptable shortfall %")
+    
+    # Optional
+    id: Optional[str] = Field(default=None, description="Goal identifier")
+    notes: str = Field(default="", description="Additional notes")
+    
+    @field_validator('equity_pct', 'fi_pct', 'cash_pct')
+    @classmethod
+    def validate_allocation(cls, v, info):
+        if v < 0 or v > 1:
+            raise ValueError(f"{info.field_name} must be between 0 and 1")
+        return v
+
+
+class GoalResultModel(BaseModel):
+    """Result of goal-based simulation"""
+    goal_name: str = Field(description="Goal name")
+    goal_id: Optional[str] = Field(description="Goal identifier")
+    priority: GoalPriorityEnum = Field(description="Goal priority")
+    status: GoalStatusEnum = Field(description="Goal status")
+    
+    # Target and timing
+    target_amount: float = Field(description="Target amount needed")
+    target_year: int = Field(description="Year when goal is needed")
+    years_remaining: int = Field(description="Years until goal")
+    
+    # Simulation results
+    probability_of_success: float = Field(ge=0, le=1, description="Probability of meeting goal")
+    median_value_at_target: float = Field(description="Median portfolio value at goal date")
+    percentile_10: float = Field(description="10th percentile value")
+    percentile_90: float = Field(description="90th percentile value")
+    
+    # Funding analysis
+    current_funding_pct: float = Field(ge=0, description="Current funding as % of target")
+    expected_shortfall: float = Field(ge=0, description="Expected $ shortfall in failure scenarios")
+    shortfall_probability: float = Field(ge=0, le=1, description="Probability of shortfall")
+    
+    # Recommendations
+    additional_funding_needed: float = Field(ge=0, description="Additional annual funding to reach target")
+    recommendation: str = Field(description="Action recommendation")
+    
+    # Statistics
+    scenarios_succeeded: int = Field(description="Number of scenarios that met goal")
+    scenarios_failed: int = Field(description="Number of scenarios that failed")
+
+
+class GoalConflictModel(BaseModel):
+    """Detected conflict between goals"""
+    conflict_type: str = Field(description="Type of conflict (funding_competition, priority_mismatch)")
+    description: str = Field(description="Human-readable conflict description")
+    goals_affected: List[str] = Field(description="Names of goals in conflict")
+    total_funding_gap: Optional[float] = Field(default=None, description="Total $ gap across goals")
+    recommendation: str = Field(description="Recommendation to resolve conflict")
+
+
+class GoalAnalysisRequest(BaseModel):
+    """Request for goal-based planning analysis"""
+    current_year: int = Field(default=2024, description="Current calendar year")
+    goals: List[GoalInputModel] = Field(description="Goals to analyze")
+    
+    # Market assumptions (optional - will use defaults if not provided)
+    equity_return_annual: Optional[float] = Field(default=0.07, description="Expected equity return")
+    fi_return_annual: Optional[float] = Field(default=0.02, description="Expected FI return")
+    cash_return_annual: Optional[float] = Field(default=0.00, description="Expected cash return")
+    equity_volatility: Optional[float] = Field(default=0.18, description="Equity volatility")
+    fi_volatility: Optional[float] = Field(default=0.06, description="FI volatility")
+    cash_volatility: Optional[float] = Field(default=0.01, description="Cash volatility")
+    
+    n_scenarios: int = Field(default=1000, ge=100, le=10000, description="Number of Monte Carlo scenarios")
+
+
+class GoalAnalysisResponse(BaseModel):
+    """Response containing goal analysis results"""
+    goals: List[GoalResultModel] = Field(description="Results for each goal")
+    conflicts: List[GoalConflictModel] = Field(default_factory=list, description="Detected conflicts")
+    overall_summary: str = Field(description="Overall portfolio goal analysis summary")
+    total_annual_funding_needed: float = Field(description="Total additional funding across all goals")
+    critical_goals_count: int = Field(description="Number of critical priority goals")
+    on_track_count: int = Field(description="Number of goals on track")
+    at_risk_count: int = Field(description="Number of goals at risk")
