@@ -150,14 +150,14 @@ const ScenariosPage: React.FC = () => {
         'monthly_spending',
       ];
       
-      // Transform modelInputs to match backend schema
+      // Transform modelInputs to match backend schema exactly
       // Remove frontend-only fields and map field names correctly
       const backendInputs = {
         starting_portfolio: modelInputs.starting_portfolio,
         years_to_model: modelInputs.years_to_model,
         current_age: modelInputs.current_age,
         horizon_age: modelInputs.horizon_age,
-        monthly_income: 0, // Default to 0 if not present
+        monthly_income: 0, // Default to 0
         monthly_spending: modelInputs.monthly_spending,
         inflation_annual: modelInputs.inflation_annual,
         spending_rule: modelInputs.spending_rule,
@@ -172,37 +172,43 @@ const ScenariosPage: React.FC = () => {
         fi_vol_annual: modelInputs.fi_vol_annual,
         cash_vol_annual: modelInputs.cash_vol_annual,
         n_scenarios: modelInputs.n_scenarios,
-        one_time_cf: modelInputs.one_time_cf,
-        one_time_cf_month: modelInputs.one_time_cf_month,
+        one_time_cf: modelInputs.one_time_cf || 0,
+        one_time_cf_month: modelInputs.one_time_cf_month || 0,
         taxable_pct: modelInputs.taxable_pct,
         ira_pct: modelInputs.ira_pct,
         roth_pct: modelInputs.roth_pct,
+        taxable_basis_pct: 0.6, // Default
         tax_rate: modelInputs.tax_rate,
+        filing_status: 'single', // Default
+        state_tax_rate: 0.0, // Default
         rmd_age: modelInputs.rmd_age,
-        social_security_monthly: modelInputs.social_security_monthly,
-        ss_start_age: modelInputs.ss_start_age,
-        pension_monthly: modelInputs.pension_monthly,
-        pension_start_age: modelInputs.pension_start_age,
-        monthly_healthcare: modelInputs.healthcare_monthly,
-        healthcare_start_age: modelInputs.healthcare_start_age,
-        healthcare_inflation: modelInputs.healthcare_inflation,
-        roth_conversion_annual: modelInputs.roth_conversion_annual,
-        roth_conversion_start_age: modelInputs.roth_conversion_start_age,
-        roth_conversion_end_age: modelInputs.roth_conversion_end_age,
-        estate_tax_exemption: modelInputs.estate_tax_exemption,
-        legacy_goal: modelInputs.legacy_goal,
-        use_actuarial_tables: modelInputs.use_actuarial_tables,
-        health_adjustment: modelInputs.health_adjustment,
-        use_glide_path: modelInputs.use_glide_path,
-        target_equity_at_end: modelInputs.target_equity_pct, // Map field name
-        use_lifestyle_phases: modelInputs.use_lifestyle_phases,
-        slow_go_age: modelInputs.go_go_end_age, // Map field name
-        no_go_age: modelInputs.slow_go_end_age, // Map field name
-        slow_go_spending_pct: modelInputs.go_go_spending_multiplier, // Map field name
-        no_go_spending_pct: modelInputs.no_go_spending_multiplier, // Map field name
-        use_guardrails: modelInputs.use_guardrails,
-        upper_guardrail: modelInputs.upper_guardrail,
-        lower_guardrail: modelInputs.lower_guardrail,
+        use_tax_optimization: true, // Default
+        optimize_roth_conversions: false, // Default
+        roth_conversion_start_age: modelInputs.roth_conversion_start_age || 60,
+        roth_conversion_end_age: modelInputs.roth_conversion_end_age || 72,
+        avoid_irmaa: true, // Default
+        social_security_monthly: modelInputs.social_security_monthly || 0,
+        ss_start_age: modelInputs.ss_start_age || 67,
+        pension_monthly: modelInputs.pension_monthly || 0,
+        pension_start_age: modelInputs.pension_start_age || 65,
+        monthly_healthcare: modelInputs.healthcare_monthly || 0,
+        healthcare_start_age: modelInputs.healthcare_start_age || 65,
+        healthcare_inflation: modelInputs.healthcare_inflation || 0.05,
+        roth_conversion_annual: modelInputs.roth_conversion_annual || 0,
+        estate_tax_exemption: modelInputs.estate_tax_exemption || 13610000,
+        legacy_goal: modelInputs.legacy_goal || 0,
+        use_actuarial_tables: modelInputs.use_actuarial_tables || false,
+        health_adjustment: modelInputs.health_adjustment || 0,
+        use_glide_path: modelInputs.use_glide_path || false,
+        target_equity_at_end: modelInputs.target_equity_pct || 0.4, // Map field name
+        use_lifestyle_phases: modelInputs.use_lifestyle_phases || false,
+        slow_go_age: modelInputs.go_go_end_age || 75, // Map field name
+        no_go_age: modelInputs.slow_go_end_age || 85, // Map field name
+        slow_go_spending_pct: modelInputs.go_go_spending_multiplier || 1.0, // Map field name
+        no_go_spending_pct: modelInputs.no_go_spending_multiplier || 0.6, // Map field name
+        use_guardrails: modelInputs.use_guardrails || false,
+        upper_guardrail: modelInputs.upper_guardrail || 0.2,
+        lower_guardrail: modelInputs.lower_guardrail || 0.15,
       };
       
       // Use more practical variation ranges for each parameter

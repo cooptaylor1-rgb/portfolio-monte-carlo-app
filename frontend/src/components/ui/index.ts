@@ -34,4 +34,31 @@ export type { ModalProps } from './Modal';
 
 export { LoadingSkeleton } from './LoadingSkeleton';
 export type { LoadingSkeletonProps } from './LoadingSkeleton';
+
 export { ErrorBoundary } from './ErrorBoundary';
+
+// ============================================================================
+// PHASE 1 ADDITIONS - Complete Design System Components
+// ============================================================================
+
+// Form Inputs
+export { Input } from './Input';
+export type { InputProps, InputType, InputSize } from './Input';
+
+export { Select } from './Select';
+export type { SelectProps, SelectOption, SelectSize } from './Select';
+
+export { Textarea } from './Textarea';
+export type { TextareaProps, TextareaSize } from './Textarea';
+
+export { Switch } from './Switch';
+export type { SwitchProps, SwitchSize } from './Switch';
+
+// Feedback Components
+export { Alert } from './Alert';
+export type { AlertProps, AlertVariant, AlertSize } from './Alert';
+
+// Navigation Components
+export { Tabs } from './Tabs';
+export type { TabsProps, Tab } from './Tabs';
+

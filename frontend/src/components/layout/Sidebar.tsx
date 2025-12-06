@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileEdit, GitCompare, FileText, CheckCircle, BarChart3, DollarSign } from 'lucide-react';
+import { LayoutDashboard, FileEdit, GitCompare, FileText, CheckCircle, BarChart3, DollarSign, Home, Target, TrendingUp } from 'lucide-react';
 import { useSimulationStore } from '../../store/simulationStore';
 
 interface NavItem {
@@ -55,6 +55,30 @@ const navItems: NavItem[] = [
     label: 'Social Security',
     icon: <DollarSign size={20} />,
     description: 'Claiming Strategy',
+  },
+  {
+    path: '/annuity',
+    label: 'Annuity Analysis',
+    icon: <TrendingUp size={20} />,
+    description: 'SPIA/DIA/QLAC Pricing',
+  },
+  {
+    path: '/estate',
+    label: 'Estate Planning',
+    icon: <Home size={20} />,
+    description: 'Tax & Legacy Planning',
+  },
+  {
+    path: '/tax-optimization',
+    label: 'Tax Optimization',
+    icon: <DollarSign size={20} />,
+    description: 'Roth Conversions',
+  },
+  {
+    path: '/goals',
+    label: 'Goal Planning',
+    icon: <Target size={20} />,
+    description: 'Financial Goals',
   },
 ];
 

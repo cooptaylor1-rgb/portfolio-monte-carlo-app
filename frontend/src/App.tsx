@@ -8,6 +8,10 @@ import ReportsPage from './pages/ReportsPage';
 import SalemReportPage from './pages/SalemReportPage';
 import MonteCarloAnalyticsPage from './pages/MonteCarloAnalyticsPage';
 import SocialSecurityOptimization from './pages/SocialSecurityOptimization';
+import AnnuityPage from './pages/AnnuityPage';
+import EstatePlanningPage from './pages/EstatePlanningPage';
+import TaxOptimizationPage from './pages/TaxOptimizationPage';
+import GoalPlanningPage from './pages/GoalPlanningPage';
 import PresentationMode from './presentation/PresentationMode';
 import './index.css';
 
@@ -33,6 +37,10 @@ function App() {
                 <Route path="/reports" element={<ReportsPage />} />
                 <Route path="/analytics" element={<MonteCarloAnalyticsPage />} />
                 <Route path="/social-security" element={<SocialSecurityOptimization />} />
+                <Route path="/annuity" element={<AnnuityPage />} />
+                <Route path="/estate" element={<EstatePlanningPage />} />
+                <Route path="/tax-optimization" element={<TaxOptimizationPage />} />
+                <Route path="/goals" element={<GoalPlanningPage />} />
               </Routes>
             </AppLayout>
           } />
