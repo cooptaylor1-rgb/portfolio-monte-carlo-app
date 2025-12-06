@@ -3,7 +3,7 @@ Pydantic models for API request/response validation.
 These models define the data contracts between frontend and backend.
 """
 from pydantic import BaseModel, Field, field_validator
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from datetime import date
 from enum import Enum
 
