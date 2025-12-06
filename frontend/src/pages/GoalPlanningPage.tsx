@@ -4,7 +4,7 @@
  */
 import React, { useState } from 'react';
 import apiClient from '../lib/api';
-import { SectionHeader, Button, Card, Badge, Input, Select, Switch } from '../components/ui';
+import { SectionHeader, Button, Card, Badge, Input, Switch } from '../components/ui';
 import { Target, Plus, Trash2 } from 'lucide-react';
 
 interface Goal {
