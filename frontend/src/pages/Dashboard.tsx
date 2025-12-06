@@ -257,31 +257,27 @@ const Dashboard: React.FC = () => {
       )}
 
       {/* Portfolio Projection Fan Chart */}
-      <Card padding="lg">
-        <div className="mb-6">
-          <h3 className="text-h3 font-display text-text-primary mb-2">
-            Portfolio Trajectory
-          </h3>
-          <p className="text-body text-text-tertiary">
-            Projected portfolio value over time with probability bands (P10 to P90)
-          </p>
-        </div>
+      <ChartContainer
+        title="Portfolio Trajectory"
+        subtitle="Projected portfolio value over time with probability bands (P10 to P90)"
+        isEmpty={fanChartData.length === 0}
+        emptyMessage="Run a simulation to see portfolio projections"
+        height={400}
+        helpText="This chart shows the range of possible outcomes for your portfolio over time. The median (gold line) represents the middle scenario, while the bands show the 10th to 90th percentile ranges."
+      >
         <FanChart data={fanChartData} height={400} />
-      </Card>
+      </ChartContainer>
 
       {/* Success Gauge and Distribution */}
       {metrics && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Success Probability Gauge */}
-          <Card padding="lg">
-            <div className="mb-6">
-              <h3 className="text-h3 font-display text-text-primary mb-2">
-                Success Probability
-              </h3>
-              <p className="text-body text-text-tertiary">
-                Likelihood of meeting retirement goals
-              </p>
-            </div>
+          <ChartContainer
+            title="Success Probability"
+            subtitle="Likelihood of meeting retirement goals"
+            height={400}
+            helpText="This gauge shows the probability that your portfolio will successfully support your planned spending throughout retirement. 85%+ is considered excellent, 70-85% is good."
+          >
             <div className="flex items-center justify-center py-6">
               <SuccessGauge probability={metrics.success_probability} size={250} />
             </div>
@@ -294,18 +290,17 @@ const Dashboard: React.FC = () => {
                   : '⚠ Low probability - review inputs and adjust plan'}
               </p>
             </div>
-          </Card>
+          </ChartContainer>
 
           {/* Ending Balance Distribution */}
-          <Card padding="lg">
-            <div className="mb-6">
-              <h3 className="text-h3 font-display text-text-primary mb-2">
-                Ending Balance Range
-              </h3>
-              <p className="text-body text-text-tertiary">
-                Distribution of possible portfolio outcomes
-              </p>
-            </div>
+          <ChartContainer
+            title="Ending Balance Range"
+            subtitle="Distribution of possible portfolio outcomes"
+            isEmpty={distributionData.length === 0}
+            emptyMessage="No distribution data available"
+            height={350}
+            helpText="This histogram shows the range of possible final portfolio values at the end of your planning period. The vertical lines mark the 10th percentile, median, and 90th percentile outcomes."
+          >
             <DistributionHistogram
               data={distributionData}
               median={metrics.ending_median}
@@ -313,7 +308,7 @@ const Dashboard: React.FC = () => {
               p90={metrics.ending_p90}
               height={350}
             />
-          </Card>
+          </ChartContainer>
         </div>
       )}
 

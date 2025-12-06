@@ -65,4 +65,19 @@ export type { TabsProps, Tab } from './Tabs';
 export { Breadcrumb, useBreadcrumbs } from './Breadcrumb';
 export type { BreadcrumbProps, BreadcrumbItem } from './Breadcrumb';
 
+// Data Visualization Components
+export { ChartContainer, ChartLegend, ChartTooltipContent } from './ChartContainer';
+export type { 
+  ChartContainerProps, 
+  LegendItem, 
+  ChartLegendProps,
+  TooltipItem,
+  ChartTooltipContentProps 
+} from './ChartContainer';
+
+export { Table } from './Table';
+export type { TableProps, TableColumn } from './Table';
+
+
+
 

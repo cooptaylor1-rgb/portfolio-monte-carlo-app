@@ -8,6 +8,8 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  Area,
+  AreaChart,
 } from 'recharts';
 import { colors } from '../../theme';
 import { formatChartCurrency } from '../../theme/chartUtils';
@@ -22,11 +24,16 @@ interface FanChartProps {
     p90: number;
   }>;
   height?: number;
+  showLegend?: boolean;
 }
 
-export const FanChart: React.FC<FanChartProps> = ({ data, height = 400 }) => {
+export const FanChart: React.FC<FanChartProps> = ({ 
+  data, 
+  height = 400,
+  showLegend = true 
+}) => {
   const formatYear = (month: number) => {
-    return `Y${Math.floor(month / 12)}`;
+    return `Year ${Math.floor(month / 12)}`;
   };
 
   // Guard against empty or invalid data
@@ -43,84 +50,117 @@ export const FanChart: React.FC<FanChartProps> = ({ data, height = 400 }) => {
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke={colors.background.border} />
+      <LineChart 
+        data={data} 
+        margin={{ top: 10, right: 30, left: 20, bottom: 5 }}
+      >
+        <defs>
+          {/* Gradient for area fills */}
+          <linearGradient id="goldGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={colors.brand.gold} stopOpacity={0.3}/>
+            <stop offset="95%" stopColor={colors.brand.gold} stopOpacity={0.05}/>
+          </linearGradient>
+        </defs>
+        
+        <CartesianGrid 
+          strokeDasharray="3 3" 
+          stroke={colors.background.border}
+          opacity={0.5}
+        />
         <XAxis
           dataKey="month"
           tickFormatter={formatYear}
-          stroke={colors.text.secondary}
-          style={{ fontSize: '12px' }}
+          stroke={colors.text.tertiary}
+          style={{ fontSize: '12px', fontFamily: 'Inter, sans-serif' }}
+          tick={{ fill: colors.text.tertiary }}
         />
         <YAxis
           tickFormatter={formatChartCurrency}
-          stroke={colors.text.secondary}
-          style={{ fontSize: '12px' }}
+          stroke={colors.text.tertiary}
+          style={{ fontSize: '12px', fontFamily: 'Inter, sans-serif' }}
+          tick={{ fill: colors.text.tertiary }}
         />
         <Tooltip
-          formatter={(value: number) => formatChartCurrency(value)}
-          labelFormatter={(label: number) => `Month ${label}`}
+          formatter={(value: number) => [formatChartCurrency(value), '']}
+          labelFormatter={(label: number) => `Month ${label} (Year ${Math.floor(label / 12)})`}
           contentStyle={{
             backgroundColor: colors.background.elevated,
             border: `1px solid ${colors.background.border}`,
             borderRadius: '8px',
             color: colors.text.primary,
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          }}
+          itemStyle={{
+            color: colors.text.secondary,
+            fontSize: '12px',
           }}
         />
-        <Legend
-          wrapperStyle={{ color: colors.text.primary }}
-          iconType="line"
-        />
+        {showLegend && (
+          <Legend
+            wrapperStyle={{ 
+              color: colors.text.primary,
+              paddingTop: '20px',
+            }}
+            iconType="line"
+            formatter={(value) => <span style={{ color: colors.text.secondary, fontSize: '13px' }}>{value}</span>}
+          />
+        )}
         
-        {/* P90 Line */}
+        {/* P90 Line - Best case */}
         <Line
           type="monotone"
           dataKey="p90"
-          stroke={colors.status.success.base}
-          strokeWidth={2}
+          stroke={colors.chart.p90}
+          strokeWidth={2.5}
           dot={false}
-          name="90th Percentile"
+          name="90th Percentile (Best Case)"
+          activeDot={{ r: 6, fill: colors.chart.p90 }}
         />
         
         {/* P75 Line */}
         <Line
           type="monotone"
           dataKey="p75"
-          stroke={colors.status.success.light}
+          stroke={colors.chart.p75}
           strokeWidth={1.5}
           dot={false}
           name="75th Percentile"
           strokeDasharray="5 5"
+          activeDot={{ r: 5, fill: colors.chart.p75 }}
         />
         
-        {/* Median Line */}
+        {/* Median Line - Most important */}
         <Line
           type="monotone"
           dataKey="median"
           stroke={colors.brand.gold}
-          strokeWidth={3}
+          strokeWidth={3.5}
           dot={false}
-          name="Median"
+          name="Median (Expected)"
+          activeDot={{ r: 7, fill: colors.brand.gold, stroke: colors.background.elevated, strokeWidth: 2 }}
         />
         
         {/* P25 Line */}
         <Line
           type="monotone"
           dataKey="p25"
-          stroke={colors.status.warning.base}
+          stroke={colors.chart.p25}
           strokeWidth={1.5}
           dot={false}
           name="25th Percentile"
           strokeDasharray="5 5"
+          activeDot={{ r: 5, fill: colors.chart.p25 }}
         />
         
-        {/* P10 Line */}
+        {/* P10 Line - Worst case */}
         <Line
           type="monotone"
           dataKey="p10"
-          stroke={colors.status.error.base}
-          strokeWidth={2}
+          stroke={colors.chart.p10}
+          strokeWidth={2.5}
           dot={false}
-          name="10th Percentile"
+          name="10th Percentile (Worst Case)"
+          activeDot={{ r: 6, fill: colors.chart.p10 }}
         />
       </LineChart>
     </ResponsiveContainer>
