@@ -183,6 +183,10 @@ async def run_sensitivity_analysis(request: SensitivityRequest):
     - results: List of outcomes for each parameter value
     """
     try:
+        logger.info(f"Starting sensitivity analysis for parameter: {request.parameter}")
+        logger.info(f"Number of variations: {len(request.variations)}")
+        logger.debug(f"Input model data: {request.inputs.model_dump()}")
+        
         sim_inputs = convert_model_to_dataclass(request.inputs)
         
         # Verify parameter exists
@@ -194,6 +198,8 @@ async def run_sensitivity_analysis(request: SensitivityRequest):
         
         # Run sensitivity analysis
         results_df = sensitivity_analysis(sim_inputs, request.parameter, request.variations)
+        
+        logger.info(f"Got {len(results_df)} results from sensitivity analysis")
         
         # Convert to response model
         results = [
@@ -212,6 +218,8 @@ async def run_sensitivity_analysis(request: SensitivityRequest):
             results=results
         )
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Sensitivity analysis error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

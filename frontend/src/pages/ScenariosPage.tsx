@@ -171,12 +171,15 @@ const ScenariosPage: React.FC = () => {
               variations = variations.map(pct => -baseSpending * (1 + pct)); // Keep negative sign
             }
             
+            console.log(`Running sensitivity for ${param} with variations:`, variations);
             const response = await apiClient.axiosClient.post('/simulation/sensitivity', {
               inputs: modelInputs,
               parameter: param,
               variations: variations,
             });
 
+            console.log(`Got ${response.data.results.length} results for ${param}`);
+            
             // Transform results for this parameter
             return response.data.results.map((result: any) => {
               let displayVariation = result.parameter_value;
@@ -195,8 +198,9 @@ const ScenariosPage: React.FC = () => {
                 impact: result.success_probability,
               };
             });
-          } catch (error) {
+          } catch (error: any) {
             console.error(`Failed to analyze ${param}:`, error);
+            console.error(`Error details:`, error.response?.data);
             return [];
           }
         })
@@ -204,13 +208,15 @@ const ScenariosPage: React.FC = () => {
 
       // Flatten all results
       const combinedResults = allResults.flat();
+      console.log(`Total combined results: ${combinedResults.length}`);
       setSensitivityData(combinedResults);
       
       if (combinedResults.length === 0) {
-        alert('No sensitivity results were generated. Please check your inputs and try again.');
+        alert('No sensitivity results were generated. Please check your inputs and try again.\n\nMake sure you have run a base simulation first and all required fields are filled in.');
       }
     } catch (error: any) {
       console.error('Failed to run sensitivity analysis:', error);
+      console.error('Error details:', error.response?.data);
       const errorMsg = error.response?.data?.detail || error.message || 'Failed to run sensitivity analysis';
       alert(`Error: ${errorMsg}`);
     } finally {
