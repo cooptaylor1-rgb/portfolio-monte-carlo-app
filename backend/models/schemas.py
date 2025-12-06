@@ -227,6 +227,15 @@ class SimulationResponse(BaseModel):
     inputs: Optional[ModelInputsModel] = Field(default=None, description="Echo of input parameters for reference")
     success: bool = True
     message: str = "Simulation completed successfully"
+    
+    # Extended results (Sprint 4 features)
+    ending_distribution: Optional[Dict[str, float]] = Field(default=None, description="Ending value distribution (p05-p95)")
+    worst_case_path: Optional[List[float]] = Field(default=None, description="Worst case (P5) portfolio path")
+    best_case_path: Optional[List[float]] = Field(default=None, description="Best case (P95) portfolio path")
+    median_path: Optional[List[float]] = Field(default=None, description="Median (P50) portfolio path")
+    sequence_risk: Optional['SequenceRiskAnalysis'] = Field(default=None, description="Sequence-of-returns risk analysis")
+    inflation_scenarios: Optional[List['InflationScenarioResult']] = Field(default=None, description="Stochastic inflation scenarios")
+    longevity_analysis: Optional['LongevityResult'] = Field(default=None, description="Probabilistic longevity analysis")
 
 
 class AssumptionPresetModel(BaseModel):

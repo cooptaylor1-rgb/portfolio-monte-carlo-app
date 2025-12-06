@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 import logging
 
-from api import simulation, presets, health, social_security, tax_optimization, goals
+from api import simulation, presets, health, social_security, tax_optimization, goals, enhanced_simulation
 from models.schemas import HealthCheckResponse
 
 # Configure logging
@@ -122,6 +122,7 @@ async def root():
 # Include routers
 app.include_router(health.router, prefix="/api", tags=["health"])
 app.include_router(simulation.router, prefix="/api/simulation", tags=["simulation"])
+app.include_router(enhanced_simulation.router, prefix="/api/simulation", tags=["enhanced-simulation"])
 app.include_router(presets.router, prefix="/api/presets", tags=["presets"])
 app.include_router(social_security.router)
 app.include_router(tax_optimization.router, prefix="/api/tax", tags=["tax-optimization"])
