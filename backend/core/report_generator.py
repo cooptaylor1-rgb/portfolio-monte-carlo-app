@@ -13,7 +13,7 @@ Last Updated: December 2024
 """
 
 from dataclasses import dataclass
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Tuple, Any
 from enum import Enum
 import numpy as np
 import logging
@@ -573,38 +573,113 @@ class RiskAnalyzer:
     def _analyze_inflation_risk(
         self,
         annual_spending: float,
-        starting: float
+        starting: float,
+        stochastic_scenarios: Optional[List] = None
     ) -> IdentifiedRisk:
-        """Analyze inflation risk"""
+        """
+        Analyze inflation risk with optional stochastic scenarios.
+        
+        If stochastic_scenarios provided, analyzes distribution of inflation outcomes.
+        Otherwise uses simple heuristics based on spending rate.
+        
+        Args:
+            annual_spending: Annual spending amount
+            starting: Starting portfolio value
+            stochastic_scenarios: Optional list of InflationScenario objects
+        
+        Returns:
+            IdentifiedRisk with inflation assessment
+        """
         spending_rate = (annual_spending / starting) * 100
         
-        if spending_rate > 5:
-            severity = RiskLevel.HIGH
-            probability = 0.35
-        elif spending_rate > 4.5:
-            severity = RiskLevel.MODERATE
-            probability = 0.25
+        # Enhanced analysis if stochastic scenarios provided
+        if stochastic_scenarios and len(stochastic_scenarios) > 0:
+            # Analyze distribution of inflation outcomes
+            final_rates = [s.monthly_rates[-1] * 12 for s in stochastic_scenarios]  # Annualized
+            avg_inflation = np.mean(final_rates)
+            p90_inflation = np.percentile(final_rates, 90)
+            p10_inflation = np.percentile(final_rates, 10)
+            
+            # Calculate cumulative inflation impact
+            cumulative_factors = [s.cumulative_factor[-1] for s in stochastic_scenarios]
+            avg_cumulative = np.mean(cumulative_factors)
+            p90_cumulative = np.percentile(cumulative_factors, 90)
+            
+            # Assess severity based on tail risk
+            if p90_inflation > 0.06:  # 90th percentile above 6%
+                severity = RiskLevel.HIGH
+                probability = 0.40
+            elif p90_inflation > 0.045:  # 90th percentile above 4.5%
+                severity = RiskLevel.MODERATE
+                probability = 0.30
+            elif avg_inflation > 0.035:  # Average above 3.5%
+                severity = RiskLevel.MODERATE
+                probability = 0.25
+            else:
+                severity = RiskLevel.LOW
+                probability = 0.15
+            
+            # Impact: erosion of purchasing power
+            years = len(stochastic_scenarios[0].monthly_rates) / 12
+            potential_impact = annual_spending * (p90_cumulative - 1.0) * years * 0.5
+            
+            description = (
+                f"Stochastic inflation analysis shows mean inflation of {avg_inflation:.1%} "
+                f"with 90th percentile at {p90_inflation:.1%}. Over {int(years)} years, "
+                f"this creates {(p90_cumulative - 1.0) * 100:.0f}% cumulative inflation in worst case. "
+                f"Current spending rate ({spending_rate:.1f}%) amplifies inflation sensitivity."
+            )
+            
+            if p90_inflation > 0.05:
+                mitigation = (
+                    f"HIGH INFLATION RISK: 90th percentile inflation ({p90_inflation:.1%}) significantly "
+                    f"exceeds historical average. URGENT recommendations: "
+                    f"(1) Increase TIPS/I-Bonds to 20-25% of portfolio, "
+                    f"(2) Maintain 60%+ equity for long-term inflation hedge, "
+                    f"(3) Build 30% flexible spending capacity to cut during inflation spikes, "
+                    f"(4) Consider inflation-protected annuity (COLA rider) for essential expenses. "
+                    f"Monitor CPI quarterly and adjust spending immediately if inflation exceeds 4%."
+                )
+            else:
+                mitigation = (
+                    f"Moderate inflation risk ({avg_inflation:.1%} average, {p90_inflation:.1%} 90th percentile). "
+                    f"Recommendations: (1) Allocate 10-15% to TIPS/I-Bonds for baseline inflation protection, "
+                    f"(2) Maintain diversified equity exposure (50-70%) as long-term inflation hedge, "
+                    f"(3) Review spending annually for inflation adjustments, "
+                    f"(4) Consider flexible spending rules (10-20% discretionary buffer) for high inflation periods."
+                )
+        
         else:
-            severity = RiskLevel.LOW
-            probability = 0.15
-        
-        description = (
-            f"High spending rate ({spending_rate:.1f}%) amplifies inflation risk. "
-            f"If inflation exceeds 3% for extended period, real portfolio value "
-            f"may decline faster than expected."
-        )
-        
-        mitigation = (
-            "Increase TIPS or I-Bond allocation to 10-15% of portfolio for inflation protection. "
-            "Consider equity allocation (stocks historically outpace inflation). "
-            "Build flexible spending budget to cut discretionary expenses during high inflation."
-        )
+            # Fallback to simple analysis if no stochastic data
+            if spending_rate > 5:
+                severity = RiskLevel.HIGH
+                probability = 0.35
+            elif spending_rate > 4.5:
+                severity = RiskLevel.MODERATE
+                probability = 0.25
+            else:
+                severity = RiskLevel.LOW
+                probability = 0.15
+            
+            potential_impact = starting * 0.15
+            
+            description = (
+                f"High spending rate ({spending_rate:.1f}%) amplifies inflation risk. "
+                f"If inflation exceeds 3% for extended period, real portfolio value "
+                f"may decline faster than expected."
+            )
+            
+            mitigation = (
+                "Increase TIPS or I-Bond allocation to 10-15% of portfolio for inflation protection. "
+                "Consider equity allocation (stocks historically outpace inflation). "
+                "Build flexible spending budget to cut discretionary expenses during high inflation."
+            )
         
         return IdentifiedRisk(
             risk_type=RiskType.INFLATION,
             severity=severity,
             probability=probability,
-            potential_impact=starting * 0.15,
+            potential_impact=potential_impact,
             description=description,
             mitigation_strategy=mitigation
         )
@@ -1458,6 +1533,130 @@ if __name__ == "__main__":
     
     print("\n" + "="*70)
     print("DEMO COMPLETE ✓")
+
+
+# ============================================================================
+# SEQUENCE OF RETURNS RISK ANALYSIS
+# ============================================================================
+
+def analyze_sequence_risk(
+    all_paths: np.ndarray,
+    years_to_model: int,
+    starting_portfolio: float
+) -> Dict[str, Any]:
+    """
+    Analyze sequence of returns risk by comparing early vs late bear market impact.
+    
+    Sequence risk is the risk that poor returns early in retirement have a much
+    larger impact on success than poor returns later. This is because early losses
+    compound with withdrawals, creating a "hole" the portfolio never escapes.
+    
+    Args:
+        all_paths: Array of shape (n_scenarios, n_months) with portfolio values
+        years_to_model: Number of years in simulation
+        starting_portfolio: Initial portfolio value
+    
+    Returns:
+        Dictionary with sequence risk metrics
+    """
+    n_scenarios, n_months = all_paths.shape
+    
+    # Define periods
+    early_months = min(60, n_months)  # First 5 years
+    mid_start = early_months
+    mid_months = min(120, n_months - early_months)  # Years 6-15
+    late_start = min(early_months + mid_months, n_months)
+    
+    # Calculate returns for each period
+    early_returns = []
+    mid_returns = []
+    late_returns = []
+    
+    for path in all_paths:
+        if early_months > 0:
+            early_ret = (path[early_months - 1] / starting_portfolio) - 1
+            early_returns.append(early_ret)
+        
+        if mid_months > 0 and mid_start < n_months:
+            mid_ret = (path[min(mid_start + mid_months - 1, n_months - 1)] / 
+                      path[mid_start]) - 1
+            mid_returns.append(mid_ret)
+        
+        if late_start < n_months:
+            late_ret = (path[-1] / path[late_start]) - 1
+            late_returns.append(late_ret)
+    
+    avg_early = np.mean(early_returns) if early_returns else 0
+    avg_mid = np.mean(mid_returns) if mid_returns else 0
+    avg_late = np.mean(late_returns) if late_returns else 0
+    
+    # Identify scenarios with early bear markets (bottom 10%)
+    early_bear_threshold = np.percentile(early_returns, 10)
+    early_bear_scenarios = [i for i, ret in enumerate(early_returns) 
+                           if ret <= early_bear_threshold]
+    
+    # Identify scenarios with late bear markets
+    late_bear_threshold = np.percentile(late_returns, 10) if late_returns else 0
+    late_bear_scenarios = [i for i, ret in enumerate(late_returns) 
+                          if ret <= late_bear_threshold]
+    
+    # Calculate final portfolio values for each group
+    early_bear_final = np.mean([all_paths[i, -1] for i in early_bear_scenarios])
+    late_bear_final = np.mean([all_paths[i, -1] for i in late_bear_scenarios]) if late_bear_scenarios else 0
+    overall_median = np.median(all_paths[:, -1])
+    
+    # Sequence risk score (0-10)
+    early_impact_pct = (overall_median - early_bear_final) / starting_portfolio
+    late_impact_pct = (overall_median - late_bear_final) / starting_portfolio if late_bear_final > 0 else 0
+    
+    # Higher score = early losses hurt much more than late losses
+    if late_impact_pct > 0:
+        impact_ratio = early_impact_pct / late_impact_pct
+    else:
+        impact_ratio = 5.0  # Default if no late impact
+    
+    sequence_score = min(10.0, impact_ratio * 2)  # Scale to 0-10
+    
+    # Description
+    if sequence_score > 7:
+        risk_level = "CRITICAL"
+        description = (
+            f"CRITICAL sequence risk: Early bear markets reduce final portfolio by "
+            f"{early_impact_pct * 100:.0f}% vs only {late_impact_pct * 100:.0f}% for late bear markets "
+            f"(impact ratio {impact_ratio:.1f}x). This plan is extremely vulnerable to early poor returns. "
+            f"URGENT: Build 3-5 year cash reserve to avoid forced stock sales during early downturns."
+        )
+    elif sequence_score > 4:
+        risk_level = "MODERATE"
+        description = (
+            f"Moderate sequence risk: Early bear markets reduce final portfolio by "
+            f"{early_impact_pct * 100:.0f}% vs {late_impact_pct * 100:.0f}% for late bear markets "
+            f"(impact ratio {impact_ratio:.1f}x). Consider building 2-3 year cash buffer "
+            f"to weather early market volatility without forced sales."
+        )
+    else:
+        risk_level = "LOW"
+        description = (
+            f"Low sequence risk: Impact of early vs late bear markets is similar "
+            f"({early_impact_pct * 100:.0f}% vs {late_impact_pct * 100:.0f}%, ratio {impact_ratio:.1f}x). "
+            f"Plan is reasonably resilient to market timing. Maintain diversified allocation "
+            f"and 1-2 year cash reserve for normal volatility management."
+        )
+    
+    return {
+        'early_period_return': avg_early,
+        'mid_period_return': avg_mid,
+        'late_period_return': avg_late,
+        'sequence_risk_score': sequence_score,
+        'risk_level': risk_level,
+        'description': description,
+        'early_bear_market_impact': early_impact_pct,
+        'late_bear_market_impact': late_impact_pct,
+        'impact_ratio': impact_ratio,
+        'early_bear_final_value': early_bear_final,
+        'late_bear_final_value': late_bear_final,
+        'overall_median_final': overall_median,
+    }
     print("="*70)
     
     # Additional demo: Failure Analysis

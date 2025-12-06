@@ -691,3 +691,131 @@ class NarrativeReportResponse(BaseModel):
     report: EnhancedNarrativeReportModel = Field(description="Complete narrative report")
     success: bool = Field(default=True, description="Request success status")
     message: Optional[str] = Field(default=None, description="Optional message")
+
+
+# ============================================================================
+# SPRINT 4: STOCHASTIC INFLATION & LONGEVITY MODELS
+# ============================================================================
+
+class InflationRegimeEnum(str, Enum):
+    """Inflation environment scenarios"""
+    NORMAL = "normal"
+    HIGH = "high"
+    DEFLATION = "deflation"
+    VOLATILE = "volatile"
+
+
+class GenderEnum(str, Enum):
+    """Gender for mortality calculations"""
+    MALE = "male"
+    FEMALE = "female"
+
+
+class HealthStatusEnum(str, Enum):
+    """Health status for longevity adjustments"""
+    POOR = "poor"
+    AVERAGE = "average"
+    GOOD = "good"
+    EXCELLENT = "excellent"
+
+
+class StochasticInflationInputs(BaseModel):
+    """Parameters for stochastic inflation modeling"""
+    use_stochastic: bool = Field(default=False, description="Use stochastic vs fixed inflation")
+    regime: InflationRegimeEnum = Field(default=InflationRegimeEnum.NORMAL, description="Inflation regime")
+    base_rate: float = Field(default=0.025, ge=-0.05, le=0.15, description="Long-run mean inflation")
+    volatility: float = Field(default=0.015, ge=0, le=0.10, description="Inflation volatility")
+    mean_reversion_speed: float = Field(default=0.3, ge=0, le=1, description="Mean reversion parameter")
+
+
+class LongevityInputs(BaseModel):
+    """Parameters for probabilistic longevity modeling"""
+    use_probabilistic: bool = Field(default=False, description="Use probabilistic vs fixed horizon")
+    gender: GenderEnum = Field(default=GenderEnum.MALE, description="Gender")
+    health_status: HealthStatusEnum = Field(default=HealthStatusEnum.AVERAGE, description="Health status")
+    smoker: bool = Field(default=False, description="Smoking status")
+    planning_percentile: int = Field(default=90, ge=50, le=99, description="Longevity percentile for planning")
+    
+    # Spouse information for joint life
+    has_spouse: bool = Field(default=False, description="Include spouse in longevity calc")
+    spouse_age: Optional[int] = Field(default=None, ge=18, le=100, description="Spouse age")
+    spouse_gender: Optional[GenderEnum] = Field(default=None, description="Spouse gender")
+    spouse_health: HealthStatusEnum = Field(default=HealthStatusEnum.AVERAGE, description="Spouse health")
+    spouse_smoker: bool = Field(default=False, description="Spouse smoking status")
+
+
+class SequenceRiskAnalysis(BaseModel):
+    """Analysis of sequence of returns risk"""
+    early_period_return: float = Field(description="Average return in first 5 years")
+    mid_period_return: float = Field(description="Average return in years 6-15")
+    late_period_return: float = Field(description="Average return in final years")
+    sequence_risk_score: float = Field(ge=0, le=10, description="Risk score 0-10 (10=highest risk)")
+    description: str = Field(description="Human-readable description of sequence risk")
+    early_bear_market_impact: float = Field(description="Portfolio impact of early bear market")
+    late_bear_market_impact: float = Field(description="Portfolio impact of late bear market")
+
+
+class InflationScenarioResult(BaseModel):
+    """Results from stochastic inflation scenario"""
+    scenario_id: int = Field(description="Scenario number")
+    final_inflation_rate: float = Field(description="Final inflation rate")
+    average_inflation: float = Field(description="Average inflation over period")
+    cumulative_inflation: float = Field(description="Total cumulative inflation factor")
+    percentile: Optional[int] = Field(default=None, description="Percentile if applicable")
+
+
+class LongevityResult(BaseModel):
+    """Results from probabilistic longevity modeling"""
+    life_expectancy: float = Field(description="Mean life expectancy")
+    median_age: float = Field(description="Median age at death")
+    p75_age: float = Field(description="75th percentile age")
+    p90_age: float = Field(description="90th percentile age")
+    p95_age: float = Field(description="95th percentile age")
+    planning_horizon_age: int = Field(description="Recommended planning horizon")
+    years_of_longevity_risk: float = Field(description="Years beyond life expectancy (90th)")
+    longevity_risk_premium: float = Field(description="Extra capital needed for tail risk")
+    
+    # Joint life if applicable
+    joint_life_expectancy: Optional[float] = Field(default=None, description="Joint life expectancy")
+    joint_planning_horizon: Optional[int] = Field(default=None, description="Joint planning horizon")
+
+
+class ExtendedModelInputs(ModelInputsModel):
+    """Extended model inputs with Sprint 4 features"""
+    # Stochastic inflation
+    stochastic_inflation: Optional[StochasticInflationInputs] = Field(
+        default=None,
+        description="Stochastic inflation parameters"
+    )
+    
+    # Probabilistic longevity
+    longevity_params: Optional[LongevityInputs] = Field(
+        default=None,
+        description="Longevity modeling parameters"
+    )
+    
+    # Correlation matrix (already in base but documenting)
+    corr_equity_fi: float = Field(default=0.20, ge=-1, le=1, description="Equity-FI correlation")
+    corr_equity_cash: float = Field(default=0.05, ge=-1, le=1, description="Equity-cash correlation")
+    corr_fi_cash: float = Field(default=0.10, ge=-1, le=1, description="FI-cash correlation")
+
+
+class ExtendedSimulationResult(BaseModel):
+    """Extended simulation results with Sprint 4 analytics"""
+    # Sequence risk analysis
+    sequence_risk: Optional[SequenceRiskAnalysis] = Field(
+        default=None,
+        description="Sequence of returns risk analysis"
+    )
+    
+    # Inflation scenarios
+    inflation_scenarios: Optional[List[InflationScenarioResult]] = Field(
+        default=None,
+        description="Stochastic inflation scenario results"
+    )
+    
+    # Longevity analysis
+    longevity_analysis: Optional[LongevityResult] = Field(
+        default=None,
+        description="Probabilistic longevity results"
+    )
