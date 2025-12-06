@@ -62,3 +62,7 @@ export type { AlertProps, AlertVariant, AlertSize } from './Alert';
 export { Tabs } from './Tabs';
 export type { TabsProps, Tab } from './Tabs';
 
+export { Breadcrumb, useBreadcrumbs } from './Breadcrumb';
+export type { BreadcrumbProps, BreadcrumbItem } from './Breadcrumb';
+
+

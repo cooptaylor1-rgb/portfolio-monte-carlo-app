@@ -1,6 +1,6 @@
 /**
  * Application header with logo, title, and quick actions
- * Redesigned with better visual hierarchy and CTAs
+ * Phase 3: Enhanced with responsive design and better mobile UX
  */
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -45,35 +45,50 @@ const AppHeader: React.FC = () => {
   };
 
   return (
-    <header className="bg-background-elevated border-b border-background-border shadow-lg sticky top-0 z-50">
-      <div className="flex items-center justify-between px-8 py-4 max-w-container mx-auto">
+    <header className="bg-background-elevated border-b border-background-border shadow-lg sticky top-0 z-dropdown backdrop-blur-sm">
+      <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4 max-w-container mx-auto">
         {/* Logo and Title */}
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-accent-gold to-accent-gold-dark rounded-lg flex items-center justify-center font-bold text-white shadow-md">
-            <span className="text-xl">S</span>
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-accent-gold to-accent-gold-dark rounded-lg flex items-center justify-center font-bold text-white shadow-md flex-shrink-0">
+            <span className="text-lg sm:text-xl">S</span>
           </div>
-          <div>
-            <h1 className="text-h3 font-display font-bold text-text-primary tracking-tight">
+          <div className="min-w-0">
+            <h1 className="text-base sm:text-h3 font-display font-bold text-text-primary tracking-tight truncate">
               Portfolio Scenario Analysis
             </h1>
-            <p className="text-small text-text-tertiary">
+            <p className="text-micro sm:text-small text-text-tertiary hidden sm:block">
               Salem Investment Counselors
             </p>
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          {/* Presentation Mode - Hidden on mobile */}
           {hasRunSimulation && (
             <button
               onClick={() => navigate('/presentation')}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-accent-gold text-text-primary font-semibold rounded-sm transition-all hover:bg-accent-gold-light shadow-md hover:shadow-lg"
+              className="hidden md:inline-flex items-center gap-2 px-4 lg:px-6 py-2 lg:py-3 bg-accent-gold text-text-primary font-semibold rounded-sm transition-all hover:bg-accent-gold-light shadow-md hover:shadow-lg"
               title="Enter Presentation Mode"
             >
-              <Presentation size={20} />
-              Presentation Mode
+              <Presentation size={18} />
+              <span className="hidden lg:inline">Presentation Mode</span>
+              <span className="lg:hidden">Present</span>
             </button>
           )}
+          
+          {/* Run Simulation - Always visible */}
+          <Button
+            variant="primary"
+            size="sm"
+            icon={<Play size={16} />}
+            onClick={handleRunSimulation}
+            loading={isLoading}
+            disabled={isLoading}
+            className="sm:hidden"
+          >
+            Run
+          </Button>
           
           <Button
             variant="primary"
@@ -82,26 +97,32 @@ const AppHeader: React.FC = () => {
             onClick={handleRunSimulation}
             loading={isLoading}
             disabled={isLoading}
+            className="hidden sm:inline-flex"
           >
             Run Simulation
           </Button>
           
+          {/* Export & Save - Show only when simulation complete */}
           {hasRunSimulation && (
             <>
+              {/* Export - Hidden on small mobile */}
               <Button
                 variant="secondary"
-                size="md"
-                icon={<FileDown size={18} />}
+                size="sm"
+                icon={<FileDown size={16} />}
                 onClick={handleExport}
+                className="hidden sm:inline-flex"
               >
-                Export
+                <span className="hidden lg:inline">Export</span>
               </Button>
               
+              {/* Save - Hidden on mobile */}
               <Button
                 variant="tertiary"
-                size="md"
-                icon={<Save size={18} />}
+                size="sm"
+                icon={<Save size={16} />}
                 onClick={() => console.log('Save functionality')}
+                className="hidden lg:inline-flex"
               >
                 Save
               </Button>
