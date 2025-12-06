@@ -6,8 +6,9 @@
 import React, { useState, useMemo } from 'react';
 import { useSimulationStore } from '../store/simulationStore';
 import { useNavigate } from 'react-router-dom';
-import { SectionHeader, Button, Card, EmptyState, Badge } from '../components/ui';
-import { FileText, Download, FileSpreadsheet, FileImage, AlertCircle } from 'lucide-react';
+import { SectionHeader, Button, Card, EmptyState, Badge, ExportCard, ExportProgress, ChartContainer } from '../components/ui';
+import type { ExportFormat } from '../components/ui';
+import { FileText, Download, FileSpreadsheet, Presentation, Eye, AlertCircle } from 'lucide-react';
 import apiClient from '../lib/api';
 import {
   Line,
@@ -51,6 +52,110 @@ const ReportsPage: React.FC = () => {
   const navigate = useNavigate();
   const { simulationResults, clientInfo, modelInputs, hasRunSimulation } = useSimulationStore();
   const [exportingFormat, setExportingFormat] = useState<string | null>(null);
+  const [exportStatus, setExportStatus] = useState<'preparing' | 'generating' | 'complete' | 'error'>('preparing');
+  const [exportMessage, setExportMessage] = useState<string>('');
+  const [showExportProgress, setShowExportProgress] = useState(false);
+
+  /**
+   * Export format configurations
+   */
+  const exportFormats: ExportFormat[] = [
+    {
+      id: 'pdf',
+      name: 'PDF Report',
+      description: 'Professional PDF report with charts, analysis, and branding. Perfect for client presentations.',
+      icon: FileText,
+      fileType: 'PDF',
+      includes: [
+        'Executive summary with key metrics',
+        'Portfolio trajectory fan chart',
+        'Success probability analysis',
+        'Distribution histograms',
+        'Input assumptions table',
+        'Professional Salem branding',
+      ],
+      recommended: true,
+      size: '2-5 MB',
+    },
+    {
+      id: 'powerpoint',
+      name: 'PowerPoint Deck',
+      description: 'Editable presentation slides with charts and data. Ideal for customized client meetings.',
+      icon: Presentation,
+      fileType: 'PPTX',
+      includes: [
+        'Title slide with client info',
+        'Key findings summary',
+        'Embedded chart images',
+        'Data tables and metrics',
+        'Fully editable slides',
+        'Salem template styling',
+      ],
+      size: '3-6 MB',
+    },
+    {
+      id: 'excel',
+      name: 'Excel Spreadsheet',
+      description: 'Comprehensive data export with raw numbers. Best for detailed analysis and modeling.',
+      icon: FileSpreadsheet,
+      fileType: 'CSV',
+      includes: [
+        'Summary metrics table',
+        'Percentile projections (annual)',
+        'Distribution data',
+        'Input parameters',
+        'Easy to import into Excel',
+        'Machine-readable format',
+      ],
+      size: '< 1 MB',
+    },
+  ];
+
+  /**
+   * Handle export with progress tracking
+   */
+  const handleExport = async (formatId: string) => {
+    setExportingFormat(formatId);
+    setShowExportProgress(true);
+    setExportStatus('preparing');
+    setExportMessage('Preparing your export...');
+
+    try {
+      // Simulate preparation delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setExportStatus('generating');
+      setExportMessage('Generating file...');
+
+      // Call appropriate export function
+      if (formatId === 'pdf') {
+        await exportToPDF();
+      } else if (formatId === 'powerpoint') {
+        await exportToPowerPoint();
+      } else if (formatId === 'excel') {
+        await exportToExcel();
+      }
+
+      setExportStatus('complete');
+      setExportMessage('Export completed successfully!');
+      
+      // Auto-hide after 3 seconds
+      setTimeout(() => {
+        setShowExportProgress(false);
+        setExportingFormat(null);
+      }, 3000);
+    } catch (error) {
+      console.error('Export error:', error);
+      setExportStatus('error');
+      setExportMessage('Export failed. Please try again.');
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        setShowExportProgress(false);
+        setExportingFormat(null);
+      }, 5000);
+    }
+  };
 
   /**
    * Validate and prepare chart data with comprehensive error handling
@@ -423,46 +528,35 @@ const ReportsPage: React.FC = () => {
 
   return (
     <div className="space-y-xl pb-24">
-      {/* Header with Export Buttons */}
+      {/* Header */}
       <SectionHeader
         title="Portfolio Analysis Report"
         description="Comprehensive Monte Carlo analysis with exportable charts and data"
         icon={<FileText size={28} />}
-        actions={
-          <div className="flex gap-3">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={exportToExcel}
-              icon={<FileSpreadsheet size={16} />}
-              disabled={exportingFormat !== null}
-              loading={exportingFormat === 'excel'}
-            >
-              Export Excel
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={exportToPowerPoint}
-              icon={<FileImage size={16} />}
-              disabled={exportingFormat !== null}
-              loading={exportingFormat === 'powerpoint'}
-            >
-              Export PowerPoint
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={exportToPDF}
-              icon={<Download size={16} />}
-              disabled={exportingFormat !== null}
-              loading={exportingFormat === 'pdf'}
-            >
-              Export PDF
-            </Button>
-          </div>
-        }
       />
+
+      {/* Export Formats Section */}
+      <Card padding="lg">
+        <div className="mb-6">
+          <h3 className="text-h3 font-display text-text-primary mb-2">
+            Export Your Report
+          </h3>
+          <p className="text-body text-text-tertiary">
+            Choose your preferred format to download this analysis. All exports include your latest simulation results.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {exportFormats.map((format) => (
+            <ExportCard
+              key={format.id}
+              format={format}
+              onExport={handleExport}
+              isExporting={exportingFormat === format.id}
+            />
+          ))}
+        </div>
+      </Card>
 
       {/* Executive Summary Cards */}
       <Card padding="lg">
@@ -856,6 +950,16 @@ const ReportsPage: React.FC = () => {
           </p>
         </div>
       </Card>
+
+      {/* Export Progress Notification */}
+      {showExportProgress && (
+        <ExportProgress
+          format={exportFormats.find(f => f.id === exportingFormat)?.name || 'Report'}
+          status={exportStatus}
+          message={exportMessage}
+          onClose={() => setShowExportProgress(false)}
+        />
+      )}
     </div>
   );
 };

@@ -137,6 +137,7 @@ export default {
         'slide-in-right': 'slideInRight 250ms ease-out',
         'slide-up': 'slideUp 250ms ease-out',
         'scale-in': 'scaleIn 150ms ease-out',
+        'progress-indeterminate': 'progressIndeterminate 1.5s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -162,6 +163,11 @@ export default {
         scaleIn: {
           '0%': { transform: 'scale(0.95)', opacity: '0' },
           '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        progressIndeterminate: {
+          '0%': { transform: 'translateX(-100%)' },
+          '50%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(-100%)' },
         },
       },
     },
