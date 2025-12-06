@@ -17,6 +17,16 @@
   @page {
     size: letter;
     margin: 0.75in 0.75in 1in 0.75in;
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 9pt;
+      color: #6b7280;
+    }
+  }
+
+  /* Page counters */
+  body {
+    counter-reset: page;
   }
 
   body {
@@ -40,17 +50,43 @@
   }
 
   /* Page breaks */
-  .print\\:break-before-page {
+  .print\\:break-before-page,
+  .page-break-before {
     page-break-before: always;
   }
 
   .print\\:break-inside-avoid,
-  .report-section {
+  .report-section,
+  .avoid-break {
     page-break-inside: avoid;
   }
 
-  .print\\:break-after-page {
+  .print\\:break-after-page,
+  .page-break-after {
     page-break-after: always;
+  }
+
+  /* Salem report specific sections */
+  .salem-section {
+    page-break-inside: avoid;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .salem-section h2 {
+    page-break-after: avoid;
+    border-bottom: 2px solid #0F3B63;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Keep headers with content */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  h1 + *, h2 + *, h3 + * {
+    page-break-before: avoid;
   }
 
   /* Table handling - prevent breaks in headers */
@@ -228,6 +264,79 @@
 
   .h-80 {
     height: 4in !important;
+  }
+
+  /* Salem report header */
+  .report-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 3px solid #0F3B63;
+    page-break-after: avoid;
+  }
+
+  /* Salem footer with page info */
+  .salem-footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 2px solid #C4A76A;
+    font-size: 8pt;
+    color: #6b7280;
+    page-break-before: avoid;
+  }
+
+  /* Summary cards - optimize for print */
+  .summary-card,
+  .metric-card {
+    border: 1px solid #d1d5db;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    page-break-inside: avoid;
+    background-color: #f9fafb !important;
+  }
+
+  /* Chart sizing for better print layout */
+  .recharts-wrapper {
+    max-height: 4.5in !important;
+    page-break-inside: avoid;
+  }
+
+  /* Stress test and comparison sections */
+  .stress-test-result,
+  .comparison-card {
+    border: 1px solid #d1d5db;
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    page-break-inside: avoid;
+  }
+
+  /* Narrative sections with left border */
+  .narrative-section {
+    border-left: 3px solid #C4A76A;
+    padding-left: 1rem;
+    margin: 1rem 0;
+    page-break-inside: avoid;
+  }
+
+  /* Assumptions and appendix - allow breaks */
+  .assumptions-section,
+  .appendix-section {
+    page-break-inside: auto;
+  }
+
+  .assumptions-section > div,
+  .appendix-section > div {
+    page-break-inside: avoid;
+  }
+
+  /* Disclaimer text */
+  .disclaimer {
+    font-size: 8pt;
+    line-height: 1.3;
+    color: #6b7280;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    margin-top: 1rem;
+    page-break-before: avoid;
   }
 }
 

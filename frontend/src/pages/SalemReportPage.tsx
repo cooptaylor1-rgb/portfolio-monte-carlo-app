@@ -86,7 +86,7 @@ export const SalemReportPage: React.FC = () => {
 
   // Main report view
   return (
-    <div className="salem-report">
+    <div className="salem-report report-container">
       {/* Print button (hidden when printing) */}
       <div className="no-print fixed top-5 right-5 z-50">
         <button
@@ -103,33 +103,41 @@ export const SalemReportPage: React.FC = () => {
       <NarrativeSection narrative={reportData.narrative} />
       
       {/* Monte Carlo Results with New Charts */}
-      <MonteCarloChart data={reportData.monte_carlo} />
+      <div className="page-break-before">
+        <MonteCarloChart data={reportData.monte_carlo} />
+      </div>
       
       {/* Success Probability Over Time */}
       {reportData.monte_carlo.success_probability_over_time && (
-        <SuccessProbabilityChart data={reportData.monte_carlo.success_probability_over_time} />
+        <div className="avoid-break">
+          <SuccessProbabilityChart data={reportData.monte_carlo.success_probability_over_time} />
+        </div>
       )}
       
       {/* Terminal Wealth Distribution */}
       {reportData.monte_carlo.terminal_wealth_distribution && (
-        <TerminalWealthHistogram data={reportData.monte_carlo.terminal_wealth_distribution} />
+        <div className="avoid-break page-break-before">
+          <TerminalWealthHistogram data={reportData.monte_carlo.terminal_wealth_distribution} />
+        </div>
       )}
       
       {/* Stress Tests with Comparison Chart */}
-      <section className="salem-section">
+      <section className="salem-section page-break-before">
         <h2>Stress Test Analysis</h2>
         <p className="mb-lg text-text-tertiary">
           Testing plan resilience under adverse market conditions
         </p>
         {reportData.stress_tests.length > 0 && (
-          <StressTestChart scenarios={reportData.stress_tests} />
+          <div className="avoid-break">
+            <StressTestChart scenarios={reportData.stress_tests} />
+          </div>
         )}
         <StressTestsSection stressTests={reportData.stress_tests} />
       </section>
       
       {/* Cash Flow Details */}
       {reportData.cash_flow_projection && reportData.cash_flow_projection.length > 0 && (
-        <section className="salem-section">
+        <section className="salem-section page-break-before">
           <h2>Financial Projections</h2>
           <CashFlowTable data={reportData.cash_flow_projection} />
         </section>
@@ -137,10 +145,14 @@ export const SalemReportPage: React.FC = () => {
       
       {/* Income Timeline */}
       {reportData.income_timeline && reportData.income_timeline.length > 0 && (
-        <IncomeTimelineChart data={reportData.income_timeline} />
+        <div className="avoid-break">
+          <IncomeTimelineChart data={reportData.income_timeline} />
+        </div>
       )}
       
-      <AssumptionsSection assumptions={reportData.assumptions} />
+      <div className="page-break-before">
+        <AssumptionsSection assumptions={reportData.assumptions} />
+      </div>
       <AppendixSection items={reportData.appendix} />
       <SalemFooter />
     </div>
