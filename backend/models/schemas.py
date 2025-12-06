@@ -54,7 +54,7 @@ class ModelInputsModel(BaseModel):
     cash_vol_annual: float = Field(default=0.01, ge=0, le=0.10, description="Cash volatility")
     
     # Monte Carlo settings
-    n_scenarios: int = Field(default=200, ge=50, le=10000, description="Number of simulation scenarios")
+    n_scenarios: int = Field(default=100, ge=50, le=10000, description="Number of simulation scenarios")
     
     # One-time cash flows
     one_time_cf: float = Field(default=0.0, description="One-time cash flow amount")
@@ -543,7 +543,7 @@ class GoalAnalysisRequest(BaseModel):
     fi_volatility: Optional[float] = Field(default=0.06, description="FI volatility")
     cash_volatility: Optional[float] = Field(default=0.01, description="Cash volatility")
     
-    n_scenarios: int = Field(default=1000, ge=100, le=10000, description="Number of Monte Carlo scenarios")
+    n_scenarios: int = Field(default=100, ge=50, le=10000, description="Number of Monte Carlo scenarios")
 
 
 class GoalAnalysisResponse(BaseModel):
@@ -938,7 +938,7 @@ class AnnuityComparisonRequest(BaseModel):
     smoker: bool = Field(default=False)
     
     # Analysis parameters
-    n_scenarios: int = Field(default=1000, ge=100, le=10000)
+    n_scenarios: int = Field(default=100, ge=50, le=10000)
 
 
 class AnnuityComparisonResult(BaseModel):

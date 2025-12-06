@@ -89,7 +89,7 @@ class PortfolioInputs:
     corr_fi_cash: float = 0.10
     
     # Simulation settings
-    n_scenarios: int = 1000
+    n_scenarios: int = 100
     random_seed: Optional[int] = None
     
     # Spending strategy
@@ -566,62 +566,66 @@ def run_monte_carlo_simulation(
     # Track current spending for guardrails
     current_spending_multiplier = np.ones(n_scenarios)
     
+    # Precompute age-based income and healthcare arrays for efficiency
+    age_array = inputs.current_age + np.arange(1, n_months + 1) / 12.0
+    age_int_array = np.floor(age_array).astype(int)
+    
+    # Precompute monthly income for each month
+    monthly_income_array = np.zeros(n_months)
+    
+    # Social Security
+    ss_mask = age_int_array >= inputs.ss_start_age
+    monthly_income_array[ss_mask] += inputs.social_security_annual / 12.0
+    
+    # Pension with COLA
+    if inputs.pension_annual > 0:
+        pension_mask = age_int_array >= inputs.pension_start_age
+        years_since_pension = np.maximum(0, age_array - inputs.pension_start_age)
+        pension_with_cola = inputs.pension_annual * (1 + inputs.pension_cola) ** years_since_pension
+        monthly_income_array[pension_mask] += (pension_with_cola / 12.0)[pension_mask]
+    
+    # Salary/wages
+    monthly_income_array += inputs.monthly_income
+    
+    # Precompute healthcare costs
+    healthcare_array = np.zeros(n_months)
+    if inputs.healthcare_annual > 0:
+        healthcare_mask = age_int_array >= inputs.healthcare_start_age
+        years_since_healthcare = age_array - inputs.healthcare_start_age
+        healthcare_cost = inputs.healthcare_annual * (1 + inputs.healthcare_inflation_real) ** np.maximum(0, years_since_healthcare)
+        healthcare_array[healthcare_mask] = (healthcare_cost / 12.0)[healthcare_mask]
+    
     # ====================
-    # MAIN SIMULATION LOOP
+    # MAIN SIMULATION LOOP (VECTORIZED)
     # ====================
     for month in range(1, n_months + 1):
-        # Current age (in years, as float)
-        age_years = inputs.current_age + (month / 12.0)
-        age_int = int(np.floor(age_years))
+        age_int = age_int_array[month - 1]
         
         # ------------------
-        # 1. APPLY RETURNS
+        # 1. APPLY RETURNS (vectorized across all scenarios)
         # ------------------
-        # Multiplicative returns: V(t) = V(t-1) * R(t)
         paths[:, month] = paths[:, month - 1] * returns[:, month - 1]
         
         # ------------------
-        # 2. SUBTRACT FEES
+        # 2. SUBTRACT FEES (vectorized)
         # ------------------
-        # Fees are applied monthly as a percentage of AUM
-        fees = paths[:, month] * monthly_fee_rate
-        paths[:, month] -= fees
+        paths[:, month] -= paths[:, month] * monthly_fee_rate
         
         # ------------------
-        # 3. ADD INCOME
+        # 3. ADD INCOME (precomputed)
         # ------------------
-        monthly_income = 0.0
-        
-        # Social Security (starts at specified age)
-        if age_int >= inputs.ss_start_age:
-            monthly_income += inputs.social_security_annual / 12.0
-        
-        # Pension (with optional COLA)
-        if age_int >= inputs.pension_start_age:
-            years_since_pension_start = max(0, age_years - inputs.pension_start_age)
-            pension_with_cola = inputs.pension_annual * (1 + inputs.pension_cola) ** years_since_pension_start
-            monthly_income += pension_with_cola / 12.0
-        
-        # Salary/wages (pre-retirement income)
-        if inputs.monthly_income > 0:
-            monthly_income += inputs.monthly_income
-        
-        paths[:, month] += monthly_income
+        paths[:, month] += monthly_income_array[month - 1]
         
         # ------------------
         # 4. SUBTRACT SPENDING
         # ------------------
-        # Calculate spending based on strategy
         if inputs.spending_rule == SpendingRule.FIXED_REAL:
-            # Fixed real spending, adjusted for lifestyle phases
             spending = baseline_monthly_spending * current_spending_multiplier
             
         elif inputs.spending_rule == SpendingRule.PERCENT_OF_PORTFOLIO:
-            # Dynamic spending as % of portfolio
             spending = paths[:, month] * (inputs.spending_pct_annual / 12.0)
             
         else:  # HYBRID_FLOOR_CEILING
-            # % of portfolio with floor and ceiling
             spending = paths[:, month] * (inputs.spending_pct_annual / 12.0)
             spending = np.clip(
                 spending,
@@ -636,11 +640,8 @@ def run_monte_carlo_simulation(
             elif age_int >= inputs.slow_go_age:
                 spending *= inputs.slow_go_spending_pct
         
-        # Healthcare costs (grows faster than general inflation)
-        if age_int >= inputs.healthcare_start_age:
-            years_since_healthcare = age_years - inputs.healthcare_start_age
-            healthcare_cost = inputs.healthcare_annual * (1 + inputs.healthcare_inflation_real) ** years_since_healthcare
-            spending += healthcare_cost / 12.0
+        # Add healthcare costs (precomputed)
+        spending += healthcare_array[month - 1]
         
         paths[:, month] -= spending
         
