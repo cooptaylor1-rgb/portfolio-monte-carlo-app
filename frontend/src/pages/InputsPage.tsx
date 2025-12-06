@@ -52,6 +52,23 @@ const InputsPage: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<string>('');
 
+  // Initialize missing optional fields on mount
+  React.useEffect(() => {
+    const updates: any = {};
+    if (modelInputs.equity_dist_rate === undefined) updates.equity_dist_rate = 0;
+    if (modelInputs.fi_dist_rate === undefined) updates.fi_dist_rate = 0;
+    if (modelInputs.corr_equity_fi === undefined) updates.corr_equity_fi = 0;
+    if (modelInputs.num_sims === undefined) updates.num_sims = 200;
+    if (modelInputs.spending_inflation_adjusted === undefined) updates.spending_inflation_adjusted = true;
+    if (modelInputs.one_time_contribution === undefined) updates.one_time_contribution = 0;
+    if (modelInputs.contribution_year === undefined) updates.contribution_year = 0;
+    if (modelInputs.inflation_annual === 0.03) updates.inflation_annual = 0; // Update old default
+    
+    if (Object.keys(updates).length > 0) {
+      setModelInputs(updates);
+    }
+  }, []);
+
   const handleValidate = async () => {
     try {
       setIsLoading(true);
@@ -495,19 +512,59 @@ const InputsPage: React.FC = () => {
 
           <div className="md:col-span-2 h-px bg-background-border my-2"></div>
 
+          {/* Spending Method Toggle */}
+          <div className="md:col-span-2">
+            <FormField label="Spending Method" help="Choose how to calculate monthly withdrawals">
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="spending_rule"
+                    checked={modelInputs.spending_rule === 1}
+                    onChange={() => setModelInputs({ spending_rule: 1 })}
+                    className="w-4 h-4 text-accent-gold"
+                  />
+                  <span className="text-text-primary">Fixed Dollar Amount</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="spending_rule"
+                    checked={modelInputs.spending_rule === 2}
+                    onChange={() => setModelInputs({ spending_rule: 2 })}
+                    className="w-4 h-4 text-accent-gold"
+                  />
+                  <span className="text-text-primary">Percentage of Portfolio</span>
+                </label>
+              </div>
+            </FormField>
+          </div>
+
+          {modelInputs.spending_rule === 1 ? (
+            <DollarInput
+              label="Monthly Spending"
+              value={modelInputs.monthly_spending}
+              onChange={(value) => setModelInputs({ monthly_spending: value })}
+              required
+              help="Fixed monthly withdrawal amount"
+            />
+          ) : (
+            <PercentInput
+              label="Annual Withdrawal Rate"
+              value={modelInputs.spending_pct_annual}
+              onChange={(value) => setModelInputs({ spending_pct_annual: value })}
+              required
+              help="Percentage of portfolio to withdraw annually (e.g., 4% rule)"
+            />
+          )}
+
           <DollarInput
             label="Monthly Income"
             value={modelInputs.monthly_income || 0}
             onChange={(value) => setModelInputs({ monthly_income: value })}
             help="Regular monthly income (salary, pension, etc.)"
           />
-          <DollarInput
-            label="Monthly Spending"
-            value={modelInputs.monthly_spending}
-            onChange={(value) => setModelInputs({ monthly_spending: value })}
-            required
-            help="Regular monthly withdrawal amount"
-          />
+          
           <Checkbox
             label="Adjust Spending for Inflation"
             checked={modelInputs.spending_inflation_adjusted}

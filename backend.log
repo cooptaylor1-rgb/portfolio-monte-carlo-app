@@ -1,0 +1,58 @@
+INFO:     Will watch for changes in these directories: ['/workspaces/portfolio-monte-carlo-app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [3863] using StatReload
+INFO:     Started server process [3871]
+INFO:     Waiting for application startup.
+2025-12-06 13:44:13,304 - main - INFO - Starting Salem Investment Counselors - Portfolio Analysis API v2.0.0
+INFO:     Application startup complete.
+2025-12-06 13:44:16,878 - main - INFO - GET /api/health - Status: 200 - Duration: 0.006s
+INFO:     127.0.0.1:52970 - "GET /api/health HTTP/1.1" 200 OK
+2025-12-06 14:03:54,382 - main - INFO - GET /api/health - Status: 200 - Duration: 0.000s
+INFO:     127.0.0.1:37330 - "GET /api/health HTTP/1.1" 200 OK
+2025-12-06 14:13:00,276 - api.simulation - INFO - === SIMULATION REQUEST RECEIVED ===
+2025-12-06 14:13:00,276 - api.simulation - INFO - Client: 
+2025-12-06 14:13:00,278 - api.simulation - INFO - Request data: {'client_info': {'client_name': '', 'report_date': datetime.date(2025, 12, 3), 'advisor_name': '', 'client_id': '', 'client_notes': ''}, 'inputs': {'starting_portfolio': 5000000.0, 'years_to_model': 30, 'current_age': 48, 'horizon_age': 78, 'monthly_income': 0.0, 'monthly_spending': 20000.0, 'inflation_annual': 0.0, 'spending_rule': <SpendingRule.PERCENT_OF_PORTFOLIO: 2>, 'spending_pct_annual': 0.04, 'equity_pct': 0.7, 'fi_pct': 0.25, 'cash_pct': 0.05, 'equity_return_annual': 0.1, 'fi_return_annual': 0.03, 'cash_return_annual': 0.02, 'equity_vol_annual': 0.15, 'fi_vol_annual': 0.05, 'cash_vol_annual': 0.01, 'n_scenarios': 200, 'one_time_cf': 0.0, 'one_time_cf_month': 0, 'taxable_pct': 0.33, 'ira_pct': 0.5, 'roth_pct': 0.17, 'tax_rate': 0.25, 'rmd_age': 73, 'social_security_monthly': 0.0, 'ss_start_age': 67, 'pension_monthly': 0.0, 'pension_start_age': 65, 'monthly_healthcare': 0.0, 'healthcare_start_age': 65, 'healthcare_inflation': 0.05, 'roth_conversion_annual': 0.0, 'estate_tax_exemption': 13610000.0, 'legacy_goal': 0.0, 'use_actuarial_tables': False, 'health_adjustment': 0, 'use_glide_path': False, 'target_equity_at_end': 0.4, 'use_lifestyle_phases': False, 'slow_go_age': 75, 'no_go_age': 85, 'slow_go_spending_pct': 0.8, 'no_go_spending_pct': 0.6, 'use_guardrails': False, 'upper_guardrail': 0.2, 'lower_guardrail': 0.15}, 'financial_goals': [], 'stress_scenarios': [], 'seed': None}
+2025-12-06 14:13:00,279 - core.simulation_adapter - INFO - Using NEW Monte Carlo engine (with adapter)
+2025-12-06 14:13:00,279 - core.monte_carlo_engine - INFO - ✓ Validated inputs: 5,000,000 portfolio, 30 years, age 48
+2025-12-06 14:13:00,280 - core.monte_carlo_engine - INFO - Starting Monte Carlo simulation: 200 scenarios, 30 years
+2025-12-06 14:13:00,390 - core.monte_carlo_engine - INFO - Portfolio: μ=7.85%, σ=10.82% (real, annual)
+2025-12-06 14:13:00,407 - core.monte_carlo_engine - INFO - Simulation complete, calculating metrics...
+2025-12-06 14:13:00,505 - core.monte_carlo_engine - INFO - ✓ Success probability: 100.0%
+2025-12-06 14:13:00,505 - core.monte_carlo_engine - INFO - ✓ Median ending: $6,150,414
+2025-12-06 14:13:00,506 - core.monte_carlo_engine - INFO - ✓ P10 ending: $3,042,378
+2025-12-06 14:13:00,608 - api.simulation - INFO - New engine metrics included: 31 years
+2025-12-06 14:13:00,613 - api.simulation - INFO - Simulation completed - Success probability: 100.00%
+2025-12-06 14:13:00,618 - main - INFO - POST /api/simulation/run - Status: 200 - Duration: 0.343s
+INFO:     136.47.233.31:0 - "POST /api/simulation/run HTTP/1.1" 200 OK
+2025-12-06 14:13:07,717 - main - INFO - POST /api/simulation/sensitivity - Status: 422 - Duration: 0.001s
+INFO:     136.47.233.31:0 - "POST /api/simulation/sensitivity HTTP/1.1" 422 Unprocessable Entity
+2025-12-06 14:13:07,727 - main - INFO - POST /api/simulation/sensitivity - Status: 422 - Duration: 0.001s
+INFO:     136.47.233.31:0 - "POST /api/simulation/sensitivity HTTP/1.1" 422 Unprocessable Entity
+2025-12-06 14:13:07,727 - main - INFO - POST /api/simulation/sensitivity - Status: 422 - Duration: 0.002s
+INFO:     136.47.233.31:0 - "POST /api/simulation/sensitivity HTTP/1.1" 422 Unprocessable Entity
+2025-12-06 14:13:07,734 - main - INFO - POST /api/simulation/sensitivity - Status: 422 - Duration: 0.001s
+INFO:     136.47.233.31:0 - "POST /api/simulation/sensitivity HTTP/1.1" 422 Unprocessable Entity
+2025-12-06 14:13:09,364 - main - INFO - POST /api/simulation/sensitivity - Status: 422 - Duration: 0.002s
+INFO:     136.47.233.31:0 - "POST /api/simulation/sensitivity HTTP/1.1" 422 Unprocessable Entity
+2025-12-06 14:13:09,365 - main - INFO - POST /api/simulation/sensitivity - Status: 422 - Duration: 0.003s
+INFO:     136.47.233.31:0 - "POST /api/simulation/sensitivity HTTP/1.1" 422 Unprocessable Entity
+2025-12-06 14:13:09,372 - main - INFO - POST /api/simulation/sensitivity - Status: 422 - Duration: 0.001s
+INFO:     136.47.233.31:0 - "POST /api/simulation/sensitivity HTTP/1.1" 422 Unprocessable Entity
+2025-12-06 14:13:09,379 - main - INFO - POST /api/simulation/sensitivity - Status: 422 - Duration: 0.001s
+INFO:     136.47.233.31:0 - "POST /api/simulation/sensitivity HTTP/1.1" 422 Unprocessable Entity
+2025-12-06 14:13:14,798 - main - INFO - POST /api/simulation/sensitivity - Status: 422 - Duration: 0.002s
+INFO:     136.47.233.31:0 - "POST /api/simulation/sensitivity HTTP/1.1" 422 Unprocessable Entity
+2025-12-06 14:13:14,812 - main - INFO - POST /api/simulation/sensitivity - Status: 422 - Duration: 0.001s
+INFO:     136.47.233.31:0 - "POST /api/simulation/sensitivity HTTP/1.1" 422 Unprocessable Entity
+2025-12-06 14:13:14,824 - main - INFO - POST /api/simulation/sensitivity - Status: 422 - Duration: 0.001s
+INFO:     136.47.233.31:0 - "POST /api/simulation/sensitivity HTTP/1.1" 422 Unprocessable Entity
+2025-12-06 14:13:14,829 - main - INFO - POST /api/simulation/sensitivity - Status: 422 - Duration: 0.001s
+INFO:     136.47.233.31:0 - "POST /api/simulation/sensitivity HTTP/1.1" 422 Unprocessable Entity
+2025-12-06 14:13:15,647 - main - INFO - POST /api/simulation/sensitivity - Status: 422 - Duration: 0.002s
+INFO:     136.47.233.31:0 - "POST /api/simulation/sensitivity HTTP/1.1" 422 Unprocessable Entity
+2025-12-06 14:13:15,652 - main - INFO - POST /api/simulation/sensitivity - Status: 422 - Duration: 0.001s
+INFO:     136.47.233.31:0 - "POST /api/simulation/sensitivity HTTP/1.1" 422 Unprocessable Entity
+2025-12-06 14:13:15,675 - main - INFO - POST /api/simulation/sensitivity - Status: 422 - Duration: 0.001s
+INFO:     136.47.233.31:0 - "POST /api/simulation/sensitivity HTTP/1.1" 422 Unprocessable Entity
+2025-12-06 14:13:15,679 - main - INFO - POST /api/simulation/sensitivity - Status: 422 - Duration: 0.001s
+INFO:     136.47.233.31:0 - "POST /api/simulation/sensitivity HTTP/1.1" 422 Unprocessable Entity

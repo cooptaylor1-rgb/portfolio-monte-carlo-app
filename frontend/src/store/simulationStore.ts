@@ -55,7 +55,7 @@ const defaultModelInputs: ModelInputs = {
   horizon_age: 78,
   monthly_income: 0,
   monthly_spending: -20000,
-  inflation_annual: 0.03,
+  inflation_annual: 0.00,
   equity_pct: 0.70,
   fi_pct: 0.25,
   cash_pct: 0.05,
@@ -109,8 +109,16 @@ const defaultModelInputs: ModelInputs = {
   no_go_spending_multiplier: 0.60,
   use_guardrails: false,
   upper_guardrail: 0.20,
-  lower_guardrail: 0.15,
-  guardrail_adjustment: 0.10,
+  lower_guardrail: 0.20,
+  guardrail_adjustment: 0.05,
+  // UI-only fields
+  equity_dist_rate: 0,
+  fi_dist_rate: 0,
+  corr_equity_fi: 0,
+  num_sims: 200,
+  spending_inflation_adjusted: true,
+  one_time_contribution: 0,
+  contribution_year: 0,
 };
 
 export const useSimulationStore = create<SimulationStore>()(

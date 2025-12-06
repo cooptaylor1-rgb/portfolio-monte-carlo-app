@@ -131,6 +131,13 @@ const ScenariosPage: React.FC = () => {
   };
 
   const runSensitivityAnalysis = async () => {
+    // Check if we have base inputs
+    if (!modelInputs.starting_portfolio || modelInputs.starting_portfolio === 0) {
+      alert('Please configure your inputs and run a base simulation first.');
+      navigate('/inputs');
+      return;
+    }
+
     setIsSensitivityRunning(true);
     setSensitivityData([]);
     
@@ -198,8 +205,14 @@ const ScenariosPage: React.FC = () => {
       // Flatten all results
       const combinedResults = allResults.flat();
       setSensitivityData(combinedResults);
-    } catch (error) {
+      
+      if (combinedResults.length === 0) {
+        alert('No sensitivity results were generated. Please check your inputs and try again.');
+      }
+    } catch (error: any) {
       console.error('Failed to run sensitivity analysis:', error);
+      const errorMsg = error.response?.data?.detail || error.message || 'Failed to run sensitivity analysis';
+      alert(`Error: ${errorMsg}`);
     } finally {
       setIsSensitivityRunning(false);
     }

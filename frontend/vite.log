@@ -1,0 +1,20 @@
+nohup: ignoring input
+
+> salem-portfolio-analysis@2.0.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 194 ms
+
+  ➜  Local:   http://localhost:3000/
+  ➜  Network: use --host to expose
+2:07:09 PM [vite] hmr update /src/index.css, /src/pages/InputsPage.tsx, /src/pages/ScenariosPage.tsx, /src/pages/Dashboard.tsx, /src/pages/ReportsPage.tsx, /src/presentation/PresentationMode.tsx, /src/components/layout/AppHeader.tsx, /src/components/layout/Sidebar.tsx, /src/components/monte-carlo/visualizations/MonteCarloAnalytics.tsx
+2:08:04 PM [vite] hmr update /src/index.css, /src/pages/InputsPage.tsx, /src/pages/ScenariosPage.tsx, /src/pages/Dashboard.tsx, /src/pages/ReportsPage.tsx, /src/presentation/PresentationMode.tsx, /src/components/layout/AppHeader.tsx, /src/components/layout/Sidebar.tsx, /src/components/monte-carlo/visualizations/MonteCarloAnalytics.tsx
+2:09:44 PM [vite] hmr update /src/pages/InputsPage.tsx, /src/index.css
+2:10:03 PM [vite] hmr update /src/pages/InputsPage.tsx, /src/index.css
+2:10:50 PM [vite] hmr update /src/index.css, /src/pages/InputsPage.tsx, /src/pages/ScenariosPage.tsx, /src/pages/Dashboard.tsx, /src/pages/ReportsPage.tsx, /src/presentation/PresentationMode.tsx, /src/components/layout/AppHeader.tsx, /src/components/layout/Sidebar.tsx, /src/components/monte-carlo/visualizations/MonteCarloAnalytics.tsx
+2:11:15 PM [vite] hmr update /src/index.css, /src/pages/InputsPage.tsx, /src/pages/ScenariosPage.tsx, /src/pages/Dashboard.tsx, /src/pages/ReportsPage.tsx, /src/presentation/PresentationMode.tsx, /src/components/layout/AppHeader.tsx, /src/components/layout/Sidebar.tsx, /src/components/monte-carlo/visualizations/MonteCarloAnalytics.tsx
+2:12:32 PM [vite] hmr update /src/pages/InputsPage.tsx, /src/index.css
+2:12:34 PM [vite] hmr update /src/pages/InputsPage.tsx, /src/index.css
+2:14:40 PM [vite] hmr update /src/pages/ScenariosPage.tsx, /src/index.css
+2:14:50 PM [vite] hmr update /src/pages/ScenariosPage.tsx, /src/index.css
