@@ -828,3 +828,130 @@ class ExtendedSimulationResult(BaseModel):
         default=None,
         description="Probabilistic longevity results"
     )
+
+
+# ============================================================================
+# SPRINT 5: Annuity & Insurance Models
+# ============================================================================
+
+class AnnuityTypeEnum(str, Enum):
+    """Types of annuity products"""
+    SPIA = "spia"
+    DIA = "dia"
+    QLAC = "qlac"
+
+
+class LifeOptionEnum(str, Enum):
+    """Life coverage options for annuities"""
+    LIFE_ONLY = "life_only"
+    LIFE_WITH_10_CERTAIN = "10_certain"
+    LIFE_WITH_20_CERTAIN = "20_certain"
+    JOINT_LIFE = "joint_life"
+    JOINT_SURVIVOR_100 = "joint_100"
+    JOINT_SURVIVOR_50 = "joint_50"
+
+
+class AnnuityInputs(BaseModel):
+    """Input parameters for annuity quote request"""
+    annuity_type: AnnuityTypeEnum = Field(description="Type of annuity product")
+    premium: float = Field(gt=0, description="Lump sum premium amount")
+    purchase_age: int = Field(ge=50, le=85, description="Age when purchasing")
+    
+    # DIA/QLAC specific
+    start_age: Optional[int] = Field(default=None, ge=50, le=90, description="Age when payments begin (for DIA/QLAC)")
+    
+    # QLAC specific
+    ira_balance: Optional[float] = Field(default=None, description="Total IRA balance (for QLAC limit calc)")
+    
+    # Demographics
+    gender: GenderEnum = Field(default=GenderEnum.MALE)
+    health_status: HealthStatusEnum = Field(default=HealthStatusEnum.AVERAGE)
+    smoker: bool = Field(default=False)
+    
+    # Product features
+    life_option: LifeOptionEnum = Field(default=LifeOptionEnum.LIFE_ONLY)
+    cola_pct: float = Field(default=0.0, ge=0, le=0.05, description="Annual COLA adjustment")
+
+
+class AnnuityQuoteResult(BaseModel):
+    """Result from annuity pricing quote"""
+    annuity_type: AnnuityTypeEnum
+    premium: float
+    annual_payout: float
+    monthly_payout: float
+    payout_rate: float
+    
+    # Actuarial metrics
+    expected_total_payments: float
+    expected_years_of_payments: float
+    longevity_credit: float
+    breakeven_years: float
+    
+    # Present value analysis
+    actuarial_present_value: float
+    load_factor: float
+    insurance_company_margin: float
+    
+    # Demographics
+    purchase_age: int
+    start_age: int
+    deferral_years: int
+    life_expectancy: float
+    
+    # Product features
+    life_option: LifeOptionEnum
+    cola_pct: float
+    has_refund: bool
+    
+    # Tax considerations
+    exclusion_ratio: float
+    taxable_portion_pct: float
+
+
+class QLACRulesResult(BaseModel):
+    """QLAC-specific IRS rules and validation"""
+    max_premium_pct: float = 0.25
+    max_premium_dollar: float = 200_000.0
+    max_start_age: int = 85
+    rmd_exclusion: bool = True
+    must_be_ira_funded: bool = True
+    
+    # Validation results
+    premium_within_limits: bool
+    start_age_valid: bool
+    max_allowed_premium: float
+
+
+class AnnuityComparisonRequest(BaseModel):
+    """Request to compare annuity vs. portfolio"""
+    premium: float = Field(gt=0, description="Amount to potentially annuitize")
+    age: int = Field(ge=50, le=85)
+    annual_spending: float = Field(gt=0, description="Desired annual income")
+    
+    # Portfolio assumptions
+    portfolio_return: float = Field(default=0.05, description="Expected portfolio return")
+    portfolio_vol: float = Field(default=0.10, description="Portfolio volatility")
+    
+    # Demographics
+    gender: GenderEnum = Field(default=GenderEnum.MALE)
+    health_status: HealthStatusEnum = Field(default=HealthStatusEnum.AVERAGE)
+    smoker: bool = Field(default=False)
+    
+    # Analysis parameters
+    n_scenarios: int = Field(default=1000, ge=100, le=10000)
+
+
+class AnnuityComparisonResult(BaseModel):
+    """Result from annuity vs. portfolio comparison"""
+    annuity_option: Dict[str, Any] = Field(description="Annuity metrics")
+    portfolio_option: Dict[str, Any] = Field(description="Portfolio metrics")
+    recommendation: str = Field(description="Analysis recommendation")
+
+
+class AnnuityResponse(BaseModel):
+    """API response for annuity operations"""
+    success: bool = True
+    message: str = "Annuity analysis completed"
+    quote: Optional[AnnuityQuoteResult] = None
+    qlac_rules: Optional[QLACRulesResult] = None
+    comparison: Optional[AnnuityComparisonResult] = None
