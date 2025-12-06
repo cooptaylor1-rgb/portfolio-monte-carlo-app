@@ -19,13 +19,36 @@ from models.schemas import (
     TerminalWealthBucket,
     CashFlowProjection,
     IncomeSourcesTimeline,
+    # Enhanced narrative report models
+    NarrativeReportRequest,
+    NarrativeReportResponse,
+    EnhancedNarrativeReportModel,
+    ExecutiveSummaryModel,
+    IdentifiedRiskModel,
+    RecommendationModel,
+    FailureAnalysisModel,
+    WorstCaseAnalysisModel,
+    FailurePatternModel,
+    WhatIfScenarioModel,
+    RiskLevelEnum,
+    RiskTypeEnum
 )
-from datetime import date
+from core.report_generator import (
+    NarrativeEngine,
+    RiskAnalyzer,
+    RecommendationEngine,
+    FailureAnalyzer,
+    WorstCaseAnalyzer,
+    RiskLevel,
+    RiskType
+)
+from datetime import date, datetime
 import logging
 from typing import List
 from io import BytesIO
 import uuid
 import os
+import numpy as np
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -2028,3 +2051,244 @@ async def export_pdf(plan_id: str):
     except Exception as e:
         logger.error(f"Failed to generate PDF for plan_id {plan_id}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
+
+
+# ============================================================================
+# ENHANCED NARRATIVE REPORT ENDPOINT
+# ============================================================================
+
+@router.post("/narrative", response_model=NarrativeReportResponse)
+async def generate_narrative_report(request: NarrativeReportRequest):
+    """
+    Generate enhanced narrative report with risk analysis and recommendations.
+    
+    Produces client-ready reports with:
+    - Executive summary in plain English
+    - Top identified risks with severity and mitigation strategies
+    - Prioritized actionable recommendations
+    - Optional failure analysis (what scenarios fail, when, why)
+    - Optional worst-case analysis (10th percentile deep-dive)
+    
+    Args:
+        request: NarrativeReportRequest with simulation results and parameters
+    
+    Returns:
+        NarrativeReportResponse with complete narrative report
+    """
+    try:
+        logger.info("Generating enhanced narrative report")
+        
+        # Initialize engines
+        narrative_engine = NarrativeEngine()
+        risk_analyzer = RiskAnalyzer()
+        recommendation_engine = RecommendationEngine()
+        
+        # 1. Generate Executive Summary
+        executive_summary = narrative_engine.generate_executive_summary(
+            success_probability=request.success_probability,
+            median_ending_value=request.median_ending_value,
+            percentile_10_value=request.percentile_10_value,
+            percentile_90_value=request.percentile_90_value,
+            starting_portfolio=request.starting_portfolio,
+            years_to_model=request.years_to_model,
+            current_age=request.current_age,
+            monthly_spending=request.monthly_spending,
+            has_goals=request.has_goals,
+            goals_on_track_count=request.goals_on_track_count,
+            total_goals=request.total_goals
+        )
+        
+        exec_summary_model = ExecutiveSummaryModel(
+            plan_overview=executive_summary.plan_overview,
+            success_probability_narrative=executive_summary.success_probability_narrative,
+            key_strengths=executive_summary.key_strengths,
+            key_concerns=executive_summary.key_concerns,
+            bottom_line=executive_summary.bottom_line
+        )
+        
+        # 2. Identify Risks
+        risks = risk_analyzer.identify_risks(
+            success_probability=request.success_probability,
+            median_ending=request.median_ending_value,
+            percentile_10=request.percentile_10_value,
+            failure_scenarios=np.array([]),  # Simplified - use all_paths if provided
+            starting_portfolio=request.starting_portfolio,
+            annual_spending=abs(request.monthly_spending) * 12,
+            years_to_model=request.years_to_model,
+            current_age=request.current_age,
+            horizon_age=request.current_age + request.years_to_model,
+            equity_pct=request.equity_pct,
+            monthly_spending=request.monthly_spending
+        )
+        
+        # Convert to API models
+        risk_models = [
+            IdentifiedRiskModel(
+                risk_type=_convert_risk_type_to_enum(risk.risk_type),
+                severity=_convert_risk_level_to_enum(risk.severity),
+                probability=risk.probability,
+                potential_impact=risk.potential_impact,
+                description=risk.description,
+                mitigation_strategy=risk.mitigation_strategy,
+                priority_rank=risk.priority_rank
+            )
+            for risk in risks
+        ]
+        
+        # 3. Generate Recommendations
+        recommendations = recommendation_engine.generate_recommendations(
+            risks=risks,
+            success_probability=request.success_probability,
+            starting_portfolio=request.starting_portfolio,
+            annual_spending=abs(request.monthly_spending) * 12,
+            equity_pct=request.equity_pct,
+            years_to_model=request.years_to_model
+        )
+        
+        recommendation_models = [
+            RecommendationModel(
+                title=rec.title,
+                description=rec.description,
+                expected_benefit=rec.expected_benefit,
+                implementation_steps=rec.implementation_steps,
+                priority=rec.priority,
+                category=rec.category
+            )
+            for rec in recommendations
+        ]
+        
+        # 4. Failure Analysis (if requested and paths provided)
+        failure_analysis_model = None
+        if request.include_failure_analysis and request.all_paths:
+            try:
+                failure_analyzer = FailureAnalyzer()
+                paths_array = np.array(request.all_paths)
+                
+                failure_analysis = failure_analyzer.analyze_failures(
+                    all_paths=paths_array,
+                    success_threshold=0,  # Portfolio depletion threshold
+                    years_to_model=request.years_to_model,
+                    starting_portfolio=request.starting_portfolio,
+                    annual_spending=abs(request.monthly_spending) * 12
+                )
+                
+                # Convert patterns to models
+                pattern_models = [
+                    FailurePatternModel(
+                        pattern_name=pattern.pattern_name,
+                        frequency=pattern.frequency,
+                        typical_failure_year=pattern.typical_failure_year,
+                        description=pattern.description,
+                        prevention_strategy=pattern.prevention_strategy
+                    )
+                    for pattern in failure_analysis['patterns']
+                ]
+                
+                failure_analysis_model = FailureAnalysisModel(
+                    failure_count=failure_analysis['failure_count'],
+                    failure_rate=failure_analysis['failure_rate'],
+                    avg_failure_year=failure_analysis.get('avg_failure_year'),
+                    median_failure_year=failure_analysis.get('median_failure_year'),
+                    earliest_failure_year=failure_analysis.get('earliest_failure_year'),
+                    patterns=pattern_models,
+                    summary=failure_analysis['summary'],
+                    prevention_strategies=failure_analysis['prevention_strategies']
+                )
+            except Exception as e:
+                logger.warning(f"Failed to generate failure analysis: {str(e)}")
+        
+        # 5. Worst-Case Analysis (if requested and paths provided)
+        worst_case_model = None
+        if request.include_worst_case_analysis and request.all_paths:
+            try:
+                worst_case_analyzer = WorstCaseAnalyzer()
+                paths_array = np.array(request.all_paths)
+                
+                worst_case = worst_case_analyzer.analyze_worst_case(
+                    all_paths=paths_array,
+                    percentile_10_value=request.percentile_10_value,
+                    starting_portfolio=request.starting_portfolio,
+                    annual_spending=abs(request.monthly_spending) * 12,
+                    years_to_model=request.years_to_model
+                )
+                
+                # Convert what-if scenarios
+                what_if_models = [
+                    WhatIfScenarioModel(
+                        scenario=scenario['scenario'],
+                        change=scenario['change'],
+                        impact=scenario['impact'],
+                        trade_off=scenario['trade_off']
+                    )
+                    for scenario in worst_case['what_if_scenarios']
+                ]
+                
+                worst_case_model = WorstCaseAnalysisModel(
+                    percentile_10_value=worst_case['percentile_10_value'],
+                    max_drawdown_pct=worst_case['max_drawdown_pct'],
+                    turning_point_year=worst_case['turning_point_year'],
+                    recovery_time_years=worst_case['recovery_time_years'],
+                    description=worst_case['description'],
+                    recovery_strategies=worst_case['recovery_strategies'],
+                    what_if_scenarios=what_if_models
+                )
+            except Exception as e:
+                logger.warning(f"Failed to generate worst-case analysis: {str(e)}")
+        
+        # Assemble complete report
+        report = EnhancedNarrativeReportModel(
+            executive_summary=exec_summary_model,
+            identified_risks=risk_models,
+            recommendations=recommendation_models,
+            failure_analysis=failure_analysis_model,
+            worst_case_analysis=worst_case_model,
+            report_generated_at=datetime.utcnow().isoformat()
+        )
+        
+        logger.info(
+            f"Report generated: {len(risk_models)} risks, "
+            f"{len(recommendation_models)} recommendations"
+        )
+        
+        return NarrativeReportResponse(
+            report=report,
+            success=True,
+            message="Narrative report generated successfully"
+        )
+        
+    except ValueError as e:
+        logger.error(f"Validation error: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error generating narrative report: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate narrative report: {str(e)}"
+        )
+
+
+def _convert_risk_type_to_enum(risk_type: RiskType) -> RiskTypeEnum:
+    """Convert engine RiskType to API enum"""
+    mapping = {
+        RiskType.SEQUENCE_OF_RETURNS: RiskTypeEnum.SEQUENCE_OF_RETURNS,
+        RiskType.LONGEVITY: RiskTypeEnum.LONGEVITY,
+        RiskType.INFLATION: RiskTypeEnum.INFLATION,
+        RiskType.HEALTHCARE_COSTS: RiskTypeEnum.HEALTHCARE_COSTS,
+        RiskType.PORTFOLIO_DEPLETION: RiskTypeEnum.PORTFOLIO_DEPLETION,
+        RiskType.TAX_INEFFICIENCY: RiskTypeEnum.TAX_INEFFICIENCY,
+        RiskType.SPENDING_UNSUSTAINABLE: RiskTypeEnum.SPENDING_UNSUSTAINABLE,
+        RiskType.CONCENTRATION: RiskTypeEnum.CONCENTRATION,
+        RiskType.MARKET_VOLATILITY: RiskTypeEnum.MARKET_VOLATILITY,
+    }
+    return mapping[risk_type]
+
+
+def _convert_risk_level_to_enum(risk_level: RiskLevel) -> RiskLevelEnum:
+    """Convert engine RiskLevel to API enum"""
+    mapping = {
+        RiskLevel.LOW: RiskLevelEnum.LOW,
+        RiskLevel.MODERATE: RiskLevelEnum.MODERATE,
+        RiskLevel.HIGH: RiskLevelEnum.HIGH,
+        RiskLevel.CRITICAL: RiskLevelEnum.CRITICAL,
+    }
+    return mapping[risk_level]

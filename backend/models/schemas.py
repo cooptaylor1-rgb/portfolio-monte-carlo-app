@@ -546,3 +546,148 @@ class GoalAnalysisResponse(BaseModel):
     critical_goals_count: int = Field(description="Number of critical priority goals")
     on_track_count: int = Field(description="Number of goals on track")
     at_risk_count: int = Field(description="Number of goals at risk")
+
+
+# ============================================================================
+# ENHANCED NARRATIVE REPORT MODELS
+# ============================================================================
+
+class RiskLevelEnum(str, Enum):
+    """Risk severity levels"""
+    LOW = "low"
+    MODERATE = "moderate"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
+class RiskTypeEnum(str, Enum):
+    """Types of financial risks"""
+    SEQUENCE_OF_RETURNS = "sequence_of_returns"
+    LONGEVITY = "longevity"
+    INFLATION = "inflation"
+    HEALTHCARE_COSTS = "healthcare_costs"
+    PORTFOLIO_DEPLETION = "portfolio_depletion"
+    TAX_INEFFICIENCY = "tax_inefficiency"
+    SPENDING_UNSUSTAINABLE = "spending_unsustainable"
+    CONCENTRATION = "concentration"
+    MARKET_VOLATILITY = "market_volatility"
+
+
+class IdentifiedRiskModel(BaseModel):
+    """A specific identified risk"""
+    risk_type: RiskTypeEnum = Field(description="Type of risk")
+    severity: RiskLevelEnum = Field(description="Risk severity level")
+    probability: float = Field(ge=0, le=1, description="Probability of risk materializing")
+    potential_impact: float = Field(description="Dollar amount or percentage impact")
+    description: str = Field(description="Risk description in plain language")
+    mitigation_strategy: str = Field(description="Specific mitigation steps")
+    priority_rank: int = Field(description="Priority rank (1 = highest)")
+
+
+class RecommendationModel(BaseModel):
+    """An actionable recommendation"""
+    title: str = Field(description="Recommendation title")
+    description: str = Field(description="Detailed description")
+    expected_benefit: str = Field(description="Expected outcome/benefit")
+    implementation_steps: List[str] = Field(description="Concrete implementation steps")
+    priority: int = Field(description="Priority (1 = highest)")
+    category: str = Field(description="Category (spending, allocation, tax, insurance)")
+
+
+class ExecutiveSummaryModel(BaseModel):
+    """Natural language executive summary"""
+    plan_overview: str = Field(description="Plan overview in plain English")
+    success_probability_narrative: str = Field(description="Success probability explanation")
+    key_strengths: List[str] = Field(description="Key plan strengths")
+    key_concerns: List[str] = Field(description="Key concerns to address")
+    bottom_line: str = Field(description="Bottom-line recommendation")
+
+
+class FailurePatternModel(BaseModel):
+    """Pattern observed in failed scenarios"""
+    pattern_name: str = Field(description="Pattern name")
+    frequency: float = Field(ge=0, le=1, description="Percentage of failures showing this pattern")
+    typical_failure_year: int = Field(description="Typical year when failure occurs")
+    description: str = Field(description="Pattern description")
+    prevention_strategy: str = Field(description="Strategy to prevent this failure pattern")
+
+
+class FailureAnalysisModel(BaseModel):
+    """Failure scenario analysis"""
+    failure_count: int = Field(description="Number of scenarios that failed")
+    failure_rate: float = Field(ge=0, le=1, description="Failure rate")
+    avg_failure_year: Optional[int] = Field(description="Average year of failure")
+    median_failure_year: Optional[int] = Field(description="Median year of failure")
+    earliest_failure_year: Optional[int] = Field(description="Earliest failure year observed")
+    patterns: List[FailurePatternModel] = Field(description="Identified failure patterns")
+    summary: str = Field(description="Failure analysis summary")
+    prevention_strategies: List[str] = Field(description="Overall prevention strategies")
+
+
+class WhatIfScenarioModel(BaseModel):
+    """Alternative what-if scenario"""
+    scenario: str = Field(description="Scenario name")
+    change: str = Field(description="What changes in this scenario")
+    impact: str = Field(description="Expected impact")
+    trade_off: str = Field(description="Trade-offs to consider")
+
+
+class WorstCaseAnalysisModel(BaseModel):
+    """Worst-case (10th percentile) analysis"""
+    percentile_10_value: float = Field(description="10th percentile ending value")
+    max_drawdown_pct: float = Field(ge=0, le=1, description="Maximum drawdown percentage")
+    turning_point_year: int = Field(description="Year when problems begin")
+    recovery_time_years: Optional[int] = Field(description="Years to recover (if at all)")
+    description: str = Field(description="Worst-case scenario description")
+    recovery_strategies: List[str] = Field(description="Specific recovery strategies")
+    what_if_scenarios: List[WhatIfScenarioModel] = Field(description="Alternative scenarios to consider")
+
+
+class EnhancedNarrativeReportModel(BaseModel):
+    """Complete enhanced narrative report"""
+    executive_summary: ExecutiveSummaryModel = Field(description="Executive summary")
+    identified_risks: List[IdentifiedRiskModel] = Field(description="Top identified risks")
+    recommendations: List[RecommendationModel] = Field(description="Prioritized recommendations")
+    failure_analysis: Optional[FailureAnalysisModel] = Field(default=None, description="Failure scenario analysis")
+    worst_case_analysis: Optional[WorstCaseAnalysisModel] = Field(default=None, description="Worst-case analysis")
+    report_generated_at: str = Field(description="Report generation timestamp")
+
+
+class NarrativeReportRequest(BaseModel):
+    """Request for enhanced narrative report"""
+    # Monte Carlo simulation results
+    success_probability: float = Field(ge=0, le=1, description="Success probability")
+    median_ending_value: float = Field(description="Median ending portfolio value")
+    percentile_10_value: float = Field(description="10th percentile value")
+    percentile_90_value: float = Field(description="90th percentile value")
+    
+    # Plan parameters
+    starting_portfolio: float = Field(gt=0, description="Starting portfolio value")
+    years_to_model: int = Field(ge=1, le=50, description="Planning horizon")
+    current_age: int = Field(ge=18, le=100, description="Current age")
+    monthly_spending: float = Field(description="Monthly spending (negative)")
+    
+    # Asset allocation
+    equity_pct: float = Field(ge=0, le=1, description="Equity allocation")
+    
+    # Optional: Monte Carlo paths for detailed analysis
+    all_paths: Optional[List[List[float]]] = Field(
+        default=None,
+        description="All Monte Carlo paths for failure/worst-case analysis"
+    )
+    
+    # Optional: Goal-based planning
+    has_goals: bool = Field(default=False, description="Whether goal-based planning is used")
+    goals_on_track_count: int = Field(default=0, description="Number of goals on track")
+    total_goals: int = Field(default=0, description="Total number of goals")
+    
+    # Options
+    include_failure_analysis: bool = Field(default=True, description="Include failure analysis")
+    include_worst_case_analysis: bool = Field(default=True, description="Include worst-case analysis")
+
+
+class NarrativeReportResponse(BaseModel):
+    """Response containing enhanced narrative report"""
+    report: EnhancedNarrativeReportModel = Field(description="Complete narrative report")
+    success: bool = Field(default=True, description="Request success status")
+    message: Optional[str] = Field(default=None, description="Optional message")
