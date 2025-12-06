@@ -348,6 +348,112 @@ def generate_returns_geometric_brownian_motion(
     return returns
 
 
+def generate_correlated_asset_returns(
+    inputs: PortfolioInputs,
+    n_scenarios: int,
+    n_months: int,
+    rng: np.random.Generator
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Generate correlated returns for multiple asset classes using Cholesky decomposition.
+    
+    This properly models the correlation structure between equity, fixed income, and cash.
+    Without correlation, we'd overstate diversification benefits.
+    
+    Method:
+    1. Create correlation matrix from inputs
+    2. Cholesky decomposition: corr = L @ L^T
+    3. Generate independent standard normals Z
+    4. Create correlated normals: X = L @ Z
+    5. Transform to lognormal returns
+    
+    Args:
+        inputs: PortfolioInputs with correlation parameters
+        n_scenarios: Number of simulation paths
+        n_months: Number of time steps
+        rng: NumPy random generator
+    
+    Returns:
+        Tuple of (equity_returns, fi_returns, cash_returns)
+        Each array is shape (n_scenarios, n_months)
+    """
+    dt = 1.0 / 12.0  # Monthly timestep
+    
+    # Asset parameters
+    assets = [
+        {
+            'name': 'equity',
+            'mu': inputs.equity_return_annual,
+            'sigma': inputs.equity_vol_annual
+        },
+        {
+            'name': 'fi',
+            'mu': inputs.fi_return_annual,
+            'sigma': inputs.fi_vol_annual
+        },
+        {
+            'name': 'cash',
+            'mu': inputs.cash_return_annual,
+            'sigma': inputs.cash_vol_annual
+        }
+    ]
+    
+    # Correlation matrix
+    corr_matrix = np.array([
+        [1.0, inputs.corr_equity_fi, inputs.corr_equity_cash],
+        [inputs.corr_equity_fi, 1.0, inputs.corr_fi_cash],
+        [inputs.corr_equity_cash, inputs.corr_fi_cash, 1.0]
+    ])
+    
+    # Validate correlation matrix is positive definite
+    try:
+        L = np.linalg.cholesky(corr_matrix)
+    except np.linalg.LinAlgError:
+        logger.warning("Correlation matrix not positive definite, using nearest valid matrix")
+        # Make matrix positive definite by adding small diagonal
+        corr_matrix += np.eye(3) * 0.001
+        L = np.linalg.cholesky(corr_matrix)
+    
+    # Pre-allocate return arrays
+    equity_returns = np.zeros((n_scenarios, n_months))
+    fi_returns = np.zeros((n_scenarios, n_months))
+    cash_returns = np.zeros((n_scenarios, n_months))
+    
+    # Generate correlated returns month by month
+    for t in range(n_months):
+        # Generate independent standard normals (3 per scenario)
+        Z = rng.standard_normal((n_scenarios, 3))
+        
+        # Create correlated normals: X = Z @ L^T
+        # (We use L^T because we want correlations between rows, not columns)
+        X_corr = Z @ L.T
+        
+        # Transform to lognormal returns for each asset class
+        for i, asset in enumerate(assets):
+            mu = asset['mu']
+            sigma = asset['sigma']
+            
+            # Drift adjustment for lognormal
+            drift = (mu - 0.5 * sigma**2) * dt
+            diffusion = sigma * np.sqrt(dt)
+            
+            # Lognormal returns using correlated normals
+            returns_t = np.exp(drift + diffusion * X_corr[:, i])
+            
+            if i == 0:
+                equity_returns[:, t] = returns_t
+            elif i == 1:
+                fi_returns[:, t] = returns_t
+            else:
+                cash_returns[:, t] = returns_t
+    
+    logger.debug(f"Generated correlated returns - "
+                f"Equity-FI correlation: {np.corrcoef(equity_returns.flatten(), fi_returns.flatten())[0,1]:.3f}, "
+                f"Expected: {inputs.corr_equity_fi:.3f}")
+    
+    return equity_returns, fi_returns, cash_returns
+
+
 def calculate_required_minimum_distribution(
     ira_balance,  # Can be float or ndarray
     age: int,
