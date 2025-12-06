@@ -10,6 +10,12 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: CardVariant;
   padding?: 'none' | 'sm' | 'md' | 'lg';
   children: React.ReactNode;
+  /** Optional role for semantic HTML - use 'region' for landmark, 'article' for self-contained content */
+  role?: string;
+  /** ARIA label for accessible name */
+  'aria-label'?: string;
+  /** ARIA labelledby for accessible name reference */
+  'aria-labelledby'?: string;
 }
 
 export const Card: React.FC<CardProps> = ({

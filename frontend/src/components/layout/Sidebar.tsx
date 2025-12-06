@@ -87,8 +87,12 @@ const Sidebar: React.FC = () => {
   const { hasRunSimulation } = useSimulationStore();
 
   return (
-    <aside className="w-60 bg-background-elevated border-r border-background-border fixed h-[calc(100vh-73px)] top-[73px] overflow-y-auto">
-      <nav className="p-4">
+    <aside 
+      className="w-60 bg-background-elevated border-r border-background-border fixed h-[calc(100vh-73px)] top-[73px] overflow-y-auto"
+      role="navigation"
+      aria-label="Main navigation"
+    >
+      <nav className="p-4" aria-label="Primary">
         {/* Workflow Section */}
         <div className="mb-6">
           <div className="px-3 mb-3">

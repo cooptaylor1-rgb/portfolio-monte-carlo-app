@@ -53,13 +53,23 @@ export const ChartContainer: React.FC<ChartContainerProps> = ({
   helpText,
   className = '',
 }) => {
+  // Generate unique ID for aria-labelledby
+  const headingId = `chart-${title.toLowerCase().replace(/\s+/g, '-')}`;
+  
   return (
-    <Card className={className}>
+    <Card 
+      className={className}
+      role="region"
+      aria-labelledby={headingId}
+    >
       {/* Chart Header */}
       <div className="flex items-start justify-between mb-6">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-h4 font-semibold text-text-primary truncate">
+            <h3 
+              id={headingId}
+              className="text-h4 font-semibold text-text-primary truncate"
+            >
               {title}
             </h3>
             {helpText && (

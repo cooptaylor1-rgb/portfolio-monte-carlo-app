@@ -45,7 +45,11 @@ const AppHeader: React.FC = () => {
   };
 
   return (
-    <header className="bg-background-elevated border-b border-background-border shadow-lg sticky top-0 z-dropdown backdrop-blur-sm">
+    <header 
+      className="bg-background-elevated border-b border-background-border shadow-lg sticky top-0 z-dropdown backdrop-blur-sm"
+      role="banner"
+      aria-label="Site header"
+    >
       <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4 max-w-container mx-auto">
         {/* Logo and Title */}
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
@@ -86,6 +90,7 @@ const AppHeader: React.FC = () => {
             loading={isLoading}
             disabled={isLoading}
             className="sm:hidden"
+            aria-label={isLoading ? 'Running simulation...' : 'Run Monte Carlo simulation'}
           >
             Run
           </Button>
@@ -98,6 +103,7 @@ const AppHeader: React.FC = () => {
             loading={isLoading}
             disabled={isLoading}
             className="hidden sm:inline-flex"
+            aria-label={isLoading ? 'Running simulation...' : 'Run Monte Carlo simulation'}
           >
             Run Simulation
           </Button>
@@ -112,6 +118,7 @@ const AppHeader: React.FC = () => {
                 icon={<FileDown size={16} />}
                 onClick={handleExport}
                 className="hidden sm:inline-flex"
+                aria-label="Export reports"
               >
                 <span className="hidden lg:inline">Export</span>
               </Button>
@@ -123,6 +130,7 @@ const AppHeader: React.FC = () => {
                 icon={<Save size={16} />}
                 onClick={() => console.log('Save functionality')}
                 className="hidden lg:inline-flex"
+                aria-label="Save current state"
               >
                 Save
               </Button>
