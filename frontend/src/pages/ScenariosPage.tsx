@@ -150,6 +150,61 @@ const ScenariosPage: React.FC = () => {
         'monthly_spending',
       ];
       
+      // Transform modelInputs to match backend schema
+      // Remove frontend-only fields and map field names correctly
+      const backendInputs = {
+        starting_portfolio: modelInputs.starting_portfolio,
+        years_to_model: modelInputs.years_to_model,
+        current_age: modelInputs.current_age,
+        horizon_age: modelInputs.horizon_age,
+        monthly_income: 0, // Default to 0 if not present
+        monthly_spending: modelInputs.monthly_spending,
+        inflation_annual: modelInputs.inflation_annual,
+        spending_rule: modelInputs.spending_rule,
+        spending_pct_annual: modelInputs.spending_pct_annual,
+        equity_pct: modelInputs.equity_pct,
+        fi_pct: modelInputs.fi_pct,
+        cash_pct: modelInputs.cash_pct,
+        equity_return_annual: modelInputs.equity_return_annual,
+        fi_return_annual: modelInputs.fi_return_annual,
+        cash_return_annual: modelInputs.cash_return_annual,
+        equity_vol_annual: modelInputs.equity_vol_annual,
+        fi_vol_annual: modelInputs.fi_vol_annual,
+        cash_vol_annual: modelInputs.cash_vol_annual,
+        n_scenarios: modelInputs.n_scenarios,
+        one_time_cf: modelInputs.one_time_cf,
+        one_time_cf_month: modelInputs.one_time_cf_month,
+        taxable_pct: modelInputs.taxable_pct,
+        ira_pct: modelInputs.ira_pct,
+        roth_pct: modelInputs.roth_pct,
+        tax_rate: modelInputs.tax_rate,
+        rmd_age: modelInputs.rmd_age,
+        social_security_monthly: modelInputs.social_security_monthly,
+        ss_start_age: modelInputs.ss_start_age,
+        pension_monthly: modelInputs.pension_monthly,
+        pension_start_age: modelInputs.pension_start_age,
+        monthly_healthcare: modelInputs.healthcare_monthly,
+        healthcare_start_age: modelInputs.healthcare_start_age,
+        healthcare_inflation: modelInputs.healthcare_inflation,
+        roth_conversion_annual: modelInputs.roth_conversion_annual,
+        roth_conversion_start_age: modelInputs.roth_conversion_start_age,
+        roth_conversion_end_age: modelInputs.roth_conversion_end_age,
+        estate_tax_exemption: modelInputs.estate_tax_exemption,
+        legacy_goal: modelInputs.legacy_goal,
+        use_actuarial_tables: modelInputs.use_actuarial_tables,
+        health_adjustment: modelInputs.health_adjustment,
+        use_glide_path: modelInputs.use_glide_path,
+        target_equity_at_end: modelInputs.target_equity_pct, // Map field name
+        use_lifestyle_phases: modelInputs.use_lifestyle_phases,
+        slow_go_age: modelInputs.go_go_end_age, // Map field name
+        no_go_age: modelInputs.slow_go_end_age, // Map field name
+        slow_go_spending_pct: modelInputs.go_go_spending_multiplier, // Map field name
+        no_go_spending_pct: modelInputs.no_go_spending_multiplier, // Map field name
+        use_guardrails: modelInputs.use_guardrails,
+        upper_guardrail: modelInputs.upper_guardrail,
+        lower_guardrail: modelInputs.lower_guardrail,
+      };
+      
       // Use more practical variation ranges for each parameter
       const variationsByParameter: Record<string, number[]> = {
         'equity_return_annual': [-0.04, -0.03, -0.02, -0.01, 0, 0.01, 0.02, 0.03, 0.04],
@@ -173,7 +228,7 @@ const ScenariosPage: React.FC = () => {
             
             console.log(`Running sensitivity for ${param} with variations:`, variations);
             const response = await apiClient.axiosClient.post('/simulation/sensitivity', {
-              inputs: modelInputs,
+              inputs: backendInputs,
               parameter: param,
               variations: variations,
             });
