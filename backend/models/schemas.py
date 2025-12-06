@@ -955,3 +955,132 @@ class AnnuityResponse(BaseModel):
     quote: Optional[AnnuityQuoteResult] = None
     qlac_rules: Optional[QLACRulesResult] = None
     comparison: Optional[AnnuityComparisonResult] = None
+
+
+# ============================================================================
+# SPRINT 6: ESTATE PLANNING SCHEMAS
+# ============================================================================
+
+class StateEstateTaxEnum(str, Enum):
+    """States with estate or inheritance taxes"""
+    NONE = "none"
+    CONNECTICUT = "ct"
+    HAWAII = "hi"
+    ILLINOIS = "il"
+    MAINE = "me"
+    MARYLAND = "md"
+    MASSACHUSETTS = "ma"
+    MINNESOTA = "mn"
+    NEW_YORK = "ny"
+    OREGON = "or"
+    RHODE_ISLAND = "ri"
+    VERMONT = "vt"
+    WASHINGTON = "wa"
+    DISTRICT_OF_COLUMBIA = "dc"
+
+
+class EstatePlanningInputs(BaseModel):
+    """Estate planning analysis request"""
+    gross_estate: float = Field(..., gt=0, description="Total estate value")
+    traditional_ira: float = Field(default=0, ge=0, description="Traditional IRA balance")
+    roth_ira: float = Field(default=0, ge=0, description="Roth IRA balance")
+    taxable_account: float = Field(default=0, ge=0, description="Taxable account value")
+    taxable_cost_basis: float = Field(default=0, ge=0, description="Cost basis of taxable account")
+    
+    state: StateEstateTaxEnum = Field(default=StateEstateTaxEnum.NONE, description="State for estate tax")
+    is_married: bool = Field(default=False, description="Marital status")
+    spousal_exemption_used: float = Field(default=0, ge=0, description="Spouse's unused exemption (portability)")
+    apply_2026_sunset: bool = Field(default=False, description="Apply 2026 exemption sunset")
+    
+    # Heir information
+    heir_age: int = Field(default=45, ge=18, le=100, description="Heir's current age")
+    heir_current_income: float = Field(default=150_000, ge=0, description="Heir's annual income")
+    heir_filing_status: str = Field(default="single", description="Heir's tax filing status")
+    years_until_inheritance: int = Field(default=20, ge=0, le=60, description="Expected years until inheritance")
+    
+    # Analysis options
+    analyze_roth_conversion: bool = Field(default=True, description="Include Roth conversion analysis")
+    roth_conversion_amounts: List[float] = Field(default=[0.25, 0.50, 0.75], description="Conversion percentages to analyze")
+
+
+class EstateTaxSummary(BaseModel):
+    """Estate tax calculation summary"""
+    gross_estate: float
+    federal_exemption_used: float
+    federal_taxable_estate: float
+    federal_estate_tax: float
+    state_exemption_used: float
+    state_taxable_estate: float
+    state_estate_tax: float
+    total_estate_tax: float
+    net_to_heirs: float
+    effective_tax_rate: float
+    portability_available: float
+
+
+class InheritedIRASummary(BaseModel):
+    """Inherited IRA tax summary"""
+    ira_balance: float
+    heir_age: int
+    heir_tax_bracket: float
+    distribution_strategy: str
+    total_distributions: float
+    total_income_tax: float
+    net_to_heir: float
+    effective_tax_rate: float
+    comparison_to_stretch: Optional[Dict[str, float]] = None
+
+
+class BasisStepUpSummary(BaseModel):
+    """Step-up in basis summary"""
+    account_value: float
+    original_cost_basis: float
+    unrealized_gains: float
+    capital_gains_eliminated: float
+    ltcg_tax_saved: float
+    heir_new_basis: float
+    strategy_comparison: Dict[str, float]
+
+
+class RothConversionScenario(BaseModel):
+    """Single Roth conversion scenario"""
+    conversion_percentage: float
+    conversion_amount: float
+    upfront_conversion_tax: float
+    projected_roth_value: float
+    roth_inheritance_value: float
+    trad_ira_inheritance_tax: float
+    net_benefit_to_heir: float
+    npv_advantage: float
+    recommended_strategy: str
+    break_even_years: int
+
+
+class EstatePlanningRecommendation(BaseModel):
+    """Estate planning recommendation"""
+    priority: str  # "high", "medium", "low"
+    category: str  # "estate_tax", "ira_taxation", "basis_step_up", "roth_conversion"
+    message: str
+    actions: List[str]
+
+
+class EstatePlanningResult(BaseModel):
+    """Comprehensive estate planning analysis result"""
+    estate_tax: EstateTaxSummary
+    inherited_ira: Optional[InheritedIRASummary] = None
+    basis_step_up: Optional[BasisStepUpSummary] = None
+    roth_conversion_scenarios: Optional[List[RothConversionScenario]] = None
+    recommendations: List[EstatePlanningRecommendation]
+    
+    # Summary metrics
+    total_tax_liability: float = Field(description="Estate tax + heir's IRA tax")
+    net_to_heirs_after_all_taxes: float
+    tax_saving_opportunities: float = Field(description="Potential tax savings from recommendations")
+
+
+class EstatePlanningResponse(BaseModel):
+    """API response for estate planning"""
+    success: bool = True
+    message: str = "Estate planning analysis completed"
+    result: Optional[EstatePlanningResult] = None
+
