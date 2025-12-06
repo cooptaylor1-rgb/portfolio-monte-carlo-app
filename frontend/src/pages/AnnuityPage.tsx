@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { useSimulationStore } from '../store/simulationStore';
 import apiClient from '../lib/api';
-import { SectionHeader, Button, Card } from '../components/ui';
+import { SectionHeader, Button, Card, Input, Select } from '../components/ui';
 import { DollarSign } from 'lucide-react';
 
 const AnnuityPage: React.FC = () => {
@@ -67,79 +67,73 @@ const AnnuityPage: React.FC = () => {
 
       {/* Input Form */}
       <Card>
-        <h3 className="text-lg font-semibold mb-4">Annuity Parameters</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Premium Amount</label>
-            <input
-              type="number"
-              value={annuityInputs.premium}
-              onChange={(e) => setAnnuityInputs({...annuityInputs, premium: parseFloat(e.target.value)})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Current Age</label>
-            <input
-              type="number"
-              value={annuityInputs.age}
-              onChange={(e) => setAnnuityInputs({...annuityInputs, age: parseInt(e.target.value)})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Annuity Type</label>
-            <select
-              value={annuityInputs.annuity_type}
-              onChange={(e) => setAnnuityInputs({...annuityInputs, annuity_type: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            >
-              <option value="SPIA">SPIA - Immediate</option>
-              <option value="DIA">DIA - Deferred</option>
-              <option value="QLAC">QLAC - Qualified Longevity</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Gender</label>
-            <select
-              value={annuityInputs.gender}
-              onChange={(e) => setAnnuityInputs({...annuityInputs, gender: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            >
-              <option value="MALE">Male</option>
-              <option value="FEMALE">Female</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Life Option</label>
-            <select
-              value={annuityInputs.life_option}
-              onChange={(e) => setAnnuityInputs({...annuityInputs, life_option: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            >
-              <option value="SINGLE_LIFE">Single Life</option>
-              <option value="JOINT_SURVIVOR">Joint & Survivor</option>
-              <option value="PERIOD_CERTAIN">Period Certain</option>
-              <option value="LIFE_WITH_PERIOD_CERTAIN">Life w/ Period Certain</option>
-            </select>
-          </div>
+        <h3 className="text-lg font-semibold mb-6">Annuity Parameters</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Input
+            label="Premium Amount"
+            type="number"
+            value={annuityInputs.premium}
+            onChange={(e) => setAnnuityInputs({...annuityInputs, premium: parseFloat(e.target.value)})}
+            helperText="Initial premium to invest"
+          />
+          
+          <Input
+            label="Current Age"
+            type="number"
+            value={annuityInputs.age}
+            onChange={(e) => setAnnuityInputs({...annuityInputs, age: parseInt(e.target.value)})}
+            helperText="Age at purchase"
+          />
+          
+          <Select
+            label="Annuity Type"
+            value={annuityInputs.annuity_type}
+            onChange={(e) => setAnnuityInputs({...annuityInputs, annuity_type: e.target.value})}
+            options={[
+              { value: 'SPIA', label: 'SPIA - Immediate' },
+              { value: 'DIA', label: 'DIA - Deferred' },
+              { value: 'QLAC', label: 'QLAC - Qualified Longevity' },
+            ]}
+          />
+          
+          <Select
+            label="Gender"
+            value={annuityInputs.gender}
+            onChange={(e) => setAnnuityInputs({...annuityInputs, gender: e.target.value})}
+            options={[
+              { value: 'MALE', label: 'Male' },
+              { value: 'FEMALE', label: 'Female' },
+            ]}
+          />
+          
+          <Select
+            label="Life Option"
+            value={annuityInputs.life_option}
+            onChange={(e) => setAnnuityInputs({...annuityInputs, life_option: e.target.value})}
+            options={[
+              { value: 'SINGLE_LIFE', label: 'Single Life' },
+              { value: 'JOINT_SURVIVOR', label: 'Joint & Survivor' },
+              { value: 'PERIOD_CERTAIN', label: 'Period Certain' },
+              { value: 'LIFE_WITH_PERIOD_CERTAIN', label: 'Life w/ Period Certain' },
+            ]}
+            helperText="Payout structure"
+          />
+          
           {annuityInputs.annuity_type !== 'SPIA' && (
-            <div>
-              <label className="block text-sm font-medium mb-1">Deferral Years</label>
-              <input
-                type="number"
-                value={annuityInputs.deferral_years}
-                onChange={(e) => setAnnuityInputs({...annuityInputs, deferral_years: parseInt(e.target.value)})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
-            </div>
+            <Input
+              label="Deferral Years"
+              type="number"
+              value={annuityInputs.deferral_years}
+              onChange={(e) => setAnnuityInputs({...annuityInputs, deferral_years: parseInt(e.target.value)})}
+              helperText="Years until payments begin"
+            />
           )}
         </div>
-        <div className="mt-4 flex gap-4">
-          <Button onClick={getAnnuityQuote} disabled={isLoading}>
+        <div className="mt-6 flex gap-4">
+          <Button onClick={getAnnuityQuote} disabled={isLoading} loading={isLoading}>
             Get Quote
           </Button>
-          <Button onClick={compareAnnuities} disabled={isLoading} variant="secondary">
+          <Button onClick={compareAnnuities} disabled={isLoading} loading={isLoading} variant="secondary">
             Compare All Types
           </Button>
         </div>

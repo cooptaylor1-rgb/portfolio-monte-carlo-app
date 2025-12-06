@@ -4,7 +4,7 @@
  */
 import React, { useState } from 'react';
 import apiClient from '../lib/api';
-import { SectionHeader, Button, Card, Badge } from '../components/ui';
+import { SectionHeader, Button, Card, Badge, Input, Select, Switch } from '../components/ui';
 import { DollarSign, AlertCircle } from 'lucide-react';
 
 const TaxOptimizationPage: React.FC = () => {
@@ -53,103 +53,92 @@ const TaxOptimizationPage: React.FC = () => {
 
       {/* Input Form */}
       <Card>
-        <h3 className="text-lg font-semibold mb-4">Optimization Parameters</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Current Age</label>
-            <input
-              type="number"
-              value={taxInputs.age}
-              onChange={(e) => setTaxInputs({...taxInputs, age: parseInt(e.target.value)})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">IRA Balance</label>
-            <input
-              type="number"
-              value={taxInputs.current_ira_balance}
-              onChange={(e) => setTaxInputs({...taxInputs, current_ira_balance: parseFloat(e.target.value)})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Roth IRA Balance</label>
-            <input
-              type="number"
-              value={taxInputs.current_roth_balance}
-              onChange={(e) => setTaxInputs({...taxInputs, current_roth_balance: parseFloat(e.target.value)})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Annual Spending</label>
-            <input
-              type="number"
-              value={taxInputs.annual_spending}
-              onChange={(e) => setTaxInputs({...taxInputs, annual_spending: parseFloat(e.target.value)})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Social Security</label>
-            <input
-              type="number"
-              value={taxInputs.social_security_benefit}
-              onChange={(e) => setTaxInputs({...taxInputs, social_security_benefit: parseFloat(e.target.value)})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Filing Status</label>
-            <select
-              value={taxInputs.filing_status}
-              onChange={(e) => setTaxInputs({...taxInputs, filing_status: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            >
-              <option value="single">Single</option>
-              <option value="married_joint">Married Filing Jointly</option>
-              <option value="married_separate">Married Filing Separately</option>
-              <option value="head_of_household">Head of Household</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Years to Optimize</label>
-            <input
-              type="number"
-              value={taxInputs.years_to_optimize}
-              onChange={(e) => setTaxInputs({...taxInputs, years_to_optimize: parseInt(e.target.value)})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              min={1}
-              max={30}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Target Tax Bracket</label>
-            <select
-              value={taxInputs.target_tax_bracket}
-              onChange={(e) => setTaxInputs({...taxInputs, target_tax_bracket: parseFloat(e.target.value)})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            >
-              <option value={0.10}>10%</option>
-              <option value={0.12}>12%</option>
-              <option value={0.22}>22%</option>
-              <option value={0.24}>24%</option>
-              <option value={0.32}>32%</option>
-            </select>
-          </div>
-          <div className="flex items-center">
-            <input
-              type="checkbox"
+        <h3 className="text-lg font-semibold mb-6">Optimization Parameters</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Input
+            label="Current Age"
+            type="number"
+            value={taxInputs.age}
+            onChange={(e) => setTaxInputs({...taxInputs, age: parseInt(e.target.value)})}
+          />
+          
+          <Input
+            label="IRA Balance"
+            type="number"
+            value={taxInputs.current_ira_balance}
+            onChange={(e) => setTaxInputs({...taxInputs, current_ira_balance: parseFloat(e.target.value)})}
+            helperText="Traditional IRA/401k"
+          />
+          
+          <Input
+            label="Roth IRA Balance"
+            type="number"
+            value={taxInputs.current_roth_balance}
+            onChange={(e) => setTaxInputs({...taxInputs, current_roth_balance: parseFloat(e.target.value)})}
+            helperText="Current Roth balance"
+          />
+          
+          <Input
+            label="Annual Spending"
+            type="number"
+            value={taxInputs.annual_spending}
+            onChange={(e) => setTaxInputs({...taxInputs, annual_spending: parseFloat(e.target.value)})}
+            helperText="Retirement expenses"
+          />
+          
+          <Input
+            label="Social Security"
+            type="number"
+            value={taxInputs.social_security_benefit}
+            onChange={(e) => setTaxInputs({...taxInputs, social_security_benefit: parseFloat(e.target.value)})}
+            helperText="Annual SS benefit"
+          />
+          
+          <Select
+            label="Filing Status"
+            value={taxInputs.filing_status}
+            onChange={(e) => setTaxInputs({...taxInputs, filing_status: e.target.value})}
+            options={[
+              { value: 'single', label: 'Single' },
+              { value: 'married_joint', label: 'Married Filing Jointly' },
+              { value: 'married_separate', label: 'Married Filing Separately' },
+              { value: 'head_of_household', label: 'Head of Household' },
+            ]}
+          />
+          
+          <Input
+            label="Years to Optimize"
+            type="number"
+            value={taxInputs.years_to_optimize}
+            onChange={(e) => setTaxInputs({...taxInputs, years_to_optimize: parseInt(e.target.value)})}
+            helperText="1-30 years"
+          />
+          
+          <Select
+            label="Target Tax Bracket"
+            value={taxInputs.target_tax_bracket}
+            onChange={(e) => setTaxInputs({...taxInputs, target_tax_bracket: parseFloat(e.target.value)})}
+            options={[
+              { value: 0.10, label: '10%' },
+              { value: 0.12, label: '12%' },
+              { value: 0.22, label: '22%' },
+              { value: 0.24, label: '24%' },
+              { value: 0.32, label: '32%' },
+            ]}
+            helperText="Stay below this rate"
+          />
+          
+          <div className="flex items-start">
+            <Switch
+              label="Avoid IRMAA Thresholds"
               checked={taxInputs.avoid_irmaa}
               onChange={(e) => setTaxInputs({...taxInputs, avoid_irmaa: e.target.checked})}
-              className="mr-2"
+              helperText="Minimize Medicare surcharges"
             />
-            <label className="text-sm font-medium">Avoid IRMAA Thresholds</label>
           </div>
         </div>
-        <div className="mt-4">
-          <Button onClick={runOptimization} disabled={isLoading}>
+        <div className="mt-6">
+          <Button onClick={runOptimization} disabled={isLoading} loading={isLoading}>
             Optimize Conversions
           </Button>
         </div>

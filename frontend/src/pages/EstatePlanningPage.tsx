@@ -4,7 +4,7 @@
  */
 import React, { useState } from 'react';
 import apiClient from '../lib/api';
-import { SectionHeader, Button, Card, Badge } from '../components/ui';
+import { SectionHeader, Button, Card, Badge, Input, Select } from '../components/ui';
 import { Home, Shield, AlertCircle } from 'lucide-react';
 
 const EstatePlanningPage: React.FC = () => {
@@ -52,72 +52,66 @@ const EstatePlanningPage: React.FC = () => {
 
       {/* Input Form */}
       <Card>
-        <h3 className="text-lg font-semibold mb-4">Estate Parameters</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Total Estate Value</label>
-            <input
-              type="number"
-              value={estateInputs.total_estate_value}
-              onChange={(e) => setEstateInputs({...estateInputs, total_estate_value: parseFloat(e.target.value)})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Taxable Account</label>
-            <input
-              type="number"
-              value={estateInputs.taxable_account}
-              onChange={(e) => setEstateInputs({...estateInputs, taxable_account: parseFloat(e.target.value)})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">IRA Balance</label>
-            <input
-              type="number"
-              value={estateInputs.ira_balance}
-              onChange={(e) => setEstateInputs({...estateInputs, ira_balance: parseFloat(e.target.value)})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Roth IRA Balance</label>
-            <input
-              type="number"
-              value={estateInputs.roth_balance}
-              onChange={(e) => setEstateInputs({...estateInputs, roth_balance: parseFloat(e.target.value)})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Heir Age</label>
-            <input
-              type="number"
-              value={estateInputs.heir_age}
-              onChange={(e) => setEstateInputs({...estateInputs, heir_age: parseInt(e.target.value)})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Heir Tax Bracket</label>
-            <select
-              value={estateInputs.heir_tax_bracket}
-              onChange={(e) => setEstateInputs({...estateInputs, heir_tax_bracket: parseFloat(e.target.value)})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            >
-              <option value={0.10}>10%</option>
-              <option value={0.12}>12%</option>
-              <option value={0.22}>22%</option>
-              <option value={0.24}>24%</option>
-              <option value={0.32}>32%</option>
-              <option value={0.35}>35%</option>
-              <option value={0.37}>37%</option>
-            </select>
-          </div>
+        <h3 className="text-lg font-semibold mb-6">Estate Parameters</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Input
+            label="Total Estate Value"
+            type="number"
+            value={estateInputs.total_estate_value}
+            onChange={(e) => setEstateInputs({...estateInputs, total_estate_value: parseFloat(e.target.value)})}
+            helperText="Total assets at death"
+          />
+          
+          <Input
+            label="Taxable Account"
+            type="number"
+            value={estateInputs.taxable_account}
+            onChange={(e) => setEstateInputs({...estateInputs, taxable_account: parseFloat(e.target.value)})}
+            helperText="Non-qualified investments"
+          />
+          
+          <Input
+            label="IRA Balance"
+            type="number"
+            value={estateInputs.ira_balance}
+            onChange={(e) => setEstateInputs({...estateInputs, ira_balance: parseFloat(e.target.value)})}
+            helperText="Traditional IRA/401k"
+          />
+          
+          <Input
+            label="Roth IRA Balance"
+            type="number"
+            value={estateInputs.roth_balance}
+            onChange={(e) => setEstateInputs({...estateInputs, roth_balance: parseFloat(e.target.value)})}
+            helperText="Tax-free accounts"
+          />
+          
+          <Input
+            label="Heir Age"
+            type="number"
+            value={estateInputs.heir_age}
+            onChange={(e) => setEstateInputs({...estateInputs, heir_age: parseInt(e.target.value)})}
+            helperText="Beneficiary age"
+          />
+          
+          <Select
+            label="Heir Tax Bracket"
+            value={estateInputs.heir_tax_bracket}
+            onChange={(e) => setEstateInputs({...estateInputs, heir_tax_bracket: parseFloat(e.target.value)})}
+            options={[
+              { value: 0.10, label: '10%' },
+              { value: 0.12, label: '12%' },
+              { value: 0.22, label: '22%' },
+              { value: 0.24, label: '24%' },
+              { value: 0.32, label: '32%' },
+              { value: 0.35, label: '35%' },
+              { value: 0.37, label: '37%' },
+            ]}
+            helperText="Heir's marginal rate"
+          />
         </div>
-        <div className="mt-4">
-          <Button onClick={runAnalysis} disabled={isLoading}>
+        <div className="mt-6">
+          <Button onClick={runAnalysis} disabled={isLoading} loading={isLoading}>
             Analyze Estate Plan
           </Button>
         </div>

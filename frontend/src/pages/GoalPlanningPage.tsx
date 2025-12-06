@@ -4,7 +4,7 @@
  */
 import React, { useState } from 'react';
 import apiClient from '../lib/api';
-import { SectionHeader, Button, Card, Badge } from '../components/ui';
+import { SectionHeader, Button, Card, Badge, Input, Select, Switch } from '../components/ui';
 import { Target, Plus, Trash2 } from 'lucide-react';
 
 interface Goal {
@@ -108,67 +108,57 @@ const GoalPlanningPage: React.FC = () => {
 
         {/* Add Goal Form */}
         {showAddGoal && (
-          <div className="p-4 bg-gray-50 rounded-lg mb-4">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Goal Name</label>
-                <input
-                  type="text"
-                  value={newGoal.name}
-                  onChange={(e) => setNewGoal({...newGoal, name: e.target.value})}
-                  placeholder="e.g., New Car, Vacation Home"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Target Amount</label>
-                <input
-                  type="number"
-                  value={newGoal.target_amount}
-                  onChange={(e) => setNewGoal({...newGoal, target_amount: parseFloat(e.target.value)})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Target Year</label>
-                <input
-                  type="number"
-                  value={newGoal.target_year}
-                  onChange={(e) => setNewGoal({...newGoal, target_year: parseInt(e.target.value)})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Priority (1-10)</label>
-                <input
-                  type="number"
-                  value={newGoal.priority}
-                  onChange={(e) => setNewGoal({...newGoal, priority: parseInt(e.target.value)})}
-                  min={1}
-                  max={10}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                />
-              </div>
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
+          <div className="p-6 bg-background-hover rounded-lg mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Input
+                label="Goal Name"
+                type="text"
+                value={newGoal.name}
+                onChange={(e) => setNewGoal({...newGoal, name: e.target.value})}
+                placeholder="e.g., New Car, Vacation Home"
+              />
+              
+              <Input
+                label="Target Amount"
+                type="number"
+                value={newGoal.target_amount}
+                onChange={(e) => setNewGoal({...newGoal, target_amount: parseFloat(e.target.value)})}
+              />
+              
+              <Input
+                label="Target Year"
+                type="number"
+                value={newGoal.target_year}
+                onChange={(e) => setNewGoal({...newGoal, target_year: parseInt(e.target.value)})}
+              />
+              
+              <Input
+                label="Priority (1-10)"
+                type="number"
+                value={newGoal.priority}
+                onChange={(e) => setNewGoal({...newGoal, priority: parseInt(e.target.value)})}
+                helperText="1 = highest priority"
+              />
+              
+              <div className="flex items-start">
+                <Switch
+                  label="Essential Goal"
                   checked={newGoal.is_essential}
                   onChange={(e) => setNewGoal({...newGoal, is_essential: e.target.checked})}
-                  className="mr-2"
+                  helperText="Must-have vs nice-to-have"
                 />
-                <label className="text-sm font-medium">Essential Goal</label>
               </div>
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
+              
+              <div className="flex items-start">
+                <Switch
+                  label="Adjust for Inflation"
                   checked={newGoal.inflation_adjusted}
                   onChange={(e) => setNewGoal({...newGoal, inflation_adjusted: e.target.checked})}
-                  className="mr-2"
+                  helperText="Account for rising costs"
                 />
-                <label className="text-sm font-medium">Adjust for Inflation</label>
               </div>
             </div>
-            <div className="flex gap-2 mt-4">
+            <div className="flex gap-3 mt-6">
               <Button onClick={addGoal} size="sm">Save Goal</Button>
               <Button onClick={() => setShowAddGoal(false)} variant="secondary" size="sm">Cancel</Button>
             </div>
