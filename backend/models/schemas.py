@@ -64,8 +64,18 @@ class ModelInputsModel(BaseModel):
     taxable_pct: float = Field(default=0.33, ge=0, le=1, description="% in taxable accounts")
     ira_pct: float = Field(default=0.50, ge=0, le=1, description="% in traditional IRA/401k")
     roth_pct: float = Field(default=0.17, ge=0, le=1, description="% in Roth IRA")
+    taxable_basis_pct: float = Field(default=0.60, ge=0, le=1, description="Cost basis % of taxable accounts")
     tax_rate: float = Field(default=0.25, ge=0, le=0.50, description="Marginal tax rate")
+    filing_status: str = Field(default="single", description="Tax filing status: single or joint")
+    state_tax_rate: float = Field(default=0.0, ge=0, le=0.15, description="State income tax rate")
     rmd_age: int = Field(default=73, ge=70, le=75, description="RMD starting age")
+    
+    # Tax optimization
+    use_tax_optimization: bool = Field(default=True, description="Enable optimal withdrawal sequencing")
+    optimize_roth_conversions: bool = Field(default=False, description="Calculate optimal Roth conversions")
+    roth_conversion_start_age: int = Field(default=60, ge=50, le=72, description="Start age for conversions")
+    roth_conversion_end_age: int = Field(default=72, ge=60, le=73, description="End age for conversions")
+    avoid_irmaa: bool = Field(default=True, description="Avoid Medicare IRMAA thresholds in conversions")
     
     # Income sources
     social_security_monthly: float = Field(default=0.0, ge=0, description="Monthly Social Security benefit")
@@ -146,6 +156,38 @@ class SimulationRequest(BaseModel):
     seed: Optional[int] = Field(default=None, description="Random seed for reproducibility")
 
 
+class RothConversionYearModel(BaseModel):
+    """Single year of Roth conversion plan"""
+    year: int = Field(description="Year index (0 = start)")
+    age: int = Field(description="Client age this year")
+    conversion_amount: float = Field(description="Amount to convert from IRA to Roth")
+    tax_on_conversion: float = Field(description="Tax owed on conversion")
+    cumulative_savings: float = Field(description="Cumulative PV tax savings")
+
+
+class RothConversionPlanModel(BaseModel):
+    """Complete Roth conversion optimization plan"""
+    enabled: bool = Field(default=False, description="Whether optimization was run")
+    years: List[RothConversionYearModel] = Field(default_factory=list, description="Year-by-year schedule")
+    total_conversions: float = Field(default=0.0, description="Total amount converted")
+    total_taxes_paid: float = Field(default=0.0, description="Total taxes on conversions")
+    lifetime_tax_savings: float = Field(default=0.0, description="PV of lifetime tax savings")
+    recommendation: str = Field(default="", description="Summary recommendation")
+
+
+class TaxOptimizationMetrics(BaseModel):
+    """Tax optimization results and metrics"""
+    enabled: bool = Field(default=False, description="Whether tax optimization was used")
+    total_lifetime_taxes: float = Field(default=0.0, description="Total taxes paid over lifetime")
+    pv_lifetime_taxes: float = Field(default=0.0, description="Present value of lifetime taxes")
+    average_annual_tax: float = Field(default=0.0, description="Average annual tax payment")
+    average_effective_rate: float = Field(default=0.0, description="Average effective tax rate")
+    total_irmaa_surcharges: float = Field(default=0.0, description="Total Medicare IRMAA surcharges")
+    roth_conversion_plan: Optional[RothConversionPlanModel] = Field(default=None, description="Optimal Roth conversion schedule")
+    tax_savings_vs_naive: float = Field(default=0.0, description="Tax savings vs proportional withdrawals")
+    withdrawal_strategy: str = Field(default="", description="Description of withdrawal strategy used")
+
+
 class SimulationMetrics(BaseModel):
     """Key metrics from simulation results"""
     success_probability: float = Field(description="Probability of success")
@@ -168,6 +210,12 @@ class SimulationMetrics(BaseModel):
     longevity_metrics: Optional[Dict[int, Dict[str, float]]] = Field(
         default=None,
         description="Metrics at longevity milestone ages (70, 75, 80, 85, 90, 95, 100)"
+    )
+    
+    # Tax optimization metrics
+    tax_optimization: Optional[TaxOptimizationMetrics] = Field(
+        default=None,
+        description="Tax optimization results and analysis"
     )
 
 

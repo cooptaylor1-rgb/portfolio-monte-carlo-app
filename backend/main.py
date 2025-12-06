@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 import logging
 
-from api import simulation, presets, health, social_security
+from api import simulation, presets, health, social_security, tax_optimization
 from models.schemas import HealthCheckResponse
 
 # Configure logging
@@ -124,6 +124,7 @@ app.include_router(health.router, prefix="/api", tags=["health"])
 app.include_router(simulation.router, prefix="/api/simulation", tags=["simulation"])
 app.include_router(presets.router, prefix="/api/presets", tags=["presets"])
 app.include_router(social_security.router)
+app.include_router(tax_optimization.router, prefix="/api/tax", tags=["tax-optimization"])
 
 
 # Application entry point
